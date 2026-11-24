@@ -113,7 +113,7 @@ export function BrandView() {
       <Section title={b.styleguideTitle} intro={b.styleguideIntro}>
         <div className="mc-brand-uses">
           <Use index={0}>
-            <Ground className="mc-brand-stage">
+            <Ground className="mc-brand-stage" logo>
               <div className="mc-brand-callout-wrap">
                 <Sheet highlight="ean" />
                 <span className="mc-brand-callout">{b.highlight} · EAN-13</span>
@@ -124,10 +124,10 @@ export function BrandView() {
             <Carousel />
           </Use>
           <Use index={2}>
-            <Ground className="mc-brand-stage"><TaskBoard /></Ground>
+            <Ground className="mc-brand-stage" logo><TaskBoard /></Ground>
           </Use>
           <Use index={3}>
-            <Ground className="mc-brand-stage mc-brand-pair">
+            <Ground className="mc-brand-stage mc-brand-pair" logo>
               <Sheet />
               <JsonCard />
             </Ground>
@@ -138,7 +138,7 @@ export function BrandView() {
       <Section title={b.campaignsTitle}>
         <div className="mc-brand-campaigns">
           <Campaign index={0}>
-            <Ground className="mc-brand-stage mc-brand-packs">
+            <Ground className="mc-brand-stage mc-brand-packs" logo>
               <figure className="mc-brand-pack" data-old>
                 <img src={PRODUCT.image} alt="" />
                 <figcaption>{b.oldPack}</figcaption>
@@ -152,7 +152,7 @@ export function BrandView() {
             </Ground>
           </Campaign>
           <Campaign index={1}>
-            <Ground className="mc-brand-stage mc-brand-before-after">
+            <Ground className="mc-brand-stage mc-brand-before-after" logo>
               <figure><span className="mc-eyebrow">{b.before}</span><Sheet bare /></figure>
               <figure><span className="mc-eyebrow">{b.after}</span><Sheet /></figure>
             </Ground>
@@ -206,11 +206,12 @@ function SubTitle({ title, note }: { title: string; note?: string }) {
 }
 
 /** The brand ground of medipim.com: brand blur on a faint grid. */
-function Ground({ className, children }: { className?: string; children: ReactNode }) {
+function Ground({ className, logo, children }: { className?: string; logo?: boolean; children: ReactNode }) {
   return (
-    <div className={`mc-ground ${className ?? ''}`}>
+    <div className={`mc-ground ${className ?? ''}`} data-logo={logo || undefined}>
       <div className="mc-ground-frame" aria-hidden="true" />
       {children}
+      {logo && <div className="mc-logo-label mc-ground-logo"><MedipimLogo height={13} /></div>}
     </div>
   );
 }

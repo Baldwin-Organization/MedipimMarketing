@@ -193,6 +193,8 @@
 .mc-carousel-slide { min-width: 0; display: grid; place-items: center; padding: 2.75rem var(--mp-space-2) var(--mp-space-3); border-radius: var(--mp-shape-surface); }
 .mc-carousel-slide:nth-child(2) .mc-ground-frame { --gx: 78%; --gy: 18%; }
 .mc-carousel-slide:nth-child(3) .mc-ground-frame { --gx: 24%; --gy: 82%; }
+.mc-ground[data-logo].mc-brand-stage { padding-bottom: 3.5rem; }
+.mc-ground-logo { position: absolute; right: var(--mp-space-3); bottom: var(--mp-space-3); padding: 6px 10px; }
 .mc-carousel-logo { position: absolute; top: var(--mp-space-2); left: var(--mp-space-2); padding: 5px var(--mp-space-2); }
 .mc-carousel-count { position: absolute; top: var(--mp-space-3); right: var(--mp-space-2); font-family: var(--mp-font-mono); font-size: var(--brand-label); color: var(--mp-brand-content-strong); }
 .mc-carousel-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--mp-space-1-5); width: 100%; padding: var(--mp-space-3); background: var(--mp-bg-elevated); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-control); box-shadow: var(--mp-shadow-popup); }
