@@ -314,9 +314,15 @@ function Composition({ format }: { format: 'square' | 'wide' | 'tall' }) {
       <div className="mc-composition-body" data-format={format}>
         <div className="mc-composition-pack"><img src={PRODUCT.image} alt="" /></div>
         <dl className="mc-composition-fields">
-          <div><dt>{b.fields.code}</dt><dd>CNK {PRODUCT.cnk}</dd></div>
+          <div><dt>{b.fields.brand}</dt><dd>{PRODUCT.brand}</dd></div>
+          <div><dt>{b.fields.id}</dt><dd>{PRODUCT.id}</dd></div>
+          <div><dt>CNK</dt><dd>{PRODUCT.cnk}</dd></div>
           <div><dt>{b.fields.content}</dt><dd>{PRODUCT.content}</dd></div>
+          <div data-wide><dt>EAN-13</dt><dd>{PRODUCT.ean}</dd></div>
+          <div><dt>{b.fields.weight}</dt><dd>{PRODUCT.weight}</dd></div>
           <div><dt>{b.fields.language}</dt><dd>{PRODUCT.languages.join(' · ')}</dd></div>
+          <div data-wide><dt>{b.fields.storage}</dt><dd>{b.storage}</dd></div>
+          <div data-wide><dt>{b.fields.category}</dt><dd>{b.categories.join(' › ')}</dd></div>
         </dl>
       </div>
       <footer className="mc-composition-foot">
