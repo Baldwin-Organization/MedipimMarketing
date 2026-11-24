@@ -91,7 +91,8 @@ describe('bilingual seed', () => {
       expect(en?.description, i.title).toBeTruthy();
       expect(en?.description).not.toBe(i.description);
       if (i.type === 'event') expect(en?.location, i.title).toBeTruthy();
-      if (i.campaign) expect(en?.campaign).toBe('New UX Belgian platform');
+      if (i.campaign === 'Nieuwe UX Belgisch platform') expect(en?.campaign).toBe('New UX Belgian platform');
+      else if (i.campaign) expect(en?.campaign, i.title).toBeTruthy();
     }
     expect(all().find((i) => i.title.endsWith('(datum te bevestigen)'))?.translations?.en?.title).toMatch(/\(date to be confirmed\)$/);
   });

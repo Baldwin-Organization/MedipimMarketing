@@ -1,6 +1,7 @@
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
+import { planEvents } from './seed-events';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate } from './seed-content';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
@@ -159,7 +160,8 @@ export function exhibitorBudgets(items: Item[]): Item[] {
  */
 export function addSeedTranslations(items: Item[]): Item[] {
   const now = new Date().toISOString();
-  const seed = new Map(buildSeed(() => '').items.map((i) => [`${i.type}|${i.title}`, i]));
+  let n = 0;
+  const seed = new Map(buildSeed(() => `seed${n++}`).items.map((i) => [`${i.type}|${i.title}`, i]));
   return items.flatMap((i) => {
     const s = seed.get(`${i.type}|${i.title}`);
     if (!s?.translations?.en || i.translations?.en) return [];
@@ -207,6 +209,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-5', apply: (data) => ({ items: exhibitorBudgets(data.items) }) },
   { key: 'mc-seed-updates-6', apply: (data) => ({ items: markVisitors(data.items) }) },
   { key: 'mc-seed-updates-7', apply: addRetargeting },
+  { key: 'mc-seed-updates-8', apply: (data) => planEvents(data, newId) },
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
@@ -271,7 +274,14 @@ export function buildSeed(makeId: () => string): Contents {
     }
   }
   const retargeting = buildRetargeting(makeId, now);
-  return { items: [...items, retargeting.item], todos: [...todos, ...retargeting.todos], budgets: SEED_BUDGETS, pillars: SEED_PILLARS, content: buildSeedContent(now) };
+  const events = planEvents({ items, todos }, makeId);
+  return {
+    items: [...items, retargeting.item, ...events.items],
+    todos: [...todos, ...retargeting.todos, ...events.todos],
+    budgets: SEED_BUDGETS,
+    pillars: SEED_PILLARS,
+    content: buildSeedContent(now),
+  };
 }
 
 const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
