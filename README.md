@@ -29,7 +29,9 @@ De interface is in het Nederlands en volgt het
 - **Itemformulier** met to do's; nieuwe items krijgen standaard-to do's per type
   (bv. "Stand boeken" 8 weken voor een beurs, "Visual maken" 5 dagen voor een post).
   Een bestaand item zonder to do's kan die standaardlijst achteraf krijgen.
-- **Beurzen en conferenties** als tijdlijn, met een voorbereidingschecklist per event.
+- **Beurzen en conferenties** als horizontaal scrollbare tijdlijn over alle komende maanden,
+  met filters op land of markt, type product, doelgroep, soort, status en eigenaar, en een
+  voorbereidingschecklist per event.
 - **Campagnes**: betalende advertenties op LinkedIn Ads, Google Ads en ChatGPT Ads, met
   looptijd (start- en einddatum), budget en standaard-to do's (doel en KPI, visuals,
   targeting, tussentijdse evaluatie, rapportering). Gegroepeerd als lopend, komend en
