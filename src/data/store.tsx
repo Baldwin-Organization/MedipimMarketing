@@ -21,7 +21,7 @@ interface Store {
   moveTodoTo(id: string, date: IsoDate): Promise<void>;
   exportJson(): string;
   importJson(json: string): Promise<void>;
-  resetDemo(): Promise<void>;
+  resetToSeed(): Promise<void>;
   templateTodos(draft: ItemDraft): Todo[];
 }
 
@@ -37,7 +37,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (await repo.isEmpty()) await repo.replaceAll(buildSeed(todayIso(), newId));
+      if (await repo.isEmpty()) await repo.replaceAll(buildSeed(newId));
       const data = await repo.load();
       if (!alive) return;
       setItems(data.items);
@@ -140,8 +140,8 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         setItems(data.items);
         setRawTodos(data.todos);
       },
-      async resetDemo() {
-        const data = buildSeed(todayIso(), newId);
+      async resetToSeed() {
+        const data = buildSeed(newId);
         await repo.replaceAll(data);
         setItems(data.items);
         setRawTodos(data.todos);

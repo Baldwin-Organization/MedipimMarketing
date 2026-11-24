@@ -1,87 +1,124 @@
-import { shiftIso } from './dates';
-import { todosFromTemplate } from './schedule';
-import type { IsoDate, Item, ItemStatus, ItemType, Todo } from './types';
+import type { IsoDate, Item, Todo } from './types';
 
-interface SeedItem {
-  type: ItemType;
+interface SeedEvent {
   title: string;
-  description: string;
-  channel: string;
-  /** Days from today. */
-  day: number;
-  /** Event length in days (inclusive). */
-  days?: number;
-  time?: string;
-  location?: string;
-  owner: string;
+  date: IsoDate;
+  /** Last day (inclusive); omitted for one-day events. */
+  endDate?: IsoDate;
+  location: string;
+  channel: 'Beurs' | 'Conferentie' | 'Congres' | 'Netwerkevent';
   campaign: string;
-  status?: ItemStatus;
-  /** Leave the most recent overdue to-do open so it rolls forward. */
-  leaveLate?: boolean;
+  relevance: string;
+  description: string;
+  /** The organiser has not confirmed the date yet; `date` is then a placeholder. */
+  tentative?: boolean;
 }
 
-const SEED: SeedItem[] = [
-  // Beurzen en conferenties
-  { type: 'event', title: 'Apotheekbeurs Flanders Expo', description: 'Tweedaagse vakbeurs voor apothekers. Stand met live demo van de nieuwe productfiches en de PIM-koppeling met apotheeksoftware.', channel: 'Beurs', day: 12, days: 2, location: 'Gent, Flanders Expo · stand B14', owner: 'Sofie', campaign: 'Apotheek 2027', status: 'in_uitvoering', leaveLate: true },
-  { type: 'event', title: 'Pharma Data Summit', description: 'Conferentie over productdata in de farmaketen. Olivier spreekt over datakwaliteit van geneesmiddelfiches.', channel: 'Conferentie', day: 44, days: 1, location: 'Brussel, Square', owner: 'Olivier', campaign: 'Datakwaliteit', status: 'gepland' },
-  { type: 'event', title: 'Vitafoods Europe', description: 'Internationale beurs voor voedingssupplementen. Bezoek en meetings met fabrikanten die hun non-drug assortiment willen aanleveren.', channel: 'Beurs', day: 86, days: 3, location: 'Barcelona, Fira Gran Via', owner: 'Pieter', campaign: 'Industrie', status: 'gepland' },
-  { type: 'event', title: 'APB Wetenschappelijk Congres', description: 'Congres van de Algemene Pharmaceutische Bond. Partnerstand en sessie over digitale bijsluiters.', channel: 'Congres', day: 150, days: 2, location: 'Antwerpen, ICC', owner: 'Sofie', campaign: 'Apotheek 2027', status: 'idee' },
-  { type: 'event', title: 'Medipim Partnerdag', description: 'Netwerkevent met softwarepartners en groothandels.', channel: 'Netwerkevent', day: -19, days: 1, location: 'Mechelen, Lamot', owner: 'Ward', campaign: 'Partners', status: 'klaar' },
+const APOTHEKEN = 'Apotheken & software';
+const GROOTHANDELS = 'Groothandels';
+const DATA = 'Productdata & standaarden';
+const KETENS = 'Ketens & retail';
+const INDUSTRIE = 'Farma-industrie';
+const CANNABIS = 'Medicinale cannabis';
+const DIGITAAL = 'Digitale zorg';
+const ZIEKENHUIS = 'Ziekenhuisfarmacie';
 
-  // Social
-  { type: 'social', title: 'Nieuwe productfiches live', description: 'Carrousel met de vernieuwde productfiche: bijsluiter, packshots en prijshistoriek op één plek.', channel: 'LinkedIn', day: 2, time: '09:30', owner: 'Lien', campaign: 'Productlancering', status: 'in_uitvoering', leaveLate: true },
-  { type: 'social', title: 'Teaser apotheekbeurs', description: 'Kom langs op stand B14: korte video van de demo.', channel: 'Instagram', day: 6, time: '12:00', owner: 'Lien', campaign: 'Apotheek 2027', status: 'gepland' },
-  { type: 'social', title: 'Klantverhaal Apotheek De Linde', description: 'Interview over tijdswinst bij het opzoeken van productinfo.', channel: 'LinkedIn', day: 9, time: '10:00', owner: 'Sofie', campaign: 'Klantverhalen', status: 'gepland' },
-  { type: 'social', title: 'Tip van de week: zoeken op CNK', description: 'Korte how-to over zoeken op CNK-code.', channel: 'Facebook', day: 16, time: '08:30', owner: 'Lien', campaign: 'Tips', status: 'idee' },
-  { type: 'social', title: 'Terugblik Partnerdag', description: 'Fotoreeks en quotes van partners.', channel: 'LinkedIn', day: -15, time: '11:00', owner: 'Ward', campaign: 'Partners', status: 'klaar' },
-  { type: 'social', title: 'Datakwaliteit in cijfers', description: 'Infographic: 19.000 geneesmiddelen, 98% volledige fiches.', channel: 'LinkedIn', day: 23, time: '09:00', owner: 'Olivier', campaign: 'Datakwaliteit', status: 'idee' },
+/** Source: Medipim eventkalender 2027 (4 november 2026 – 4 november 2027, plus CPHI Frankfurt). */
+const EVENTS: SeedEvent[] = [
+  // Januari 2027
+  { title: 'Vital Executive Conference', date: '2027-01-11', location: 'Montréal, Canada', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Hoog voor Canadese groothandelscontacten', description: 'Exclusieve bijeenkomst voor strategische uitwisseling en relatieopbouw binnen de Canadese farmaceutische keten. Goede ingang naar distributiebedrijven en hun handelspartners.' },
+  { title: 'pharmacon Schladming', date: '2027-01-17', endDate: '2027-01-21', location: 'Schladming, Oostenrijk', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Middel', description: 'Farmaceutische nascholing en netwerk in de Duitstalige markt; vooral een congres, minder een grote commerciële beurs.' },
+  { title: 'Pharmapack Europe', date: '2027-01-27', endDate: '2027-01-28', location: 'Parijs, Frankrijk', channel: 'Beurs', campaign: INDUSTRIE, relevance: 'Aanvullend', description: 'Verpakking en drug delivery staan centraal. Interessant voor fabrikantcontacten, maar minder direct gericht op apotheken.' },
 
-  // E-mailings
-  { type: 'email', title: 'Nieuwsbrief december', description: 'Maandelijkse nieuwsbrief voor apothekers: nieuwe fiches, eindejaarsopening, beursuitnodiging.', channel: 'Nieuwsbrief apothekers', day: 8, time: '07:00', owner: 'Sofie', campaign: 'Nieuwsbrief', status: 'in_uitvoering', leaveLate: true },
-  { type: 'email', title: 'Uitnodiging apotheekbeurs', description: 'Persoonlijke uitnodiging met gratis badge voor stand B14.', channel: 'Uitnodiging', day: 3, time: '10:00', owner: 'Sofie', campaign: 'Apotheek 2027', status: 'gepland' },
-  { type: 'email', title: 'Productupdate Q1 voor fabrikanten', description: 'Nieuwe aanleverflow voor non-drug producten en validatieregels.', channel: 'Nieuwsbrief industrie', day: 27, time: '09:00', owner: 'Pieter', campaign: 'Industrie', status: 'idee' },
-  { type: 'email', title: 'Nieuwsbrief januari', description: 'Jaaroverzicht en roadmap 2027.', channel: 'Nieuwsbrief apothekers', day: 40, time: '07:00', owner: 'Sofie', campaign: 'Nieuwsbrief', status: 'idee' },
+  // Februari 2027
+  { title: 'Health Expo Athens', date: '2027-02-20', endDate: '2027-02-21', location: 'Athene, Griekenland', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Middel', description: 'Brengt onder meer distributeurs, fabrikanten en apotheekhouders samen. Mogelijkheid om de Griekse markt en lokale datapartners te verkennen.' },
+  { title: 'Cann-Reg 2027', date: '2027-02-24', endDate: '2027-02-25', location: 'Brussel, België', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Middel', description: 'Specifiek over regelgeving, kwaliteit, supply chain en medische toepassingen van cannabis. Bezoekers zijn onder meer regelgevers, zorgprofessionals en bedrijven.' },
+  { title: 'Singapore Pharmacy Congress', date: '2027-02-26', endDate: '2027-02-28', location: 'Singapore', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Middel', description: 'Regionaal congres over apotheekpraktijk en de farmaceutische industrie. Interessant voor Aziatisch netwerk, maar geen klassieke vakbeurs.' },
+  { title: 'Cannabinoid Innovation Forum', date: '2027-02-01', tentative: true, location: 'Mexico-Stad, Mexico', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Aanvullend', description: 'Zakelijk en wetenschappelijk forum over cannabinoïden, geneeskunde, regelgeving en marktontwikkeling. Gepland in februari; de exacte datum is nog niet bevestigd.' },
 
-  // Calls
-  { type: 'call', title: 'Kwartaalcall Multipharma', description: 'Opvolging datakoppeling en feedback op de productfiches.', channel: 'Klantcall', day: 1, time: '14:00', owner: 'Ward', campaign: 'Klanten', status: 'gepland', leaveLate: true },
-  { type: 'call', title: 'Webinar: zo lever je data aan', description: 'Webinar voor fabrikanten over de nieuwe aanleverflow.', channel: 'Webinar', day: 20, time: '11:00', owner: 'Pieter', campaign: 'Industrie', status: 'gepland' },
-  { type: 'call', title: 'Partnercall Farmad', description: 'Afstemming gezamenlijke communicatie rond de beurs.', channel: 'Partnercall', day: 5, time: '15:30', owner: 'Olivier', campaign: 'Partners', status: 'gepland' },
-  { type: 'call', title: 'Marketing weekstart', description: 'Wekelijkse planning van het marketingteam.', channel: 'Interne sync', day: 0, time: '09:00', owner: 'Olivier', campaign: 'Intern', status: 'gepland' },
+  // Maart 2027
+  { title: 'Cannabis Europa Warsaw', date: '2027-03-03', location: 'Warschau, Polen', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Middel', description: 'Eendaagse bijeenkomst over de Poolse markt voor medicinale cannabis en de ontwikkeling in Centraal- en Oost-Europa.' },
+  { title: 'HDA Distribution Management Conference and Expo', date: '2027-03-07', endDate: '2027-03-10', location: 'Palm Desert, Verenigde Staten', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Zeer hoog voor Amerikaanse distributiepartners', description: 'HDA’s grote supplychainbijeenkomst brengt honderden fabrikanten, distributeurs, consultants en dienstverleners samen. Directe kans om Amerikaanse groothandels en hun partners te ontmoeten.' },
+  { title: 'United in Compassion (UIC) 2027', date: '2027-03-11', endDate: '2027-03-13', location: 'Gold Coast, Australië', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Brengt clinici, onderzoekers, beleidsmakers en industrie samen rond cannabis als geneesmiddel. Sponsoring en exposeren zijn voorzien.' },
+  { title: 'Spannabis Bilbao en World Cannabis Conference', date: '2027-03-12', endDate: '2027-03-14', location: 'Bilbao, Spanje', channel: 'Beurs', campaign: CANNABIS, relevance: 'Aanvullend', description: 'Brede cannabisbeurs met een conferentieprogramma, waaronder medische onderwerpen. Minder specifiek dan een medische cannabisconferentie.' },
+  { title: 'PharmagoraPlus', date: '2027-03-13', endDate: '2027-03-14', location: 'Parijs, Frankrijk', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Rechtstreeks gericht op openbare apotheken, apothekers en leveranciers. Kans om Medipim en software-integraties aan apotheekbezoekers te tonen.' },
+  { title: 'DIA Europe 2027', date: '2027-03-16', endDate: '2027-03-18', location: 'Basel, Zwitserland', channel: 'Conferentie', campaign: INDUSTRIE, relevance: 'Middel voor datapartners', description: 'Farmabedrijven, regelgevers en life-sciencespecialisten bespreken productontwikkeling, regelgeving, geneesmiddelenveiligheid en toegang.' },
+  { title: 'Infarma', date: '2027-03-16', endDate: '2027-03-18', location: 'Barcelona, Spanje', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Sterke kandidaat voor rechtstreeks contact met Spaanse openbare apotheken en bedrijven uit de apotheeksector.' },
+  { title: 'Asian Pharma Supply Chain and Logistics Forum', date: '2027-03-17', endDate: '2027-03-18', location: 'Singapore', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Middel, regionale verkenning', description: 'Bijeenkomst voor professionals in farmaceutische supply chain, logistiek, kwaliteit, regelgeving en distributie. Controleer vooraf welke groothandels aan de editie deelnemen.' },
+  { title: 'EAHP Congress', date: '2027-03-17', endDate: '2027-03-19', location: 'Wenen, Oostenrijk', channel: 'Congres', campaign: ZIEKENHUIS, relevance: 'Middel', description: 'Europees congres voor ziekenhuisapothekers. Relevant als Medipim ziekenhuisfarmacie wil verkennen.' },
+  { title: 'APP Conference and Trade Exhibition', date: '2027-03-18', endDate: '2027-03-20', location: 'Gold Coast, Australië', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Grote Australische apotheekbijeenkomst met een uitgebreide vakbeurs. Directe toegang tot apothekers, apotheekteams en leveranciers.' },
+  { title: 'APhA Annual Meeting and Exposition', date: '2027-03-19', endDate: '2027-03-22', location: 'Charlotte, Verenigde Staten', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Middel tot hoog', description: 'Grote Amerikaanse bijeenkomst van apothekers. Geschikt om de markt te leren kennen en contacten met apotheekprofessionals te leggen.' },
+
+  // April 2027
+  { title: 'Global Cannabis Regulatory Summit', date: '2027-04-05', endDate: '2027-04-07', location: 'Zürich, Zwitserland', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Middel, strategisch', description: 'Internationaal forum voor regelgevers, zorgprofessionals, onderzoekers, patiëntenorganisaties en industrie. Deelname is op uitnodiging; geen gewone vakbeurs.' },
+  { title: 'IFPW CEO Roundtable', date: '2027-04-12', endDate: '2027-04-13', location: 'Londen, Verenigd Koninkrijk', channel: 'Netwerkevent', campaign: GROOTHANDELS, relevance: 'Zeer hoog voor internationale introducties; toegang vooraf afstemmen', description: 'Jaarlijkse ontmoeting van CEO’s uit groothandels en nationale distributieorganisaties. IFPW vermeldt dat deelname ledengebonden is en op uitnodiging verloopt; informeer naar partner- of gasttoegang.' },
+  { title: 'DMEA', date: '2027-04-13', endDate: '2027-04-15', location: 'München, Duitsland', channel: 'Beurs', campaign: DIGITAAL, relevance: 'Middel', description: 'Digitale zorg, health IT, data en interoperabiliteit. Interessant voor software- en integratiepartners buiten de apotheeksector.' },
+  { title: 'Zorg & ICT', date: '2027-04-13', endDate: '2027-04-15', location: 'Utrecht, Nederland', channel: 'Beurs', campaign: DIGITAAL, relevance: 'Middel', description: 'Nederlandse beurs voor zorgtechnologie en ICT. Mogelijke contacten met digitale zorg- en softwarepartners.' },
+  { title: 'ICBC Berlin', date: '2027-04-13', endDate: '2027-04-15', location: 'Berlijn, Duitsland', channel: 'Beurs', campaign: CANNABIS, relevance: 'Middel voor cannabisdata', description: 'Brede cannabisindustriebeurs met aandacht voor medicinale cannabis en Europese regelgeving.' },
+  { title: 'Cosmofarma', date: '2027-04-15', endDate: '2027-04-17', location: 'Bologna, Italië', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Jaarlijkse bijeenkomst van de Italiaanse apotheeksector. Interessant voor apotheekteams en marktontwikkeling in Italië.' },
+  { title: 'NACDS Annual Meeting', date: '2027-04-18', endDate: '2027-04-20', location: 'Palm Beach, Verenigde Staten', channel: 'Netwerkevent', campaign: KETENS, relevance: 'Hoog voor ketenpartners', description: 'Besloten, afspraakgerichte bijeenkomst met leidinggevenden van Amerikaanse apotheekketens en leveranciers. Geschikt voor strategische introducties.' },
+  { title: 'Asian Conference on Clinical Pharmacy', date: '2027-04-22', endDate: '2027-04-25', location: 'Penang, Maleisië', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Aanvullend', description: 'Congres rond klinische farmacie en innovatie in de apotheekpraktijk. Meer professioneel en wetenschappelijk dan commercieel.' },
+  { title: 'Pharmacy Expo Poland', date: '2027-04-27', endDate: '2027-04-29', location: 'Polen', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Middel tot hoog', description: 'Bevat apotheeksoftware, e-pharmacy, automatisering en technologie. Kans om Poolse leveranciers en apotheekpartners te ontmoeten.' },
+  { title: 'Pharmacy U Toronto', date: '2027-04-01', tentative: true, location: 'Toronto, Canada', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Middel, datum onzeker', description: 'Lijkt gericht op apothekers en apotheekteams. Voor 2027 is een datum in april genoemd, maar nog niet officieel bevestigd.' },
+
+  // Mei 2027
+  { title: 'Vital Annual Conference', date: '2027-05-02', location: 'Québec City, Canada', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Hoog voor Canadese distributiecontacten', description: 'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.' },
+  { title: 'CSHP Professional Practice Conference', date: '2027-05-07', endDate: '2027-05-09', location: 'Toronto, Canada', channel: 'Congres', campaign: ZIEKENHUIS, relevance: 'Middel', description: 'Canadees congres voor ziekenhuisapothekers. Relevant als Medipim ziekenhuisfarmacie of institutionele medicatiegegevens wil verkennen.' },
+  { title: 'GIRP PharmaConnect 2027', date: '2027-05-19', endDate: '2027-05-20', location: 'Sofia, Bulgarije', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Zeer hoog voor Europese groothandels', description: 'GIRP brengt groothandels, fabrikanten en andere Europese supplychainpartijen samen. Inhoudelijk een bijzonder sterke gelegenheid om Medimapper te positioneren rond grensoverschrijdende productdata en marktvergelijking.' },
+  { title: 'Congresso Brasileiro da Cannabis Medicinal en Cannabis Fair', date: '2027-05-20', endDate: '2027-05-22', location: 'São Paulo, Brazilië', channel: 'Congres', campaign: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Combineert medische onderwerpen met een beurs voor de cannabiswaardeketen, waaronder farmaceutische industrie, technologie en distributie.' },
+  { title: 'Florida Medical Cannabis Conference and Exhibition', date: '2027-05-21', endDate: '2027-05-23', location: 'Orlando, Verenigde Staten', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Middel tot hoog voor cannabisdata', description: 'Gericht op bewijs, klinische toepassingen en medische professionals, met deelname van bedrijven uit de sector.' },
+  { title: 'GS1 Connect', date: '2027-05-24', endDate: '2027-05-26', location: 'Denver, Verenigde Staten', channel: 'Conferentie', campaign: DATA, relevance: 'Hoog voor datastandaarden', description: 'Sterke inhoudelijke match rond productdatakwaliteit, masterdatabeheer, interoperabiliteit en traceerbaarheid, inclusief onderwerpen uit de geneesmiddelenketen.' },
+
+  // Juni 2027
+  { title: 'Mary Jane Berlin', date: '2027-06-03', endDate: '2027-06-06', location: 'Berlijn, Duitsland', channel: 'Beurs', campaign: CANNABIS, relevance: 'Aanvullend', description: 'Brede cannabisbeurs met een aparte B2B-dag en aanbod voor toegelaten medische leveranciers. Minder medisch gefocust dan Cann-Reg of UIC.' },
+  { title: 'HIMSS Europe', date: '2027-06-08', endDate: '2027-06-10', location: 'Barcelona, Spanje', channel: 'Conferentie', campaign: DIGITAAL, relevance: 'Middel', description: 'Zorgtechnologie, data, interoperabiliteit en digitale transformatie. Interessant voor bredere healthtech- en integratiepartners.' },
+  { title: 'HDA Business and Leadership Conference', date: '2027-06-13', endDate: '2027-06-16', location: 'San Antonio, Verenigde Staten', channel: 'Conferentie', campaign: GROOTHANDELS, relevance: 'Hoog voor Amerikaanse wholesalerleiders', description: 'Besloten HDA-bijeenkomst met senior managers en beslissers uit de Amerikaanse gezondheidszorgketen. Gericht op strategische gesprekken en één-op-ééncontacten; deelname verloopt via HDA-lidmaatschap.' },
+  { title: 'CPHI China', date: '2027-06-16', endDate: '2027-06-18', location: 'Shanghai, China', channel: 'Beurs', campaign: INDUSTRIE, relevance: 'Middel voor fabrikantdata', description: 'Grote bijeenkomst voor farmaceutische producenten en leveranciers. Interessant voor producenten- en datapartners, minder voor rechtstreeks apothekerscontact.' },
+  { title: 'Cannabis Europa London', date: '2027-06-23', endDate: '2027-06-24', location: 'Londen, Verenigd Koninkrijk', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Trekt beslissers, investeerders, regelgevers, clinici en farmaceutische leiders uit de Europese cannabisindustrie aan.' },
+
+  // Juli en augustus 2027
+  { title: 'ICRS Symposium on the Cannabinoids', date: '2027-07-04', endDate: '2027-07-08', location: 'Banff, Canada', channel: 'Congres', campaign: CANNABIS, relevance: 'Aanvullend', description: 'Sterk wetenschappelijk profiel rond cannabinoïden en endocannabinoïden; bruikbaar voor onderzoekscontacten, niet als klassieke verkoopbeurs.' },
+  { title: 'CPHI South East Asia', date: '2027-07-13', endDate: '2027-07-15', location: 'Kuala Lumpur, Maleisië', channel: 'Beurs', campaign: INDUSTRIE, relevance: 'Middel, regionale marktverkenning', description: 'Regionale beurs voor de farmaceutische keten in Zuidoost-Azië. Breder en meer producentgericht dan een wholesalereünie, maar bruikbaar voor distributeurs- en datapartners in ASEAN.' },
+  { title: 'Japan Drugstore Show', date: '2027-07-30', endDate: '2027-08-01', location: 'Tokio, Japan', channel: 'Beurs', campaign: KETENS, relevance: 'Middel, retailgericht', description: 'Gericht op drogisterijen, OTC en consumentenproducten. Kan relevant zijn voor retailproductdata en distributiepartners.' },
+  { title: 'NACDS Total Store Expo', date: '2027-08-14', endDate: '2027-08-16', location: 'San Diego, Verenigde Staten', channel: 'Beurs', campaign: KETENS, relevance: 'Hoog voor ketenpartners', description: 'Brengt grote retailers en leveranciers samen, met beslissers uit apotheek, digitalisering, logistiek en supply chain.' },
+
+  // September 2027
+  { title: 'HDA Annual Board and Membership Meeting', date: '2027-09-12', endDate: '2027-09-15', location: 'Park City, Verenigde Staten', channel: 'Netwerkevent', campaign: GROOTHANDELS, relevance: 'Hoog voor Amerikaanse strategische contacten', description: 'HDA-leden bespreken hier de koers van de organisatie en ontwikkelingen in beleid en farmaceutische distributie. Vooral geschikt voor senior relaties en bestaande introducties.' },
+  { title: 'FIP World Congress of Pharmacy and Pharmaceutical Sciences', date: '2027-09-12', endDate: '2027-09-15', location: 'Kuala Lumpur, Maleisië', channel: 'Congres', campaign: APOTHEKEN, relevance: 'Middel tot hoog voor internationaal netwerk', description: 'Brengt apotheekleiders, apothekers, docenten en farmaceutische wetenschappers uit de hele wereld samen.' },
+  { title: 'Vital Member Forum', date: '2027-09-14', location: 'Angus Glen, Canada', channel: 'Netwerkevent', campaign: GROOTHANDELS, relevance: 'Middel tot hoog voor netwerk in Canada', description: 'Kleinschaliger ledenforum met briefings en gesprekken over actuele operationele en beleidsmatige thema’s in de Canadese supply chain.' },
+  { title: 'Agential Cannabis', date: '2027-09-22', endDate: '2027-09-23', location: 'Bangkok, Thailand', channel: 'Beurs', campaign: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Specifiek voor de medicinale-cannabisketen in Azië-Pacific, van productie en kwaliteit tot markttoegang.' },
+  { title: 'Cannabis Europa Paris', date: '2027-09-23', location: 'Parijs, Frankrijk', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Middel tot hoog voor cannabisdata', description: 'Eendaagse bijeenkomst over de Franse markt en de ontwikkeling van medicinale cannabis in West-Europa.' },
+  { title: 'Expopharm', date: '2027-09-28', endDate: '2027-09-30', location: 'Düsseldorf, Duitsland', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Grote Europese apotheekbeurs met apothekers, beslissers en leveranciers. Sterk voor softwarepartners, integraties en zichtbaarheid bij apotheken.' },
+
+  // Oktober 2027
+  { title: 'The Pharmacy Show', date: '2027-10-10', endDate: '2027-10-11', location: 'Birmingham, Verenigd Koninkrijk', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Britse vakbeurs voor openbare apotheken en eerstelijnszorg. Directe toegang tot apotheekprofessionals en leveranciers.' },
+  { title: 'Pharmanology', date: '2027-10-12', tentative: true, location: 'Antwerpen, België', channel: 'Beurs', campaign: APOTHEKEN, relevance: 'Hoog', description: 'Apothekers en hun partners ontmoeten elkaar rond innovatie en praktijkwerking. Goede Belgische gelegenheid voor software- en leverancierscontacten.' },
+  { title: 'SNOMED CT Expo', date: '2027-10-20', endDate: '2027-10-22', location: 'St Julian’s, Malta', channel: 'Congres', campaign: DATA, relevance: 'Middel, technisch', description: 'Trekt experts in terminologie, interoperabiliteit en gezondheids-IT. Relevant voor datamapping en semantische koppelingen; technisch van aard.' },
+  { title: 'Mediterranean Cannabis Summit', date: '2027-10-22', endDate: '2027-10-23', location: 'Ta’ Qali, Malta', channel: 'Conferentie', campaign: CANNABIS, relevance: 'Aanvullend', description: 'Brede cannabisbijeenkomst met medische en wetenschappelijke onderdelen, naast industrie, beleid en investeringen.' },
+  { title: 'GS1 Global Healthcare Conference', date: '2027-10-25', endDate: '2027-10-27', location: 'Sydney, Australië', channel: 'Conferentie', campaign: DATA, relevance: 'Hoog voor data- en standaardisatiepartners', description: 'Internationale bijeenkomst over interoperabiliteit, GS1-standaarden, traceerbaarheid en datadeling. Geen groothandelsbeurs, maar inhoudelijk relevant voor Medimappers datamodel en partnerschappen rond productdata.' },
+
+  // November 2027
+  { title: 'HDA Research Foundation CEO Roundtable', date: '2027-11-04', location: 'Washington, Verenigde Staten', channel: 'Netwerkevent', campaign: GROOTHANDELS, relevance: 'Aanvullend, vooral voor senior netwerkcontacten', description: 'Jaarlijkse bijeenkomst ten bate van de HDA Research Foundation, met senior contacten uit de Amerikaanse distributiesector.' },
+  { title: 'CPHI Frankfurt', date: '2027-11-09', endDate: '2027-11-11', location: 'Frankfurt, Duitsland', channel: 'Beurs', campaign: INDUSTRIE, relevance: 'Middel voor fabrikantdata', description: 'Belangrijke beurs voor producenten en leveranciers. Valt net buiten de periode van de eventkalender (tot 4 november 2027).' },
 ];
 
-export function buildSeed(today: IsoDate, makeId: () => string): { items: Item[]; todos: Todo[] } {
+/** The starting content: the 2027 conference calendar, unassigned and without to-dos. */
+export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[] } {
   const now = new Date().toISOString();
-  const items: Item[] = [];
-  const todos: Todo[] = [];
-  for (const s of SEED) {
-    const date = shiftIso(today, s.day);
-    const item: Item = {
-      id: makeId(),
-      type: s.type,
-      title: s.title,
-      description: s.description,
-      channel: s.channel,
-      date,
-      time: s.time,
-      endDate: s.days && s.days > 1 ? shiftIso(date, s.days - 1) : s.type === 'event' ? date : undefined,
-      location: s.location,
-      status: s.status ?? 'gepland',
-      owner: s.owner,
-      campaign: s.campaign,
-      createdAt: now,
-      updatedAt: now,
-    };
-    items.push(item);
-    const own = todosFromTemplate(item, makeId);
-    const past = own.filter((t) => t.dueDate < today);
-    const keepOpen = s.leaveLate ? past[past.length - 1]?.id : undefined;
-    for (const t of own) {
-      if (t.dueDate < today && t.id !== keepOpen) {
-        t.done = true;
-        t.doneAt = now;
-      }
-    }
-    todos.push(...own);
-  }
-  return { items, todos };
+  const items = EVENTS.map((e): Item => ({
+    id: makeId(),
+    type: 'event',
+    title: e.tentative ? `${e.title} (datum te bevestigen)` : e.title,
+    description: `${e.description}\n\nRelevantie voor Medipim: ${e.relevance}.`,
+    channel: e.channel,
+    date: e.date,
+    endDate: e.endDate ?? e.date,
+    location: e.location,
+    status: 'idee',
+    owner: '',
+    campaign: e.campaign,
+    createdAt: now,
+    updatedAt: now,
+  }));
+  return { items, todos: [] };
 }

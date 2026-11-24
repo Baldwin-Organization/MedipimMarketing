@@ -26,4 +26,4 @@ export const CHANNELS: Record<ItemType, string[]> = {
   event: ['Beurs', 'Conferentie', 'Congres', 'Netwerkevent'],
 };
 
-export const OWNERS = ['Olivier', 'Ward', 'Sofie', 'Lien', 'Pieter'];
+export const OWNERS = ['Nele', 'Maarten', 'Ioana', 'Kjell'];

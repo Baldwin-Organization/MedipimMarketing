@@ -10,7 +10,7 @@ import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
   type: 'social', title: '', description: '', channel: 'LinkedIn', date, time: '', status: 'idee',
-  owner: OWNERS[0], campaign: '',
+  owner: '', campaign: '',
 });
 
 export function ItemDrawer() {
@@ -24,6 +24,7 @@ export function ItemDrawer() {
   const [error, setError] = useState<string | null>(null);
 
   const isNew = !editing?.id;
+  const offerTemplate = isNew || todos.length === 0;
 
   useEffect(() => {
     if (!editing) return;
@@ -35,6 +36,7 @@ export function ItemDrawer() {
       if (!item) return;
       setDraft({ ...item });
       setTodos(store.todosFor(item.id));
+      setApplyTemplate(false);
     } else {
       const base = { ...blank(store.today), ...editing.defaults };
       setDraft({ ...base, channel: editing.defaults?.channel ?? CHANNELS[base.type][0] });
@@ -48,13 +50,13 @@ export function ItemDrawer() {
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
   const setType = (type: ItemType) => setDraft((d) => ({ ...d, type, channel: CHANNELS[type][0], endDate: type === 'event' ? d.endDate ?? d.date : undefined }));
   const campaigns = [...new Set(store.items.map((i) => i.campaign).filter(Boolean))].sort();
-  const preview = isNew && applyTemplate && draft.date ? store.templateTodos(draft) : [];
+  const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
 
   const save = async () => {
     if (!draft.title.trim()) return setError('Geef het item een titel.');
     if (!draft.date) return setError('Kies een datum.');
     if (draft.endDate && draft.endDate < draft.date) return setError('De einddatum ligt voor de startdatum.');
-    const saved = await store.saveItem({ ...draft, title: draft.title.trim(), time: draft.time || undefined }, todos, { applyTemplate: isNew && applyTemplate });
+    const saved = await store.saveItem({ ...draft, title: draft.title.trim(), time: draft.time || undefined }, todos, { applyTemplate: offerTemplate && applyTemplate });
     notify(isNew ? `"${saved.title}" toegevoegd.` : 'Wijzigingen bewaard.');
     closeItem();
   };
@@ -132,6 +134,7 @@ export function ItemDrawer() {
         <div className="mc-form-row">
           <Field label="Eigenaar">{(id) => (
             <select id={id} className="mc-input" value={draft.owner} onChange={(e) => set('owner', e.target.value)}>
+              <option value="">Nog niemand</option>
               {OWNERS.map((o) => <option key={o}>{o}</option>)}
             </select>
           )}</Field>
@@ -145,7 +148,7 @@ export function ItemDrawer() {
 
         <section className="mc-form-section" aria-label="To do's">
           <h3>To do's</h3>
-          {isNew && (
+          {offerTemplate && (
             <label className="mc-switch-row">
               <Checkbox checked={applyTemplate} onChange={() => setApplyTemplate((v) => !v)} label="Standaard to do's toevoegen" />
               <span>Standaard to do's voor {TYPE_META[draft.type].label.toLowerCase()} toevoegen</span>

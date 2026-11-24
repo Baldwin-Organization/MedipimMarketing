@@ -20,7 +20,7 @@ interface CalendarDb extends DBSchema {
   todos: { key: string; value: Todo; indexes: { byItem: string } };
 }
 
-const DB_NAME = 'medipim-marketing-calendar';
+const DB_NAME = 'medipim-marketing-calendar-v2';
 
 export class IndexedDbRepository implements Repository {
   private db: Promise<IDBPDatabase<CalendarDb>>;

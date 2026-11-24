@@ -20,9 +20,10 @@ De interface is in het Nederlands en volgt het
 - **Dashboard** met wat eraan komt (14 dagen), wat te laat is en de komende beurzen.
 - **Itemformulier** met to do's; nieuwe items krijgen standaard-to do's per type
   (bv. "Stand boeken" 8 weken voor een beurs, "Visual maken" 5 dagen voor een post).
+  Een bestaand item zonder to do's kan die standaardlijst achteraf krijgen.
 - **Beurzen en conferenties** als tijdlijn, met een voorbereidingschecklist per event.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
-  voorbeelddata te herstellen. Donkere modus.
+  startinhoud te herstellen. Donkere modus.
 
 ## Aan de slag
 
@@ -33,7 +34,14 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-Bij de eerste start vult de app zichzelf met voorbeelddata, relatief ten opzichte van vandaag.
+Bij de eerste start vult de app zichzelf met de eventkalender 2027: 56 internationale
+beurzen en congressen (november 2026 tot november 2027, plus CPHI Frankfurt), als idee,
+zonder eigenaar en zonder to do's. Elk event heeft een campagne per doelgroep
+(bv. Groothandels, Apotheken & software, Medicinale cannabis) en de relevantie voor Medipim
+in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
+"(datum te bevestigen)" in de titel.
+
+Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 
 | Script | Doel |
 |---|---|
@@ -41,7 +49,6 @@ Bij de eerste start vult de app zichzelf met voorbeelddata, relatief ten opzicht
 | `npm run build` | Typecheck en productiebuild in `dist/` |
 | `npm run typecheck` | Alleen TypeScript controleren |
 | `npm test` | Unit tests (planningslogica, opslag) |
-| `node scripts/demo.mjs <map>` | Browserdoorloop met controles, screenshots en video (vereist `npx playwright install chromium` en een draaiende dev-server; zet `URL` als die niet op poort 5173 draait) |
 
 ## Structuur
 
@@ -53,7 +60,7 @@ src/
     templates.ts     standaard-to do's per type
     repository.ts    opslaginterface + IndexedDB-implementatie
     store.tsx        React-state bovenop de repository
-    seed.ts          voorbeelddata
+    seed.ts          startinhoud: eventkalender 2027
   views/             Dashboard, Kalender, Beurzen, itemformulier
   components/        knoppen, chips, pills, kalenderitems (Medipim-stijl)
   styles/

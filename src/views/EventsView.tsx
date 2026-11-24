@@ -8,6 +8,8 @@ import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
 const MONTHS_SHOWN = 6;
+/** Above this many events the labels no longer fit and only show on hover or focus. */
+const MAX_LABELLED = 8;
 
 export function EventsView() {
   const store = useStore();
@@ -52,7 +54,7 @@ function Timeline({ events }: { events: Item[] }) {
   const months = Array.from({ length: MONTHS_SHOWN }, (_, k) => addMonths(start, k));
   const inRange = events.filter((e) => e.date < toIso(end));
   return (
-    <section className="mc-timeline" aria-label={`Tijdlijn van de komende ${MONTHS_SHOWN} maanden`}>
+    <section className="mc-timeline" aria-label={`Tijdlijn van de komende ${MONTHS_SHOWN} maanden`} data-compact={inRange.length > MAX_LABELLED || undefined}>
       <div className="mc-timeline-months">
         {months.map((m) => <span key={m.toISOString()}>{fmtDate(m, 'MMMM')}</span>)}
       </div>
@@ -67,6 +69,7 @@ function Timeline({ events }: { events: Item[] }) {
             data-lane={k % 2}
             data-align={pos(e.date) > 70 ? 'end' : undefined}
             style={{ left: `${pos(e.date)}%`, width: `max(var(--mp-space-2), ${pos(e.endDate ?? e.date) - pos(e.date) + 100 / total}%)` }}
+            title={`${e.title} · ${fmt(e.date, 'd MMM')}`}
             onClick={() => openItem(e.id)}
           >
             <span className="mc-timeline-label">{e.title}<span className="mc-muted"> · {fmt(e.date, 'd MMM')}</span></span>
@@ -101,7 +104,7 @@ function EventCard({ event }: { event: Item }) {
               <Icon name="event" size={16} />
               {multi ? `${fmt(event.date, 'EEE d MMM')} – ${fmt(event.endDate!, 'EEE d MMM')}` : fmt(event.date, 'EEEE d MMMM')}
               {event.location && <><Icon name="storefront" size={16} />{event.location}</>}
-              <Icon name="person" size={16} />{event.owner}
+              {event.owner && <><Icon name="person" size={16} />{event.owner}</>}
             </p>
           </div>
           <div className="mc-event-side">
@@ -111,11 +114,17 @@ function EventCard({ event }: { event: Item }) {
           </div>
         </header>
         {event.description && <p className="mc-event-desc">{event.description}</p>}
-        <div className="mc-checklist-head">
-          <span>Voorbereiding</span>
-          <span className="mc-muted">{done} van {prep.length} klaar</span>
-          <span className="mc-progress" aria-hidden="true"><span style={{ width: `${prep.length ? (done / prep.length) * 100 : 0}%` }} /></span>
-        </div>
+        {prep.length === 0 ? (
+          <p className="mc-muted mc-checklist-empty">
+            Nog geen voorbereiding. Beslissen jullie te gaan? Open het event en voeg de standaard to do's toe.
+          </p>
+        ) : (
+          <div className="mc-checklist-head">
+            <span>Voorbereiding</span>
+            <span className="mc-muted">{done} van {prep.length} klaar</span>
+            <span className="mc-progress" aria-hidden="true"><span style={{ width: `${(done / prep.length) * 100}%` }} /></span>
+          </div>
+        )}
         <ul className="mc-checklist">
           {prep.map((t) => (
             <li key={t.id} data-done={t.done || undefined}>

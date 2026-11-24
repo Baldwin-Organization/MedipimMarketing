@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { IndexedDbRepository, parseDataset, toDataset } from './repository';
+import { todosFromTemplate } from './schedule';
 import { buildSeed } from './seed';
 
 describe('IndexedDbRepository', () => {
@@ -8,7 +9,8 @@ describe('IndexedDbRepository', () => {
     const repo = new IndexedDbRepository('test-db');
     expect(await repo.isEmpty()).toBe(true);
     let n = 0;
-    const seed = buildSeed('2026-11-24', () => `id${n++}`);
+    const { items } = buildSeed(() => `id${n++}`);
+    const seed = { items, todos: items.flatMap((i) => todosFromTemplate(i, () => `id${n++}`)) };
     await repo.replaceAll(seed);
     const loaded = await repo.load();
     expect(loaded.items).toHaveLength(seed.items.length);

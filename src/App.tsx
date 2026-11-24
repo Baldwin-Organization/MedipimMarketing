@@ -51,7 +51,7 @@ function DataActions() {
     <div className="mc-sidebar-actions">
       <Button variant="text" intent="secondary" size="small" startIcon="download" onClick={download}>Exporteren (JSON)</Button>
       <Button variant="text" intent="secondary" size="small" startIcon="upload" onClick={() => file.current?.click()}>Importeren</Button>
-      <Button variant="text" intent="secondary" size="small" startIcon="restart_alt" onClick={async () => { await store.resetDemo(); notify('Voorbeelddata hersteld.'); }}>Voorbeelddata herstellen</Button>
+      <Button variant="text" intent="secondary" size="small" startIcon="restart_alt" onClick={async () => { await store.resetToSeed(); notify('Startinhoud hersteld.'); }}>Startinhoud herstellen</Button>
       <input ref={file} type="file" accept="application/json" hidden onChange={(e) => upload(e.target.files?.[0])} />
     </div>
   );
