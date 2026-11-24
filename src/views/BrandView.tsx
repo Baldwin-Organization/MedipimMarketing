@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { MedipimLogo } from '../components/logo';
+import { MedipimLogo, MedipimMark } from '../components/logo';
 import { Icon } from '../components/ui';
 import type { IconName } from '../icons.generated';
 import { lang, t } from '../i18n';
@@ -321,7 +321,7 @@ function Composition({ format }: { format: 'square' | 'wide' | 'tall' }) {
       </div>
       <footer className="mc-composition-foot">
         <span>{lang === 'en' ? b.taglineIntl : b.tagline}</span>
-        <MedipimLogo height={format === 'wide' ? 14 : 16} />
+        <div className="mc-logo-label"><MedipimLogo height={format === 'wide' ? 'max(14px, 3.2cqi)' : 'max(14px, 4.8cqi)'} /></div>
       </footer>
     </Ground>
   );
@@ -401,6 +401,7 @@ function Carousel() {
       <div className="mc-carousel-slides">
         {b.slides.map((s, i) => (
           <Ground key={s.title} className="mc-carousel-slide">
+            <div className="mc-logo-label mc-carousel-logo"><MedipimLogo height={12} /></div>
             <span className="mc-carousel-count">{i + 1}/{b.slides.length}</span>
             <div className="mc-carousel-card">
               <span className="mc-brand-moment-icon"><Icon name={SLIDE_ICONS[i]} size={18} /></span>
@@ -443,7 +444,7 @@ function TaskBoard() {
             <li key={task} data-mp={mp || undefined}>
               <span className="mc-board-check"><Icon name="check" size={12} /></span>
               <span>{task}</span>
-              <span className="mc-board-who">{mp ? board.medipim : board.you}</span>
+              <span className="mc-board-who">{mp && <MedipimMark />}{mp ? board.medipim : board.you}</span>
             </li>
           );
         })}

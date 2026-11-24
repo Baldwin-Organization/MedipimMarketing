@@ -101,7 +101,9 @@
 .mc-composition-body[data-format="wide"] + .mc-composition-foot { padding: 4cqi 7cqi; }
 .mc-composition-foot span { font-family: var(--mp-font-display); font-size: max(0.75rem, 4.6cqi); line-height: 1.2; color: var(--mp-brand-content-strong); }
 .mc-composition-body[data-format="wide"] + .mc-composition-foot span { font-size: max(0.75rem, 3cqi); }
-.mc-composition-foot .mc-logo { flex: none; }
+/* The logo in the website's topbar label: elevated surface, hairline border, floating shadow. */
+.mc-logo-label { flex: none; display: inline-flex; align-items: center; padding: 2.2cqi 3.4cqi; background: var(--mp-surface-input-bg); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-control); box-shadow: var(--mp-shadow-floating-chrome); }
+.mc-composition-body[data-format="wide"] + .mc-composition-foot .mc-logo-label { padding: 1.5cqi 2.4cqi; }
 
 /* One product, three places */
 .mc-brand-places { display: grid; grid-template-columns: 1.3fr 1fr 0.8fr; gap: var(--mp-space-4); align-items: start; }
@@ -186,10 +188,11 @@
 .mc-carousel { display: flex; flex-direction: column; gap: var(--mp-space-3); min-height: 20rem; padding: var(--mp-space-5) var(--mp-space-4); background: var(--mp-bg-sunken); }
 .mc-carousel-title { font-family: var(--mp-font-display); font-size: var(--mp-text-lg); line-height: var(--mp-text-lg-line); }
 .mc-carousel-slides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--mp-space-2); }
-.mc-carousel-slide { min-width: 0; display: grid; place-items: center; padding: var(--mp-space-6) var(--mp-space-2) var(--mp-space-3); border-radius: var(--mp-shape-surface); }
+.mc-carousel-slide { min-width: 0; display: grid; place-items: center; padding: 2.75rem var(--mp-space-2) var(--mp-space-3); border-radius: var(--mp-shape-surface); }
 .mc-carousel-slide:nth-child(2) .mc-ground-frame { --gx: 78%; --gy: 18%; }
 .mc-carousel-slide:nth-child(3) .mc-ground-frame { --gx: 24%; --gy: 82%; }
-.mc-carousel-count { position: absolute; top: var(--mp-space-2); right: var(--mp-space-2); font-family: var(--mp-font-mono); font-size: var(--brand-label); color: var(--mp-brand-content-strong); }
+.mc-carousel-logo { position: absolute; top: var(--mp-space-2); left: var(--mp-space-2); padding: 5px var(--mp-space-2); }
+.mc-carousel-count { position: absolute; top: var(--mp-space-3); right: var(--mp-space-2); font-family: var(--mp-font-mono); font-size: var(--brand-label); color: var(--mp-brand-content-strong); }
 .mc-carousel-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--mp-space-1-5); width: 100%; padding: var(--mp-space-3); background: var(--mp-bg-elevated); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-control); box-shadow: var(--mp-shadow-popup); }
 .mc-carousel-card .mc-brand-moment-icon { width: var(--mp-space-6); height: var(--mp-space-6); }
 .mc-carousel-card-title { font-size: var(--mp-text-sm); font-weight: var(--mp-font-weight-medium); }
@@ -210,7 +213,8 @@
 .mc-board-tasks li[data-mp] { background: var(--mp-brand-bg-weakest); }
 .mc-board-check { display: grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--mp-success-bg); color: var(--mp-success-content); }
 .mc-board-who { justify-self: end; padding: 0 var(--mp-space-2); height: var(--mp-space-5); display: inline-flex; align-items: center; border-radius: var(--mp-shape-pill); background: var(--mp-bg-sunken); font-size: var(--brand-label); font-weight: var(--mp-font-weight-medium); color: var(--mp-content-secondary); transition: background-color var(--mp-transition-layout), color var(--mp-transition-layout); }
-.mc-board-tasks li[data-mp] .mc-board-who { background: var(--mp-brand-bg); color: var(--mp-content-stay-light); }
+.mc-board-tasks li[data-mp] .mc-board-who { gap: var(--mp-space-1-5); padding-left: var(--mp-space-0-5); background: var(--mp-brand-bg); color: var(--mp-content-stay-light); }
+.mc-board-who .mc-mark { flex: none; width: 1rem; height: 1rem; padding: 2px; border-radius: 50%; background: var(--mp-bg-elevated); fill: var(--mp-brand-original); }
 .mc-board-split { display: grid; gap: var(--mp-space-1-5); padding: var(--mp-space-3) var(--mp-space-1-5) var(--mp-space-1); }
 .mc-board-bar { display: block; height: 6px; overflow: hidden; border-radius: var(--mp-shape-pill); background: var(--mp-brand-bg); }
 .mc-board-bar i { display: block; height: 100%; border-radius: var(--mp-shape-pill); background: var(--mp-accent-2); transition: width 600ms ease; }
