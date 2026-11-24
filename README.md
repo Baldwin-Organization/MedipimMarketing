@@ -127,6 +127,16 @@ railway link        # eenmalig: project medipim-marketingkalender, service web
 railway up
 ```
 
+De online versie vraagt een login (HTTP basic auth, ingesteld in `Caddyfile`). Gebruikersnaam
+en wachtwoord staan niet in de code maar in de Railway-variabelen `BASIC_AUTH_USER` en
+`BASIC_AUTH_HASH`. Het wachtwoord wijzigen:
+
+```bash
+railway variables --set "BASIC_AUTH_HASH=$(caddy hash-password --plaintext 'nieuw-wachtwoord')"
+```
+
+Railway deployt daarna opnieuw. Zonder die twee variabelen start de server niet.
+
 Gegevens blijven ook online lokaal per browser; collega's zien elkaars wijzigingen
 pas met een gedeelde database (zie hieronder).
 
