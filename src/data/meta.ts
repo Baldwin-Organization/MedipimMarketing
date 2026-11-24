@@ -25,7 +25,7 @@ export const STATUS_META: Record<ItemStatus, { label: string; tone: 'neutral' | 
 };
 
 export const CHANNELS: Record<ItemType, string[]> = {
-  social: ['LinkedIn', 'Instagram', 'Facebook', 'X'],
+  social: ['LinkedIn · Medipim', 'LinkedIn · Maarten (CEO)', 'LinkedIn · Medipim Australia', 'LinkedIn · Medipim USA'],
   email: ['Nieuwsbrief apothekers', 'Nieuwsbrief industrie', 'Productupdate', 'Uitnodiging'],
   call: ['Klantcall', 'Partnercall', 'Webinar', 'Interne sync'],
   event: ['Beurs', 'Conferentie', 'Congres', 'Netwerkevent'],

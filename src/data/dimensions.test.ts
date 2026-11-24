@@ -35,7 +35,7 @@ describe('markets', () => {
 describe('enrichment', () => {
   it('gives every seeded event an audience, a product type and its country', () => {
     let n = 0;
-    const { items } = buildSeed(() => `id${n++}`);
+    const items = buildSeed(() => `id${n++}`).items.filter((i) => i.type === 'event');
     expect(items.every((i) => i.audiences.length > 0 && i.productTypes.length > 0 && i.countries.length === 1)).toBe(true);
     expect(items.find((i) => i.title === 'Cann-Reg 2027')).toMatchObject({ countries: ['BE'], productTypes: ['cannabis'] });
     expect(items.find((i) => i.title === 'GIRP PharmaConnect 2027')).toMatchObject({ countries: ['BG'], audiences: ['groothandels'] });

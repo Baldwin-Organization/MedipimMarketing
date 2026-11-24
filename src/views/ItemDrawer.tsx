@@ -10,7 +10,7 @@ import type { ItemType, Todo } from '../data/types';
 import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
-  type: 'social', title: '', description: '', channel: 'LinkedIn', date, time: '', status: 'idee',
+  type: 'social', title: '', description: '', channel: CHANNELS.social[0], date, time: '', status: 'idee',
   owner: '', campaign: '', audiences: [], productTypes: [], countries: [],
 });
 

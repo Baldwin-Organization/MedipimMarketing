@@ -1,5 +1,6 @@
+import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
-import type { Audience, Budget, IsoDate, Item, ProductType, Todo } from './types';
+import type { Audience, Budget, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
   title: string;
@@ -126,5 +127,93 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
     createdAt: now,
     updatedAt: now,
   }));
-  return { items, todos: [], budgets: [] };
+  const todos: Todo[] = [];
+  for (const a of ACTIONS) {
+    const id = makeId();
+    items.push({
+      id,
+      type: a.type,
+      title: a.title,
+      description: a.description,
+      channel: a.channel,
+      date: a.date,
+      time: a.time,
+      status: a.status,
+      owner: a.owner,
+      campaign: UX_LAUNCH,
+      audiences: a.audiences,
+      productTypes: ALL_PRODUCTS,
+      countries: a.countries,
+      createdAt: now,
+      updatedAt: now,
+    });
+    for (const t of a.todos ?? []) {
+      todos.push({ id: makeId(), itemId: id, title: t.title, dueDate: t.dueDate, done: false, offsetDays: daysBetween(a.date, t.dueDate) });
+    }
+  }
+  return { items, todos, budgets: [] };
 }
+
+const UX_LAUNCH = 'Nieuwe UX Belgisch platform';
+const ALL_AUDIENCES: Audience[] = ['groothandels', 'producenten', 'apothekers', 'ziekenhuizen'];
+const ALL_PRODUCTS: ProductType[] = ['geneesmiddelen', 'cannabis', 'cosmetica', 'voeding', 'baby'];
+
+/** Communication around the launch of the new UX of the Belgian platform (November 2026). */
+const ACTIONS: {
+  type: ItemType;
+  title: string;
+  description: string;
+  channel: string;
+  date: IsoDate;
+  time?: string;
+  status: ItemStatus;
+  owner: string;
+  audiences: Audience[];
+  countries: string[];
+  todos?: { title: string; dueDate: IsoDate }[];
+}[] = [
+  {
+    type: 'social',
+    title: 'Aankondiging nieuwe UX Belgisch platform',
+    description: 'LinkedIn-post in het Engels vanuit het profiel van Maarten (CEO), voor een internationaal publiek.',
+    channel: 'LinkedIn · Maarten (CEO)',
+    date: '2026-11-23',
+    status: 'klaar',
+    owner: 'Maarten',
+    audiences: ALL_AUDIENCES,
+    countries: [],
+  },
+  {
+    type: 'social',
+    title: 'Nieuwe UX Belgisch platform – post Medipim-pagina',
+    description: 'Tweede LinkedIn-post over de nieuwe UX, nu vanuit de Europese bedrijfspagina Medipim.',
+    channel: 'LinkedIn · Medipim',
+    date: '2026-11-25',
+    status: 'gepland',
+    owner: '',
+    audiences: ALL_AUDIENCES,
+    countries: [],
+    todos: [
+      { title: 'Tekst schrijven', dueDate: '2026-11-24' },
+      { title: 'Visual kiezen', dueDate: '2026-11-24' },
+      { title: 'Inplannen op de Medipim-pagina', dueDate: '2026-11-25' },
+    ],
+  },
+  {
+    type: 'email',
+    title: 'Nieuwsbrief: nieuwe UX van het platform',
+    description: 'Nieuwsbrief aan de Belgische apothekers over de nieuwe UX van het platform.',
+    channel: 'Nieuwsbrief apothekers',
+    date: '2026-11-27',
+    time: '09:00',
+    status: 'gepland',
+    owner: '',
+    audiences: ['apothekers'],
+    countries: ['BE'],
+    todos: [
+      { title: 'Tekst en visuals maken', dueDate: '2026-11-25' },
+      { title: 'Testmail versturen en goedkeuring vragen', dueDate: '2026-11-26' },
+      { title: 'Verzending inplannen op vrijdag 9:00', dueDate: '2026-11-26' },
+    ],
+  },
+];

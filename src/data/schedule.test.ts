@@ -62,9 +62,24 @@ describe('templates and seed', () => {
   it('seeds the 2027 conference calendar as unassigned ideas without to-dos', () => {
     let n = 0;
     const { items, todos } = buildSeed(() => `id${n++}`);
-    expect(items.length).toBe(56);
-    expect(todos).toEqual([]);
-    expect(items.every((i) => i.type === 'event' && i.status === 'idee' && i.owner === '')).toBe(true);
-    expect(items.every((i) => /^2027-\d\d-\d\d$/.test(i.date) && i.endDate! >= i.date && itemOnDay(i, i.date))).toBe(true);
+    const events = items.filter((i) => i.type === 'event');
+    expect(events.length).toBe(56);
+    expect(todos.every((t) => !events.some((e) => e.id === t.itemId))).toBe(true);
+    expect(events.every((i) => i.status === 'idee' && i.owner === '')).toBe(true);
+    expect(events.every((i) => /^2027-\d\d-\d\d$/.test(i.date) && i.endDate! >= i.date && itemOnDay(i, i.date))).toBe(true);
+  });
+
+  it('seeds the UX launch communication with to-dos relative to each item', () => {
+    let n = 0;
+    const { items, todos } = buildSeed(() => `id${n++}`);
+    const launch = items.filter((i) => i.campaign === 'Nieuwe UX Belgisch platform');
+    expect(launch.map((i) => [i.date, i.channel, i.status])).toEqual([
+      ['2026-11-23', 'LinkedIn · Maarten (CEO)', 'klaar'],
+      ['2026-11-25', 'LinkedIn · Medipim', 'gepland'],
+      ['2026-11-27', 'Nieuwsbrief apothekers', 'gepland'],
+    ]);
+    const mail = launch[2];
+    expect(mail).toMatchObject({ time: '09:00', audiences: ['apothekers'], countries: ['BE'] });
+    expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-2, -1, -1]);
   });
 });

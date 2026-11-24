@@ -58,6 +58,14 @@ zonder eigenaar en zonder to do's. Elk event is verrijkt met doelgroep, type pro
 het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
 "(datum te bevestigen)" in de titel.
 
+Daarnaast bevat de startinhoud de communicatie rond de nieuwe UX van het Belgische platform
+(thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten van 23 november 2026,
+een LinkedIn-post vanuit de Medipim-pagina op 25 november en een nieuwsbrief aan de
+Belgische apothekers op 27 november om 9:00, met to do's.
+
+Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
+(Medipim, Maarten (CEO), Medipim Australia, Medipim USA).
+
 Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 
 | Script | Doel |
