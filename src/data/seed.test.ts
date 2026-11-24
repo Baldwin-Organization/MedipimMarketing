@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
-import { contentIdeasUpdate } from './seed-content';
+import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
   let n = 0;
@@ -147,6 +147,21 @@ describe('content ideas from the team', () => {
     expect(changes.map((p) => p.id).sort()).toEqual(['content-customer-quotes', 'content-did-you-know', 'content-photography']);
     expect(changes.find((p) => p.id === 'content-customer-quotes')).toMatchObject({ title: 'Een klant aan het woord', recurring: true });
     expect(contentIdeasUpdate(content, pillars, '')).toHaveLength(0);
+  });
+});
+
+describe('weekly rhythm 2027', () => {
+  it('adds the single posts per pillar once, to data that predates them', () => {
+    const { content, pillars } = buildSeed(() => 'x');
+    const fill = content.filter((p) => /^content-(dyk|sq|mf|cq|team)-|^content-(autumn-fairs|year-review)$/.test(p.id));
+    expect(fill).toHaveLength(28);
+    const perPillar = Object.fromEntries(pillars.map((p) => [p.id, fill.filter((c) => c.pillarId === p.id).length]));
+    expect(perPillar).toEqual({ 'pillar-product': 11, 'pillar-data': 3, 'pillar-customers': 8, 'pillar-sector': 2, 'pillar-team': 4 });
+    expect(fill.every((p) => p.month?.startsWith('2027') && !p.recurring && p.translations?.en?.title)).toBe(true);
+
+    const old = content.filter((p) => !fill.includes(p));
+    expect(weeklyFillUpdate(old, pillars, '')).toHaveLength(28);
+    expect(weeklyFillUpdate(content, pillars, '')).toHaveLength(0);
   });
 });
 
