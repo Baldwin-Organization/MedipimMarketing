@@ -44,7 +44,7 @@ export const en: Dict = {
     darkMode: 'Dark mode',
     language: 'Language',
     localNote: 'Data stays local in this browser (IndexedDB).',
-    blocked: 'Another tab is still running an older version of the marketing calendar. Close or reload that tab; this page then loads by itself.',
+    blocked: 'The data does not open: another tab is probably still running an older version of the marketing calendar. Close or reload the other tabs; if that does not help, quit the browser completely and open it again.',
     exportFile: 'marketing-calendar',
   },
 

@@ -11,7 +11,7 @@ export type ContentDraft = Omit<ContentPiece, 'id' | 'createdAt' | 'updatedAt'> 
 
 interface Store {
   ready: boolean;
-  /** Another tab still runs an older version and holds the database. */
+  /** The database does not open, most likely because another tab on an older version holds it. */
   blocked: boolean;
   today: IsoDate;
   items: Item[];
@@ -54,6 +54,8 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
 
   useEffect(() => {
     let alive = true;
+    // A request queued behind another tab's blocked upgrade never gets a `blocked` event of its own.
+    const slow = window.setTimeout(() => setBlocked(true), 4000);
     (async () => {
       if (await repo.isEmpty()) await repo.replaceAll(buildSeed(newId));
       const data = await repo.load();
@@ -69,12 +71,14 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         }
         localStorage.setItem(update.key, '1');
       }
+      window.clearTimeout(slow);
       if (!alive) return;
       apply(data);
       setReady(true);
     })();
     return () => {
       alive = false;
+      window.clearTimeout(slow);
     };
   }, [repo]);
 
