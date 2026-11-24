@@ -72,7 +72,7 @@ export const nl = {
 
   budgetLines: {
     beurzen_exposant: { label: 'Beurzen als exposant', hint: 'Inclusief reis en verblijf · beurzen met deelname "exposant"' },
-    beurzen_bezoeker: { label: 'Beurzen als bezoeker', hint: 'Inclusief reis en verblijf · beurzen met deelname "bezoeker"' },
+    beurzen_bezoeker: { label: 'Beurzen en conferenties als bezoeker', hint: 'Inclusief reis en verblijf · events met deelname "bezoeker"' },
     email: { label: 'E-mailmarketing en nieuwsbrieven', hint: 'Alle e-mailings · telefonische opvolging doet het interne salesteam' },
     linkedin: { label: 'LinkedIn-advertenties en gerichte berichten', hint: 'LinkedIn Ads-campagnes en social posts met een bedrag' },
     google: { label: 'Google Ads en remarketing', hint: 'Campagnes op Google Ads' },

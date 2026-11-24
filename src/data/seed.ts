@@ -115,6 +115,16 @@ const EXHIBITING = ['PharmagoraPlus', 'Expopharm', 'The Pharmacy Show'];
 export const EXHIBITOR_BUDGET = 20000;
 /** Marked as exhibitor before the stands were narrowed down to `EXHIBITING`. */
 const NO_LONGER_EXHIBITING = ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027'];
+/** Conferences Medipim attends without a stand; they fall under the visitor budget line. */
+const VISITING = ['GIRP PharmaConnect 2027'];
+
+/** The visited conferences, for data seeded before they were chosen. Leaves any participation someone already set. */
+export function markVisitors(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items
+    .filter((i) => i.type === 'event' && !i.participation && VISITING.includes(i.title))
+    .map((i) => ({ ...i, participation: 'bezoeker', status: i.status === 'idee' ? 'gepland' : i.status, updatedAt: now }));
+}
 
 /** The exhibitor events, for data seeded before that decision. Returns only the items that change. */
 export function markExhibitors(items: Item[]): Item[] {
@@ -195,6 +205,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-3', apply: addBudgetAndContent },
   { key: 'mc-seed-updates-4', apply: (data) => ({ content: contentIdeasUpdate(data.content, data.pillars, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-5', apply: (data) => ({ items: exhibitorBudgets(data.items) }) },
+  { key: 'mc-seed-updates-6', apply: (data) => ({ items: markVisitors(data.items) }) },
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
@@ -213,7 +224,9 @@ export function buildSeed(makeId: () => string): Contents {
     location: e.location,
     ...(EXHIBITING.includes(e.title)
       ? { participation: 'exposant' as const, status: 'gepland' as const, budgetPlanned: EXHIBITOR_BUDGET }
-      : { status: 'idee' as const }),
+      : VISITING.includes(e.title)
+        ? { participation: 'bezoeker' as const, status: 'gepland' as const }
+        : { status: 'idee' as const }),
     owner: '',
     campaign: '',
     audiences: e.audiences,

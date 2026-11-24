@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors } from './seed';
 import { contentIdeasUpdate } from './seed-content';
 
 const seed = () => {
@@ -8,12 +8,13 @@ const seed = () => {
 };
 
 describe('event participation', () => {
-  it('marks the three exhibitor events with their budget and leaves the rest undecided', () => {
+  it('marks the three exhibitor events with their budget, GIRP as visited and leaves the rest undecided', () => {
     const events = seed();
     const exhibiting = events.filter((e) => e.participation === 'exposant');
     expect(exhibiting.map((e) => e.title).sort()).toEqual(['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']);
     expect(exhibiting.every((e) => e.status === 'gepland' && e.budgetPlanned === EXHIBITOR_BUDGET)).toBe(true);
-    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 3);
+    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['GIRP PharmaConnect 2027', 'gepland']]);
+    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 4);
     expect(events.filter((e) => e.budgetPlanned != null)).toHaveLength(3);
   });
 
@@ -58,6 +59,22 @@ describe('exhibitor budgets', () => {
     });
     const titles = exhibitorBudgets(events).map((e) => e.title).sort();
     expect(titles).toEqual(['APP Conference and Trade Exhibition', 'PharmagoraPlus']);
+  });
+});
+
+describe('visited conferences', () => {
+  it('marks GIRP as visited once it is off the exhibitor line, and only once', () => {
+    const fiveStands = seed().map(({ budgetPlanned: _, ...e }) =>
+      e.title === 'GIRP PharmaConnect 2027' ? { ...e, participation: 'exposant' as const, status: 'gepland' as const } : e);
+    const afterBudgets = fiveStands.map((e) => exhibitorBudgets(fiveStands).find((u) => u.id === e.id) ?? e);
+    const updated = markVisitors(afterBudgets);
+    expect(updated.map((e) => [e.title, e.participation, e.status])).toEqual([['GIRP PharmaConnect 2027', 'bezoeker', 'gepland']]);
+    expect(markVisitors(seed())).toHaveLength(0);
+  });
+
+  it('keeps a participation that was already chosen', () => {
+    const events = seed().map((e) => (e.title === 'GIRP PharmaConnect 2027' ? { ...e, participation: 'geen' as const } : e));
+    expect(markVisitors(events)).toHaveLength(0);
   });
 });
 

@@ -71,7 +71,7 @@ export const en: Dict = {
 
   budgetLines: {
     beurzen_exposant: { label: 'Trade fairs as exhibitor', hint: 'Including travel and accommodation · events with participation "exhibitor"' },
-    beurzen_bezoeker: { label: 'Trade fairs as visitor', hint: 'Including travel and accommodation · events with participation "visitor"' },
+    beurzen_bezoeker: { label: 'Trade fairs and conferences as visitor', hint: 'Including travel and accommodation · events with participation "visitor"' },
     email: { label: 'Email marketing and newsletters', hint: 'All emailings · the internal sales team does the phone follow-up' },
     linkedin: { label: 'LinkedIn ads and targeted messages', hint: 'LinkedIn Ads campaigns and social posts with an amount' },
     google: { label: 'Google Ads and remarketing', hint: 'Campaigns on Google Ads' },
