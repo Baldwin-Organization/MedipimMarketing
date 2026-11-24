@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-serif/500.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import './styles/medipim-tokens.css';
 import './styles/app.css';
+import './styles/brand.css';
 import { App } from './App';
 import { StoreProvider } from './data/store';
 import { UiProvider } from './ui-context';

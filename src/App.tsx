@@ -6,6 +6,7 @@ import { useStore } from './data/store';
 import type { IconName } from './icons.generated';
 import { LANGS, lang, setLang, t, type Lang } from './i18n';
 import { useUi } from './ui-context';
+import { BrandView } from './views/BrandView';
 import { BudgetView } from './views/BudgetView';
 import { CalendarView } from './views/CalendarView';
 import { CampaignsView } from './views/CampaignsView';
@@ -22,6 +23,7 @@ const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName }[] = [
   { to: '/campagnes', key: 'campaigns', icon: 'ads_click' },
   { to: '/pr', key: 'pr', icon: 'article' },
   { to: '/content', key: 'content', icon: 'lightbulb' },
+  { to: '/merk', key: 'brand', icon: 'verified' },
   { to: '/budget', key: 'budget', icon: 'payments' },
 ];
 
@@ -127,6 +129,7 @@ export function App() {
               <Route path="/campagnes" element={<CampaignsView />} />
               <Route path="/pr" element={<PrView />} />
               <Route path="/content" element={<ContentView />} />
+              <Route path="/merk" element={<BrandView />} />
               <Route path="/budget" element={<BudgetView />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
