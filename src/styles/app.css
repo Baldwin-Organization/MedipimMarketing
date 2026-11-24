@@ -42,7 +42,8 @@ button { font: inherit; color: inherit; }
 .mc-logo { display: block; width: auto; }
 .mc-logo-accent { fill: var(--mp-brand-original); }
 .mc-logo-fg { fill: var(--mp-content-primary); }
-.mc-brand-sub { display: block; font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); font-weight: var(--mp-font-weight-medium); color: var(--mp-content-tertiary); letter-spacing: var(--mp-text-title-tracking); }
+/* Sized so the ink of "Marketing System" (IBM Plex Sans 500: 8.046em wide, 0.086em left bearing) spans the 26px logo's 156.4px. */
+.mc-brand-sub { display: block; margin-left: -0.086em; font-size: 19.43px; line-height: 1.2; font-weight: var(--mp-font-weight-medium); color: var(--mp-content-tertiary); letter-spacing: 0; white-space: nowrap; }
 .mc-nav { display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-nav-link {
   display: flex; align-items: center; gap: var(--mp-space-3); min-height: var(--mp-height-md);
