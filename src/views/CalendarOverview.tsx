@@ -5,7 +5,7 @@ import { TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
-import { t } from '../i18n';
+import { itemTitle, t } from '../i18n';
 import { useUi } from '../ui-context';
 
 const WEEK = { weekStartsOn: 1 as const };
@@ -79,7 +79,7 @@ function MonthSummary({ month, items, limit = Infinity, onOpenMonth, onOpenDay }
               data-today={day === today || undefined}
               data-busy={on.length > 0 || undefined}
               aria-label={`${fmt(day, 'd MMMM')}${on.length ? `, ${t.calendar.items(on.length)}` : ''}`}
-              title={on.map((i) => i.title).join('\n') || undefined}
+              title={on.map((i) => itemTitle(i)).join('\n') || undefined}
               onClick={() => onOpenDay(day)}
             >
               {fmt(day, 'd')}

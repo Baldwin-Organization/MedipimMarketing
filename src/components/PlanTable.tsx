@@ -2,7 +2,7 @@ import { euro } from '../data/budget';
 import { daysBetween, fmt } from '../data/dates';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
-import { channelLabel, t } from '../i18n';
+import { channelLabel, itemTitle, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { DimensionTags } from './dimensions';
 import { StatusPill, TypeBadge } from './ui';
@@ -58,7 +58,7 @@ export function PlanTable({ items, showMedium, showElapsed, showType, label }: {
                   {running && <span className="mc-progress" title={t.plan.elapsed(Math.round(elapsed(i, store.today) * 100))}><span style={{ width: `${elapsed(i, store.today) * 100}%` }} /></span>}
                 </td>
                 <td>
-                  <span className="mc-table-title">{showType && <TypeBadge type={i.type} />}{i.title}</span>
+                  <span className="mc-table-title">{showType && <TypeBadge type={i.type} />}{itemTitle(i)}</span>
                   <DimensionTags item={i} />
                 </td>
                 <td>{channelLabel(i.channel)}</td>

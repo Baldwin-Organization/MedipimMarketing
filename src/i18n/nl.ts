@@ -197,6 +197,8 @@ export const nl = {
     planned: 'Gepland (€, excl. btw)',
     actual: 'Werkelijk besteed (€)',
     enrichment: 'Verrijking',
+    translation: 'Engelse versie',
+    translationHint: 'Wat je hier leeg laat, verschijnt in het Engels in het Nederlands.',
     todos: "To do's",
     addTemplate: "Standaard to do's toevoegen",
     addTemplateFor: (type: string) => `Standaard to do's voor ${type} toevoegen`,

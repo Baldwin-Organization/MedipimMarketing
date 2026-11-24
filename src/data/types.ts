@@ -12,6 +12,14 @@ export type ProductType = 'geneesmiddelen' | 'cannabis' | 'cosmetica' | 'voeding
 /** How Medipim takes part in an event; absent while still undecided. */
 export type Participation = 'exposant' | 'bezoeker' | 'campagne' | 'geen';
 
+/** English text of an item; an empty field falls back to the Dutch text on the item itself. */
+export interface ItemText {
+  title?: string;
+  description?: string;
+  location?: string;
+  campaign?: string;
+}
+
 export interface Item {
   id: string;
   type: ItemType;
@@ -40,6 +48,8 @@ export interface Item {
   productTypes: ProductType[];
   /** ISO 3166-1 alpha-2 codes; whether a country is an existing or new market follows from `EXISTING_MARKETS`. */
   countries: string[];
+  /** The plain text fields are Dutch; this holds the English version. */
+  translations?: { en?: ItemText };
   createdAt: string;
   updatedAt: string;
 }
@@ -55,6 +65,8 @@ export interface Todo {
   /** Days relative to the item date; kept so a moved item can carry its to-dos along. */
   offsetDays: number;
   owner?: string;
+  /** `title` is Dutch; this holds the English version. */
+  translations?: { en?: { title?: string } };
 }
 
 /** Annual budget for one item type. */

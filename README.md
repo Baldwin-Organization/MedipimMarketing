@@ -50,8 +50,11 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser
   onthouden. Alle interfacetekst, kanalen, statussen, doelgroepen, producttypes,
-  standaard-to do's, landnamen, datums en bedragen volgen de taal. Wat je zelf invult
-  (titels, beschrijvingen, locaties, thema's) blijft zoals je het schreef.
+  standaard-to do's, landnamen, datums en bedragen volgen de taal. Ook de inhoud is
+  tweetalig: elk item heeft een titel, beschrijving, locatie en thema in het Nederlands en
+  het Engels (in het formulier: de velden bovenaan in de gekozen taal, de andere taal onder
+  "Engelse versie" / "Dutch version"), en to do's bewerk je in de gekozen taal. Een leeg veld
+  toont de tekst uit de andere taal. De volledige startinhoud is vertaald.
 
 ## Aan de slag
 
@@ -67,7 +70,8 @@ beurzen en congressen (november 2026 tot november 2027, plus CPHI Frankfurt), al
 zonder eigenaar en zonder to do's. Bij PharmagoraPlus, APP (Gold Coast), GIRP PharmaConnect
 (Sofia), Expopharm en The Pharmacy Show (Birmingham) staat Medipim als exposant (status
 gepland); de andere events zijn nog te beslissen. Een browser met oudere startinhoud krijgt die
-vijf markeringen eenmalig bij het opstarten (`seedUpdates` in `src/data/seed.ts`). Elk event is verrijkt met doelgroep, type product en
+vijf markeringen en de Engelse vertalingen eenmalig bij het opstarten (`SEED_UPDATES` in
+`src/data/seed.ts`; de Engelse teksten staan in `src/data/seed-en.ts`). Elk event is verrijkt met doelgroep, type product en
 het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
 "(datum te bevestigen)" in de titel.
 

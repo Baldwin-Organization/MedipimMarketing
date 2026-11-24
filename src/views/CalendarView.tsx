@@ -10,7 +10,7 @@ import { ITEM_TYPES, OWNERS, TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { Audience, IsoDate, Item, ItemType, ProductType } from '../data/types';
-import { channelLabel, t, typePlural } from '../i18n';
+import { channelLabel, itemText, t, typePlural } from '../i18n';
 import { useUi } from '../ui-context';
 import { DayList, QuarterOverview, YearOverview } from './CalendarOverview';
 import { PageHeader } from './PageHeader';
@@ -53,13 +53,13 @@ export function CalendarView() {
   const [filters, setFilters] = useState<Filters>({ ...NO_FILTERS, showTodos: true });
 
   const channels = [...new Set(store.items.map((i) => i.channel))].sort();
-  const campaigns = [...new Set(store.items.map((i) => i.campaign).filter(Boolean))].sort();
+  const campaigns = [...new Set(store.items.map((i) => itemText(i, 'campaign')).filter(Boolean))].sort();
 
   const matches = (i: Item) =>
     (!filters.types.length || filters.types.includes(i.type)) &&
     (!filters.channel || i.channel === filters.channel) &&
     (!filters.owner || i.owner === filters.owner) &&
-    (!filters.campaign || i.campaign === filters.campaign) &&
+    (!filters.campaign || itemText(i, 'campaign') === filters.campaign) &&
     (!filters.audience || i.audiences.includes(filters.audience)) &&
     (!filters.product || i.productTypes.includes(filters.product)) &&
     matchesCountry(i, filters.country);

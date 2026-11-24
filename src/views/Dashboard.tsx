@@ -5,7 +5,7 @@ import { Button, Card, EmptyState, Stat, StatusPill, TypeBadge } from '../compon
 import { daysBetween, fmt, relativeDay, shiftIso } from '../data/dates';
 import { participationKey } from '../data/meta';
 import { useStore } from '../data/store';
-import { channelLabel, participationLabel, t } from '../i18n';
+import { channelLabel, itemText, itemTitle, participationLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -59,7 +59,7 @@ export function Dashboard() {
                         <button type="button" className="mc-row" onClick={() => openItem(i.id)}>
                           <TypeBadge type={i.type} />
                           <span className="mc-row-main">
-                            <span className="mc-row-title">{i.title}</span>
+                            <span className="mc-row-title">{itemTitle(i)}</span>
                             <span className="mc-muted">{[i.time, channelLabel(i.channel), i.owner].filter(Boolean).join(' · ')}</span>
                           </span>
                           <StatusPill status={i.status} />
@@ -100,8 +100,8 @@ export function Dashboard() {
                     <span className="mc-event-month">{fmt(e.date, 'MMM')}</span>
                   </span>
                   <span className="mc-row-main">
-                    <span className="mc-row-title">{e.title}</span>
-                    <span className="mc-muted">{e.location}</span>
+                    <span className="mc-row-title">{itemTitle(e)}</span>
+                    <span className="mc-muted">{itemText(e, 'location')}</span>
                     <span className="mc-progress" aria-label={t.dashboard.prepDone(done, prep.length)}>
                       <span style={{ width: `${prep.length ? (done / prep.length) * 100 : 0}%` }} />
                     </span>

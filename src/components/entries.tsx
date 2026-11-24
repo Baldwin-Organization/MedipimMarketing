@@ -1,6 +1,6 @@
 import type { DragEvent } from 'react';
 import { TYPE_META } from '../data/meta';
-import { participationLabel, t, todoLabel, typeLabel } from '../i18n';
+import { itemTitle, participationLabel, t, todoText, typeLabel } from '../i18n';
 import type { ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
@@ -42,7 +42,7 @@ export function useDayDrop(day: IsoDate) {
         const item = store.itemsById.get(p.id);
         if (!item || item.date === day) return;
         const n = await store.moveItemTo(p.id, day);
-        notify(t.entries.moved(item.title, n));
+        notify(t.entries.moved(itemTitle(item), n));
       } else {
         await store.moveTodoTo(p.id, day);
         notify(t.entries.todoMoved);
@@ -66,12 +66,12 @@ export function ItemChip({ item, day, compact }: { item: Item; day?: IsoDate; co
       draggable
       onDragStart={(e) => startDrag(e, { kind: 'item', id: item.id })}
       onClick={() => openItem(item.id)}
-      title={`${typeLabel(item.type)}: ${item.title}${item.type === 'event' ? ` · ${participationLabel(item.participation)}` : ''}`}
+      title={`${typeLabel(item.type)}: ${itemTitle(item)}${item.type === 'event' ? ` · ${participationLabel(item.participation)}` : ''}`}
     >
       <Icon name={m.icon} size={14} />
       {item.type === 'event' && <ParticipationDot value={item.participation} />}
       {!compact && item.time && !continued && <span className="mc-entry-time">{item.time}</span>}
-      <span className="mc-entry-title">{continued ? `↳ ${item.title}` : item.title}</span>
+      <span className="mc-entry-title">{continued ? `↳ ${itemTitle(item)}` : itemTitle(item)}</span>
     </button>
   );
 }
@@ -90,10 +90,10 @@ export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledT
       draggable={!todo.done}
       onDragStart={(e) => startDrag(e, { kind: 'todo', id: todo.id })}
     >
-      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo.title))} />
+      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoText(todo))} />
       <button type="button" className="mc-todo-body" onClick={() => item && openItem(item.id)}>
-        <span className="mc-entry-title">{todoLabel(todo.title)}</span>
-        {showItem && item && <span className="mc-todo-item">{item.title}</span>}
+        <span className="mc-entry-title">{todoText(todo)}</span>
+        {showItem && item && <span className="mc-todo-item">{itemTitle(item)}</span>}
       </button>
       <LateBadge days={todo.lateDays} compact={compact} />
     </div>

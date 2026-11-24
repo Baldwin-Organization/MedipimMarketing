@@ -246,6 +246,8 @@ export const en: Dict = {
     planned: 'Planned (€, excl. VAT)',
     actual: 'Actually spent (€)',
     enrichment: 'Enrichment',
+    translation: 'Dutch version',
+    translationHint: 'Anything left empty here shows in English in the Dutch view.',
     todos: 'To-dos',
     addTemplate: 'Add default to-dos',
     addTemplateFor: (type) => `Add default to-dos for ${type}`,

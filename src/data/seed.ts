@@ -1,5 +1,6 @@
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
+import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, Budget, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
@@ -109,21 +110,52 @@ const EVENTS: SeedEvent[] = [
 /** Events where Medipim has a stand. */
 const EXHIBITING = ['PharmagoraPlus', 'APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027', 'Expopharm', 'The Pharmacy Show'];
 
-/**
- * Seed decisions made after the seed shipped, applied once to data that already exists in a browser.
- * Returns only the items that change.
- */
-export function seedUpdates(items: Item[]): Item[] {
+/** The five exhibitor events, for data seeded before that decision. Returns only the items that change. */
+export function markExhibitors(items: Item[]): Item[] {
   const now = new Date().toISOString();
   return items
     .filter((i) => i.type === 'event' && !i.participation && EXHIBITING.includes(i.title))
     .map((i) => ({ ...i, participation: 'exposant', status: i.status === 'idee' ? 'gepland' : i.status, updatedAt: now }));
 }
 
+/**
+ * English text for seed items that predate translations. A field is only translated while its
+ * Dutch text is still the seed text, so edited items never get a translation that no longer matches.
+ */
+export function addSeedTranslations(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  const seed = new Map(buildSeed(() => '').items.map((i) => [`${i.type}|${i.title}`, i]));
+  return items.flatMap((i) => {
+    const s = seed.get(`${i.type}|${i.title}`);
+    if (!s?.translations?.en || i.translations?.en) return [];
+    const en = s.translations.en;
+    return [{
+      ...i,
+      translations: {
+        en: {
+          title: en.title,
+          ...(i.description === s.description && { description: en.description }),
+          ...(i.location === s.location && { location: en.location }),
+          ...(i.campaign === s.campaign && { campaign: en.campaign }),
+        },
+      },
+      updatedAt: now,
+    }];
+  });
+}
+
+/** Seed changes applied once to data that already exists in a browser, in order. */
+export const SEED_UPDATES: { key: string; apply: (items: Item[]) => Item[] }[] = [
+  { key: 'mc-seed-updates-1', apply: markExhibitors },
+  { key: 'mc-seed-updates-2', apply: addSeedTranslations },
+];
+
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country. */
 export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[]; budgets: Budget[] } {
   const now = new Date().toISOString();
-  const items = EVENTS.map((e): Item => ({
+  const items = EVENTS.map((e): Item => {
+    const en = EVENTS_EN[e.title];
+    return {
     id: makeId(),
     type: 'event',
     title: e.tentative ? `${e.title} (datum te bevestigen)` : e.title,
@@ -138,9 +170,17 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
     audiences: e.audiences,
     productTypes: e.products ?? ['geneesmiddelen'],
     countries: [countryCode(e.location.split(',').pop()!)].filter((c): c is string => !!c),
+    translations: {
+      en: {
+        title: e.tentative ? `${e.title} ${TENTATIVE_EN}` : en.title ?? e.title,
+        description: `${en.description}\n\n${RELEVANCE_EN}: ${en.relevance}.`,
+        location: en.location,
+      },
+    },
     createdAt: now,
     updatedAt: now,
-  }));
+    };
+  });
   const todos: Todo[] = [];
   for (const a of ACTIONS) {
     const id = makeId();
@@ -158,6 +198,7 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
       audiences: a.audiences,
       productTypes: ALL_PRODUCTS,
       countries: a.countries,
+      translations: { en: { ...ACTIONS_EN[a.title], campaign: UX_LAUNCH_EN } },
       createdAt: now,
       updatedAt: now,
     });

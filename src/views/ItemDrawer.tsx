@@ -7,7 +7,7 @@ import { newId } from '../data/repository';
 import { rollForward } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
 import type { ItemType, Todo } from '../data/types';
-import { channelLabel, statusLabel, t, todoLabel, typeLabel } from '../i18n';
+import { channelLabel, itemTitle, lang, otherLang, statusLabel, t, textIn, todoText, todoTextIn, typeLabel, type Lang, type TextField } from '../i18n';
 import { ParticipationPicker } from '../components/participation';
 import { useUi } from '../ui-context';
 
@@ -55,29 +55,45 @@ export function ItemDrawer() {
   const hasPeriod = HAS_PERIOD.includes(draft.type);
   const media = [...new Set(store.items.map((i) => i.medium).filter((m): m is string => !!m))].sort();
   const euro = (v: string) => (v === '' ? undefined : Math.max(0, Number(v)));
-  const campaigns = [...new Set(store.items.map((i) => i.campaign).filter(Boolean))].sort();
+  const other = otherLang();
+  const themesIn = (l: Lang) => [...new Set(store.items.map((i) => textIn(i, l, 'campaign')).filter(Boolean))].sort();
+  const text = (l: Lang, field: TextField) => textIn(draft, l, field);
+  const setText = (l: Lang, field: TextField, value: string) =>
+    setDraft((d) => (l === 'nl' ? { ...d, [field]: value } : { ...d, translations: { ...d.translations, en: { ...d.translations?.en, [field]: value } } }));
+  /** Picking a known theme fills in its other language when that is still empty. */
+  const setTheme = (l: Lang, value: string) => {
+    setText(l, 'campaign', value);
+    const known = store.items.find((i) => textIn(i, l, 'campaign') === value && textIn(i, otherLang(l), 'campaign'));
+    if (known && !text(otherLang(l), 'campaign')) setText(otherLang(l), 'campaign', textIn(known, otherLang(l), 'campaign'));
+  };
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
 
   const save = async () => {
-    if (!draft.title.trim()) return setError(t.drawer.errTitle);
+    if (!draft.title.trim() && !draft.translations?.en?.title?.trim()) return setError(t.drawer.errTitle);
     if (!draft.date) return setError(t.drawer.errDate);
     if (draft.endDate && draft.endDate < draft.date) return setError(t.drawer.errEnd);
-    const saved = await store.saveItem({ ...draft, title: draft.title.trim(), time: draft.time || undefined }, todos, { applyTemplate: offerTemplate && applyTemplate });
-    notify(isNew ? t.drawer.added(saved.title) : t.drawer.saved);
+    const en = Object.fromEntries(Object.entries(draft.translations?.en ?? {}).map(([k, v]) => [k, v?.trim()]).filter(([, v]) => v));
+    const saved = await store.saveItem(
+      { ...draft, title: draft.title.trim(), time: draft.time || undefined, translations: Object.keys(en).length ? { en } : undefined },
+      todos,
+      { applyTemplate: offerTemplate && applyTemplate },
+    );
+    notify(isNew ? t.drawer.added(itemTitle(saved)) : t.drawer.saved);
     closeItem();
   };
 
   const remove = async () => {
     if (!draft.id) return;
     await store.deleteItem(draft.id);
-    notify(t.drawer.deleted(draft.title));
+    notify(t.drawer.deleted(itemTitle(draft)));
     closeItem();
   };
 
   const addTodo = () => {
     if (!newTodo.trim()) return;
     const due = draft.date ? shiftIso(draft.date, -1) : store.today;
-    setTodos((list) => [...list, { id: newId(), itemId: draft.id ?? '', title: newTodo.trim(), dueDate: due, done: false, offsetDays: -1, owner: draft.owner }]);
+    const title = newTodo.trim();
+    setTodos((list) => [...list, { id: newId(), itemId: draft.id ?? '', dueDate: due, done: false, offsetDays: -1, owner: draft.owner, ...todoTitlePatch({ title: '' }, lang, title) }]);
     setNewTodo('');
   };
 
@@ -112,8 +128,8 @@ export function ItemDrawer() {
           onChange={setType}
           options={ITEM_TYPES.map((type) => ({ value: type, label: t.types[type].short, icon: TYPE_META[type].icon }))}
         />
-        <Field label={t.drawer.title}>{(id) => <input id={id} className="mc-input" value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder={t.drawer.titlePlaceholder} />}</Field>
-        <Field label={t.drawer.description} optional>{(id) => <textarea id={id} className="mc-input" rows={3} value={draft.description} onChange={(e) => set('description', e.target.value)} />}</Field>
+        <Field label={t.drawer.title}>{(id) => <input id={id} className="mc-input" value={text(lang, 'title')} onChange={(e) => setText(lang, 'title', e.target.value)} placeholder={text(other, 'title') || t.drawer.titlePlaceholder} />}</Field>
+        <Field label={t.drawer.description} optional>{(id) => <textarea id={id} className="mc-input" rows={3} value={text(lang, 'description')} onChange={(e) => setText(lang, 'description', e.target.value)} placeholder={text(other, 'description')} />}</Field>
         <div className="mc-form-row">
           <Field label={t.drawer.channel}>{(id) => (
             <select id={id} className="mc-input" value={draft.channel} onChange={(e) => set('channel', e.target.value)}>
@@ -149,7 +165,7 @@ export function ItemDrawer() {
           </div>
         )}
         {draft.type === 'event' && (
-          <Field label={t.drawer.location} optional>{(id) => <input id={id} className="mc-input" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder={t.drawer.locationPlaceholder} />}</Field>
+          <Field label={t.drawer.location} optional>{(id) => <input id={id} className="mc-input" value={text(lang, 'location')} onChange={(e) => setText(lang, 'location', e.target.value)} placeholder={text(other, 'location') || t.drawer.locationPlaceholder} />}</Field>
         )}
         <div className="mc-form-row">
           <Field label={t.drawer.owner}>{(id) => (
@@ -160,11 +176,29 @@ export function ItemDrawer() {
           )}</Field>
           <Field label={t.drawer.theme} optional>{(id) => (
             <>
-              <input id={id} className="mc-input" list={`${id}-list`} value={draft.campaign} onChange={(e) => set('campaign', e.target.value)} />
-              <datalist id={`${id}-list`}>{campaigns.map((c) => <option key={c} value={c} />)}</datalist>
+              <input id={id} className="mc-input" list={`${id}-list`} value={text(lang, 'campaign')} onChange={(e) => setTheme(lang, e.target.value)} placeholder={text(other, 'campaign')} />
+              <datalist id={`${id}-list`}>{themesIn(lang).map((c) => <option key={c} value={c} />)}</datalist>
             </>
           )}</Field>
         </div>
+
+        <section className="mc-form-section" aria-label={t.drawer.translation}>
+          <h3>{t.drawer.translation}</h3>
+          <p className="mc-muted">{t.drawer.translationHint}</p>
+          <Field label={t.drawer.title} optional>{(id) => <input id={id} className="mc-input" lang={other} value={text(other, 'title')} onChange={(e) => setText(other, 'title', e.target.value)} placeholder={text(lang, 'title')} />}</Field>
+          <Field label={t.drawer.description} optional>{(id) => <textarea id={id} className="mc-input" lang={other} rows={3} value={text(other, 'description')} onChange={(e) => setText(other, 'description', e.target.value)} placeholder={text(lang, 'description')} />}</Field>
+          <div className="mc-form-row">
+            {draft.type === 'event' && (
+              <Field label={t.drawer.location} optional>{(id) => <input id={id} className="mc-input" lang={other} value={text(other, 'location')} onChange={(e) => setText(other, 'location', e.target.value)} placeholder={text(lang, 'location')} />}</Field>
+            )}
+            <Field label={t.drawer.theme} optional>{(id) => (
+              <>
+                <input id={id} className="mc-input" lang={other} list={`${id}-list`} value={text(other, 'campaign')} onChange={(e) => setTheme(other, e.target.value)} placeholder={text(lang, 'campaign')} />
+                <datalist id={`${id}-list`}>{themesIn(other).map((c) => <option key={c} value={c} />)}</datalist>
+              </>
+            )}</Field>
+          </div>
+        </section>
 
         <section className="mc-form-section" aria-label={t.drawer.budget}>
           <h3>{t.drawer.budget}</h3>
@@ -194,7 +228,7 @@ export function ItemDrawer() {
           {preview.length > 0 && (
             <ul className="mc-template-list">
               {preview.map((todo) => (
-                <li key={todo.id}><Icon name="checklist" size={16} /><span>{todoLabel(todo.title)}</span><span className="mc-muted">{fmt(todo.dueDate, 'EEE d MMM')}</span></li>
+                <li key={todo.id}><Icon name="checklist" size={16} /><span>{todoText(todo)}</span><span className="mc-muted">{fmt(todo.dueDate, 'EEE d MMM')}</span></li>
               ))}
             </ul>
           )}
@@ -204,8 +238,8 @@ export function ItemDrawer() {
                 const late = rollForward(todo, store.today).lateDays;
                 return (
                   <li key={todo.id} data-done={todo.done || undefined}>
-                    <Checkbox checked={todo.done} onChange={() => updateTodo(todo.id, { done: !todo.done, doneAt: todo.done ? undefined : new Date().toISOString() })} label={t.common.check(todoLabel(todo.title))} />
-                    <input className="mc-input mc-input-inline" aria-label={t.drawer.todo} value={todoLabel(todo.title)} onChange={(e) => updateTodo(todo.id, { title: e.target.value })} />
+                    <Checkbox checked={todo.done} onChange={() => updateTodo(todo.id, { done: !todo.done, doneAt: todo.done ? undefined : new Date().toISOString() })} label={t.common.check(todoText(todo))} />
+                    <input className="mc-input mc-input-inline" aria-label={t.drawer.todo} value={todoTextIn(todo, lang)} placeholder={todoTextIn(todo, other)} onChange={(e) => updateTodo(todo.id, todoTitlePatch(todo, lang, e.target.value))} />
                     <LateBadge days={late} />
                     <input type="date" className="mc-input mc-input-date" aria-label={t.drawer.dueDate} value={todo.dueDate} onChange={(e) => updateTodo(todo.id, { dueDate: e.target.value })} />
                     <Button variant="text" intent="secondary" size="small" icon="delete" label={t.drawer.removeTodo} onClick={() => setTodos((list) => list.filter((x) => x.id !== todo.id))} />
@@ -223,4 +257,9 @@ export function ItemDrawer() {
       </div>
     </Drawer>
   );
+}
+
+/** The fields to change when a to-do title is edited in one language. */
+function todoTitlePatch(todo: Pick<Todo, 'title' | 'translations'>, l: Lang, title: string): Pick<Todo, 'title' | 'translations'> {
+  return l === 'nl' ? { title, translations: todo.translations } : { title: todo.title, translations: { en: { title } } };
 }

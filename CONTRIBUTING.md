@@ -24,6 +24,9 @@
 - Interfacetekst staat nooit rechtstreeks in een scherm, maar in `src/i18n/nl.ts` en
   `src/i18n/en.ts` (lees via `t`). Opgeslagen waarden (kanalen, statussen, doelgroepen,
   standaard-to do's) blijven Nederlands; toon ze via de labelfuncties in `src/i18n/index.ts`.
+- Inhoud (titel, beschrijving, locatie, thema, to do-titel) is tweetalig: de gewone velden zijn
+  Nederlands, `translations.en` bevat het Engels. Toon ze altijd via `itemText`, `itemTitle` of
+  `todoText`, nooit rechtstreeks.
 - Stijlen gebruiken uitsluitend de Medipim design tokens (`--mp-*`): achtergronden
   `--mp-*-bg*`, tekst en iconen `--mp-*-content*`, randen `--mp-*-border*`. Geen losse
   kleur- of pixelwaarden voor spacing, radius of lettergrootte.

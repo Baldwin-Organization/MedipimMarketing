@@ -1,6 +1,6 @@
 import { enGB, nl as nlDates } from 'date-fns/locale';
 import { participationKey } from '../data/meta';
-import type { Audience, ItemStatus, ItemType, Participation, ProductType } from '../data/types';
+import type { Audience, Item, ItemStatus, ItemText, ItemType, Participation, ProductType, Todo } from '../data/types';
 import { en } from './en';
 import { nl, type Dict } from './nl';
 
@@ -39,4 +39,20 @@ export const participationShort = (p?: Participation) => t.participation[partici
 export const audienceLabel = (a: Audience) => t.audiences[a];
 export const productLabel = (p: ProductType) => t.products[p];
 export const channelLabel = (channel: string) => t.channels[channel] ?? channel;
-export const todoLabel = (title: string) => t.todoTitles[title] ?? title;
+
+export type TextField = keyof ItemText;
+type Texts = Pick<Item, 'title' | 'description' | 'location' | 'campaign' | 'translations'>;
+
+export const otherLang = (l: Lang = lang): Lang => (l === 'nl' ? 'en' : 'nl');
+
+/** The item's own text in one language, without fallback. */
+export const textIn = (item: Texts, l: Lang, field: TextField): string => (l === 'nl' ? item[field] : item.translations?.en?.[field]) ?? '';
+
+/** The item's text in the current language, or in the other language when it has none. */
+export const itemText = (item: Texts, field: TextField): string => textIn(item, lang, field) || textIn(item, otherLang(), field);
+export const itemTitle = (item: Texts) => itemText(item, 'title');
+
+/** Template to-dos are stored in Dutch and translated through the dictionary. */
+export const todoTextIn = (todo: Pick<Todo, 'title' | 'translations'>, l: Lang): string =>
+  l === 'nl' ? todo.title : todo.translations?.en?.title || en.todoTitles[todo.title] || '';
+export const todoText = (todo: Pick<Todo, 'title' | 'translations'>): string => todoTextIn(todo, lang) || todoTextIn(todo, otherLang());

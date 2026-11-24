@@ -9,7 +9,7 @@ import { audienceOptions, matchesCountry, productOptions, type CountryFilter } f
 import { CHANNELS, OWNERS, STATUSES, participationKey, type ParticipationKey } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Audience, Item, ItemStatus, Participation, ProductType } from '../data/types';
-import { channelLabel, statusLabel, t, todoLabel } from '../i18n';
+import { channelLabel, itemText, itemTitle, statusLabel, t, todoText } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -157,11 +157,11 @@ function Timeline({ events }: { events: Item[] }) {
                 className="mc-timeline-event"
                 data-participation={participationKey(e.participation)}
                 style={{ left, ['--lane' as string]: lane }}
-                title={`${e.title} · ${fmt(e.date, 'd MMM')}${e.location ? ` · ${e.location}` : ''}`}
+                title={`${itemTitle(e)} · ${fmt(e.date, 'd MMM')}${itemText(e, 'location') ? ` · ${itemText(e, 'location')}` : ''}`}
                 onClick={() => openItem(e.id)}
               >
                 <span className="mc-timeline-bar" style={{ width }} />
-                <span className="mc-timeline-label">{e.title}<span className="mc-timeline-sub"> · {fmt(e.date, 'd MMM')}</span></span>
+                <span className="mc-timeline-label">{itemTitle(e)}<span className="mc-timeline-sub"> · {fmt(e.date, 'd MMM')}</span></span>
               </button>
             ))}
           </div>
@@ -190,11 +190,11 @@ function EventCard({ event }: { event: Item }) {
       <div className="mc-event-body">
         <header className="mc-event-head">
           <div>
-            <h3>{event.title}</h3>
+            <h3>{itemTitle(event)}</h3>
             <p className="mc-muted mc-event-meta">
               <Icon name="event" size={16} />
               {multi ? `${fmt(event.date, 'EEE d MMM')} – ${fmt(event.endDate!, 'EEE d MMM')}` : fmt(event.date, 'EEEE d MMMM')}
-              {event.location && <><Icon name="storefront" size={16} />{event.location}</>}
+              {itemText(event, 'location') && <><Icon name="storefront" size={16} />{itemText(event, 'location')}</>}
               {event.owner && <><Icon name="person" size={16} />{event.owner}</>}
             </p>
           </div>
@@ -206,7 +206,7 @@ function EventCard({ event }: { event: Item }) {
           </div>
         </header>
         <DimensionTags item={event} />
-        {event.description && <p className="mc-event-desc">{event.description}</p>}
+        {itemText(event, 'description') && <p className="mc-event-desc">{itemText(event, 'description')}</p>}
         {prep.length === 0 ? (
           (!event.participation || ATTENDING.includes(event.participation)) && (
             <p className="mc-muted mc-checklist-empty">
@@ -223,8 +223,8 @@ function EventCard({ event }: { event: Item }) {
         <ul className="mc-checklist">
           {prep.map((todo) => (
             <li key={todo.id} data-done={todo.done || undefined}>
-              <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo.title))} />
-              <span className="mc-checklist-title">{todoLabel(todo.title)}</span>
+              <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoText(todo))} />
+              <span className="mc-checklist-title">{todoText(todo)}</span>
               <LateBadge days={todo.lateDays} />
               <span className="mc-muted mc-checklist-date">
                 {fmt(todo.dueDate, 'd MMM')} · {offsetText(todo.offsetDays)}
