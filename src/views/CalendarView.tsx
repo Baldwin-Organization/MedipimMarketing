@@ -1,18 +1,20 @@
-import { addMonths, addWeeks, endOfMonth, endOfWeek, startOfMonth, startOfWeek } from 'date-fns';
+import { addMonths, addQuarters, addWeeks, addYears, endOfMonth, endOfWeek, getQuarter, startOfMonth, startOfQuarter, startOfWeek, startOfYear } from 'date-fns';
 import { useMemo, useState } from 'react';
 import { TodayPanel } from '../components/TodayPanel';
 import { ItemChip, TodoEntry, useDayDrop } from '../components/entries';
-import { Button, EmptyState, Segmented, ToggleChipGroup } from '../components/ui';
-import { fmt, fmtDate, fromIso, relativeDay, shiftIso, toIso } from '../data/dates';
+import { Button, Segmented, ToggleChipGroup } from '../components/ui';
+import { fmt, fmtDate, fromIso, shiftIso, toIso } from '../data/dates';
 import { AUDIENCES, EXISTING_MARKETS_SORTED, PRODUCT_TYPES, countryName, isExistingMarket, matchesCountry, type CountryFilter } from '../data/dimensions';
 import { ITEM_TYPES, OWNERS, TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { Audience, IsoDate, Item, ItemType, ProductType } from '../data/types';
 import { useUi } from '../ui-context';
+import { DayList, QuarterOverview, YearOverview } from './CalendarOverview';
 import { PageHeader } from './PageHeader';
 
-type View = 'maand' | 'week' | 'agenda';
+type View = 'jaar' | 'kwartaal' | 'maand' | 'week' | 'lijst';
+const VIEWS: View[] = ['jaar', 'kwartaal', 'maand', 'week', 'lijst'];
 const WEEK = { weekStartsOn: 1 as const };
 const MAX_IN_CELL = 4;
 
@@ -30,7 +32,10 @@ interface Filters {
 const NO_FILTERS = { types: [], channel: '', owner: '', campaign: '', audience: '', product: '', country: '' } satisfies Omit<Filters, 'showTodos'>;
 
 function useCalendarState() {
-  const [view, setView] = useState<View>(() => (sessionStorage.getItem('mc-view') as View) ?? 'maand');
+  const [view, setView] = useState<View>(() => {
+    const stored = sessionStorage.getItem('mc-view') as View | null;
+    return stored && VIEWS.includes(stored) ? stored : 'maand';
+  });
   const [anchor, setAnchor] = useState<IsoDate>(() => toIso(new Date()));
   const changeView = (v: View) => {
     sessionStorage.setItem('mc-view', v);
@@ -69,7 +74,8 @@ export function CalendarView() {
   const range = useMemo(() => {
     const d = fromIso(anchor);
     if (view === 'week') return { start: toIso(startOfWeek(d, WEEK)), end: toIso(endOfWeek(d, WEEK)) };
-    if (view === 'agenda') return { start: toIso(startOfMonth(d)), end: toIso(endOfMonth(d)) };
+    if (view === 'lijst') return { start: toIso(startOfMonth(d)), end: toIso(endOfMonth(d)) };
+    if (view === 'jaar' || view === 'kwartaal') return { start: toIso(startOfMonth(d)), end: toIso(startOfMonth(d)) };
     return { start: toIso(startOfWeek(startOfMonth(d), WEEK)), end: toIso(endOfWeek(endOfMonth(d), WEEK)) };
   }, [anchor, view]);
 
@@ -79,10 +85,18 @@ export function CalendarView() {
     return out;
   }, [range]);
 
-  const step = (dir: 1 | -1) => setAnchor(toIso(view === 'week' ? addWeeks(fromIso(anchor), dir) : addMonths(fromIso(anchor), dir)));
-  const periodLabel = view === 'week'
-    ? `Week ${fmt(range.start, 'I')} · ${fmt(range.start, 'd MMM')} – ${fmt(range.end, 'd MMM yyyy')}`
-    : fmtDate(fromIso(anchor), 'MMMM yyyy');
+  const stepBy = { jaar: addYears, kwartaal: addQuarters, maand: addMonths, week: addWeeks, lijst: addMonths }[view];
+  const step = (dir: 1 | -1) => setAnchor(toIso(stepBy(fromIso(anchor), dir)));
+  const quarterStart = startOfQuarter(fromIso(anchor));
+  const periodLabel = {
+    jaar: fmt(anchor, 'yyyy'),
+    kwartaal: `K${getQuarter(quarterStart)} ${fmtDate(quarterStart, 'yyyy')} · ${fmtDate(quarterStart, 'MMMM')} – ${fmtDate(addMonths(quarterStart, 2), 'MMMM')}`,
+    maand: fmt(anchor, 'MMMM yyyy'),
+    week: `Week ${fmt(range.start, 'I')} · ${fmt(range.start, 'd MMM')} – ${fmt(range.end, 'd MMM yyyy')}`,
+    lijst: fmt(anchor, 'MMMM yyyy'),
+  }[view];
+  const openMonth = (day: IsoDate) => { setAnchor(day); setView('maand'); };
+  const openWeek = (day: IsoDate) => { setAnchor(day); setView('week'); };
 
   const itemsOn = (day: IsoDate) =>
     items.filter((i) => itemOnDay(i, day)).sort((a, b) => Number(b.type === 'event') - Number(a.type === 'event') || (a.time ?? '').localeCompare(b.time ?? ''));
@@ -111,9 +125,11 @@ export function CalendarView() {
           value={view}
           onChange={setView}
           options={[
+            { value: 'jaar', label: 'Jaar', icon: 'calendar_month' },
+            { value: 'kwartaal', label: 'Kwartaal', icon: 'space_dashboard' },
             { value: 'maand', label: 'Maand', icon: 'grid_view' },
             { value: 'week', label: 'Week', icon: 'view_column' },
-            { value: 'agenda', label: 'Agenda', icon: 'view_list' },
+            { value: 'lijst', label: 'Lijst', icon: 'view_list' },
           ]}
         />
       </div>
@@ -162,8 +178,12 @@ export function CalendarView() {
         )}
       </div>
 
-      {view === 'agenda' ? (
-        <AgendaList days={days} itemsOn={itemsOn} todosOn={todosOn} />
+      {view === 'jaar' ? (
+        <YearOverview first={startOfYear(fromIso(anchor))} items={items} onOpenMonth={openMonth} onOpenDay={openWeek} />
+      ) : view === 'kwartaal' ? (
+        <QuarterOverview first={quarterStart} items={items} onOpenMonth={openMonth} onOpenDay={openWeek} />
+      ) : view === 'lijst' ? (
+        <DayList days={days} itemsOn={itemsOn} todosOn={todosOn} />
       ) : (
         <div className="mc-grid" data-view={view}>
           {['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'].map((d) => <div key={d} className="mc-grid-head">{d}</div>)}
@@ -175,7 +195,7 @@ export function CalendarView() {
               outside={view === 'maand' && fmt(day, 'M') !== fmt(anchor, 'M')}
               items={itemsOn(day)}
               todos={todosOn(day)}
-              onMore={() => { setAnchor(day); setView('week'); }}
+              onMore={() => openWeek(day)}
             />
           ))}
         </div>
@@ -223,34 +243,5 @@ function DayCell({ day, view, outside, items, todos, onMore }: { day: IsoDate; v
         {hidden > 0 && <button type="button" className="mc-more" onClick={onMore}>+{hidden} meer</button>}
       </div>
     </div>
-  );
-}
-
-function AgendaList({ days, itemsOn, todosOn }: { days: IsoDate[]; itemsOn: (d: IsoDate) => Item[]; todosOn: (d: IsoDate) => ScheduledTodo[] }) {
-  const { today } = useStore();
-  const rows = days.map((d) => ({ d, items: itemsOn(d), todos: todosOn(d) })).filter((r) => r.items.length || r.todos.length);
-  if (!rows.length) return <EmptyState icon="calendar_month" title="Niets gepland in deze maand" />;
-  return (
-    <ol className="mc-agenda">
-      {rows.map(({ d, items, todos }) => (
-        <AgendaDay key={d} day={d} today={today} items={items} todos={todos} />
-      ))}
-    </ol>
-  );
-}
-
-function AgendaDay({ day, today, items, todos }: { day: IsoDate; today: IsoDate; items: Item[]; todos: ScheduledTodo[] }) {
-  const drop = useDayDrop(day);
-  return (
-    <li className="mc-agenda-day" data-today={day === today || undefined} {...drop}>
-      <div className="mc-agenda-date">
-        <span className="mc-day-num">{fmt(day, 'd')}</span>
-        <span><span className="mc-day-name">{fmt(day, 'EEEE')}</span><span className="mc-muted">{relativeDay(day, today)}</span></span>
-      </div>
-      <div className="mc-agenda-entries">
-        {items.map((i) => <ItemChip key={i.id} item={i} day={day} />)}
-        {todos.map((t) => <TodoEntry key={t.id} todo={t} />)}
-      </div>
-    </li>
   );
 }

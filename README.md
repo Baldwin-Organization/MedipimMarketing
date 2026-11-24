@@ -10,7 +10,9 @@ De interface is in het Nederlands en volgt het
 
 ## Functies
 
-- **Kalender** per maand, week of als agenda, met kleuren per type en filters op type,
+- **Kalender** als jaar- of kwartaaloverzicht (minikalender en items per maand), per maand,
+  per week of als lijst met elke dag onder elkaar (per week gegroepeerd, lege dagen inbegrepen),
+  met kleuren per type en filters op type,
   kanaal, eigenaar, campagne, doelgroep, type product en land of markt.
 - **Verrijking** van elk item met doelgroep (groothandels, producenten, apothekers,
   ziekenhuizen), type product (geneesmiddelen, medicinale cannabis, cosmetica, voeding &
