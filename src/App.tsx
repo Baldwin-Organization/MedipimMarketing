@@ -4,15 +4,21 @@ import { Button, Icon } from './components/ui';
 import { useStore } from './data/store';
 import type { IconName } from './icons.generated';
 import { useUi } from './ui-context';
+import { BudgetView } from './views/BudgetView';
 import { CalendarView } from './views/CalendarView';
+import { CampaignsView } from './views/CampaignsView';
 import { Dashboard } from './views/Dashboard';
 import { EventsView } from './views/EventsView';
 import { ItemDrawer } from './views/ItemDrawer';
+import { PrView } from './views/PrView';
 
 const NAV: { to: string; label: string; icon: IconName }[] = [
   { to: '/dashboard', label: 'Dashboard', icon: 'space_dashboard' },
   { to: '/kalender', label: 'Kalender', icon: 'calendar_month' },
   { to: '/beurzen', label: 'Beurzen & conferenties', icon: 'storefront' },
+  { to: '/campagnes', label: 'Campagnes', icon: 'ads_click' },
+  { to: '/pr', label: 'PR & vakmedia', icon: 'article' },
+  { to: '/budget', label: 'Budget', icon: 'payments' },
 ];
 
 function useColorMode() {
@@ -100,6 +106,9 @@ export function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/kalender" element={<CalendarView />} />
               <Route path="/beurzen" element={<EventsView />} />
+              <Route path="/campagnes" element={<CampaignsView />} />
+              <Route path="/pr" element={<PrView />} />
+              <Route path="/budget" element={<BudgetView />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           ) : (

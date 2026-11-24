@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { groupByUrgency } from '../components/TodayPanel';
 import { ItemChip, TodoEntry } from '../components/entries';
-import { Button, Card, EmptyState, Icon, StatusPill, TypeBadge } from '../components/ui';
+import { Button, Card, EmptyState, Stat, StatusPill, TypeBadge } from '../components/ui';
 import { daysBetween, fmt, relativeDay, shiftIso } from '../data/dates';
 import { useStore } from '../data/store';
 import { useUi } from '../ui-context';
@@ -129,15 +129,4 @@ export function Dashboard() {
 function greeting(): string {
   const h = new Date().getHours();
   return h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond';
-}
-
-function Stat({ label, value, tone, icon, hint }: { label: string; value: number; tone: 'error' | 'brand' | 'neutral'; icon: Parameters<typeof Icon>[0]['name']; hint: string }) {
-  return (
-    <div className="mc-stat" data-tone={tone}>
-      <span className="mc-stat-icon"><Icon name={icon} size={20} /></span>
-      <span className="mc-stat-label">{label}</span>
-      <span className="mc-stat-value">{value}</span>
-      <span className="mc-muted">{hint}</span>
-    </div>
-  );
 }

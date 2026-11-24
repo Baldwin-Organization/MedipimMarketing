@@ -189,3 +189,14 @@ export function Drawer({ open, onClose, title, children, footer }: { open: boole
     </div>
   );
 }
+
+export function Stat({ label, value, tone, icon, hint }: { label: string; value: ReactNode; tone: 'error' | 'brand' | 'neutral'; icon: IconName; hint: string }) {
+  return (
+    <div className="mc-stat" data-tone={tone}>
+      <span className="mc-stat-icon"><Icon name={icon} size={20} /></span>
+      <span className="mc-stat-label">{label}</span>
+      <span className="mc-stat-value">{value}</span>
+      <span className="mc-muted">{hint}</span>
+    </div>
+  );
+}

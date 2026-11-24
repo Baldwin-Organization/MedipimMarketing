@@ -99,7 +99,7 @@ export function CalendarView() {
   const openWeek = (day: IsoDate) => { setAnchor(day); setView('week'); };
 
   const itemsOn = (day: IsoDate) =>
-    items.filter((i) => itemOnDay(i, day)).sort((a, b) => Number(b.type === 'event') - Number(a.type === 'event') || (a.time ?? '').localeCompare(b.time ?? ''));
+    items.filter((i) => itemOnDay(i, day)).sort((a, b) => Number(!!b.endDate) - Number(!!a.endDate) || (a.time ?? '').localeCompare(b.time ?? ''));
   const todosOn = (day: IsoDate) => (filters.showTodos ? todos.filter((t) => t.displayDate === day && !t.done) : []);
   const activeFilters = filters.types.length + [filters.channel, filters.owner, filters.campaign, filters.audience, filters.product, filters.country].filter(Boolean).length;
 
@@ -143,7 +143,7 @@ export function CalendarView() {
         />
         <FilterSelect label="Kanaal" value={filters.channel} options={channels} onChange={(channel) => setFilters((f) => ({ ...f, channel }))} />
         <FilterSelect label="Eigenaar" value={filters.owner} options={OWNERS} onChange={(owner) => setFilters((f) => ({ ...f, owner }))} />
-        <FilterSelect label="Campagne" value={filters.campaign} options={campaigns} onChange={(campaign) => setFilters((f) => ({ ...f, campaign }))} />
+        <FilterSelect label="Thema" value={filters.campaign} options={campaigns} onChange={(campaign) => setFilters((f) => ({ ...f, campaign }))} />
         <FilterSelect label="Doelgroep" value={filters.audience} options={AUDIENCES} onChange={(audience) => setFilters((f) => ({ ...f, audience }))} />
         <FilterSelect label="Product" value={filters.product} options={PRODUCT_TYPES} onChange={(product) => setFilters((f) => ({ ...f, product }))} />
         <select

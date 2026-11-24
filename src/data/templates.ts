@@ -35,4 +35,20 @@ export const TODO_TEMPLATES: Record<ItemType, TodoTemplate[]> = {
     { title: 'Brochures en demo klaarzetten', offsetDays: -3 },
     { title: 'Leads opvolgen', offsetDays: 3 },
   ],
+  campaign: [
+    { title: 'Doel, doelgroep en KPI bepalen', offsetDays: -21 },
+    { title: 'Budget en looptijd vastleggen', offsetDays: -14 },
+    { title: 'Advertentieteksten en visuals maken', offsetDays: -10 },
+    { title: 'Targeting en tracking instellen', offsetDays: -3 },
+    { title: 'Tussentijdse evaluatie en bijsturen', offsetDays: 7 },
+    { title: 'Resultaten rapporteren', offsetDays: 30 },
+  ],
+  pr: [
+    { title: 'Medium en formaat kiezen', offsetDays: -42 },
+    { title: 'Ruimte reserveren en deadline afspreken', offsetDays: -28 },
+    { title: 'Tekst of visual maken', offsetDays: -14 },
+    { title: 'Goedkeuring vragen', offsetDays: -10 },
+    { title: 'Aanleveren bij het medium', offsetDays: -7 },
+    { title: 'Publicatie delen op social', offsetDays: 1 },
+  ],
 };

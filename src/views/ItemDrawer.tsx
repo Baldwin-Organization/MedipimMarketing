@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { DimensionFields } from '../components/dimensions';
 import { Button, Checkbox, Drawer, Field, Icon, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
-import { CHANNELS, ITEM_TYPES, OWNERS, STATUSES, STATUS_META, TYPE_META } from '../data/meta';
+import { CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, STATUS_META, TYPE_META } from '../data/meta';
 import { newId } from '../data/repository';
 import { rollForward } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
@@ -49,7 +49,10 @@ export function ItemDrawer() {
   }, [editing]);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
-  const setType = (type: ItemType) => setDraft((d) => ({ ...d, type, channel: CHANNELS[type][0], endDate: type === 'event' ? d.endDate ?? d.date : undefined }));
+  const setType = (type: ItemType) => setDraft((d) => ({ ...d, type, channel: CHANNELS[type][0], endDate: HAS_PERIOD.includes(type) ? d.endDate ?? d.date : undefined }));
+  const hasPeriod = HAS_PERIOD.includes(draft.type);
+  const media = [...new Set(store.items.map((i) => i.medium).filter((m): m is string => !!m))].sort();
+  const euro = (v: string) => (v === '' ? undefined : Math.max(0, Number(v)));
   const campaigns = [...new Set(store.items.map((i) => i.campaign).filter(Boolean))].sort();
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
 
@@ -122,13 +125,21 @@ export function ItemDrawer() {
           )}</Field>
         </div>
         <div className="mc-form-row">
-          <Field label={draft.type === 'event' ? 'Startdatum' : 'Datum'}>{(id) => <input id={id} type="date" className="mc-input" value={draft.date} onChange={(e) => set('date', e.target.value)} />}</Field>
-          {draft.type === 'event' ? (
+          <Field label={hasPeriod ? 'Startdatum' : draft.type === 'pr' ? 'Publicatiedatum' : 'Datum'}>{(id) => <input id={id} type="date" className="mc-input" value={draft.date} onChange={(e) => set('date', e.target.value)} />}</Field>
+          {hasPeriod ? (
             <Field label="Einddatum">{(id) => <input id={id} type="date" className="mc-input" value={draft.endDate ?? ''} min={draft.date} onChange={(e) => set('endDate', e.target.value)} />}</Field>
           ) : (
             <Field label="Tijd" optional>{(id) => <input id={id} type="time" className="mc-input" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} />}</Field>
           )}
         </div>
+        {draft.type === 'pr' && (
+          <Field label="Medium" optional>{(id) => (
+            <>
+              <input id={id} className="mc-input" list={`${id}-list`} value={draft.medium ?? ''} onChange={(e) => set('medium', e.target.value)} placeholder="Bv. Farmaceutisch Weekblad" />
+              <datalist id={`${id}-list`}>{media.map((m) => <option key={m} value={m} />)}</datalist>
+            </>
+          )}</Field>
+        )}
         {draft.type === 'event' && (
           <Field label="Locatie" optional>{(id) => <input id={id} className="mc-input" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder="Stad, locatie · standnummer" />}</Field>
         )}
@@ -139,13 +150,25 @@ export function ItemDrawer() {
               {OWNERS.map((o) => <option key={o}>{o}</option>)}
             </select>
           )}</Field>
-          <Field label="Campagne" optional>{(id) => (
+          <Field label="Thema" optional>{(id) => (
             <>
               <input id={id} className="mc-input" list={`${id}-list`} value={draft.campaign} onChange={(e) => set('campaign', e.target.value)} />
               <datalist id={`${id}-list`}>{campaigns.map((c) => <option key={c} value={c} />)}</datalist>
             </>
           )}</Field>
         </div>
+
+        <section className="mc-form-section" aria-label="Budget">
+          <h3>Budget</h3>
+          <div className="mc-form-row">
+            <Field label="Gepland (€, excl. btw)" optional>{(id) => (
+              <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetPlanned ?? ''} onChange={(e) => set('budgetPlanned', euro(e.target.value))} />
+            )}</Field>
+            <Field label="Werkelijk besteed (€)" optional>{(id) => (
+              <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetActual ?? ''} onChange={(e) => set('budgetActual', euro(e.target.value))} />
+            )}</Field>
+          </div>
+        </section>
 
         <section className="mc-form-section" aria-label="Verrijking">
           <h3>Verrijking</h3>

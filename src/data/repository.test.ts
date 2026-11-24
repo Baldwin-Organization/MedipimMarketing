@@ -10,11 +10,12 @@ describe('IndexedDbRepository', () => {
     expect(await repo.isEmpty()).toBe(true);
     let n = 0;
     const { items } = buildSeed(() => `id${n++}`);
-    const seed = { items, todos: items.flatMap((i) => todosFromTemplate(i, () => `id${n++}`)) };
+    const seed = { items, todos: items.flatMap((i) => todosFromTemplate(i, () => `id${n++}`)), budgets: [{ id: '2027:event', year: 2027, type: 'event' as const, amount: 25000 }] };
     await repo.replaceAll(seed);
     const loaded = await repo.load();
     expect(loaded.items).toHaveLength(seed.items.length);
     expect(loaded.todos).toHaveLength(seed.todos.length);
+    expect(loaded.budgets).toEqual(seed.budgets);
 
     const first = seed.items[0];
     await repo.deleteItem(first.id);
@@ -24,8 +25,9 @@ describe('IndexedDbRepository', () => {
   });
 
   it('round-trips a JSON export and rejects foreign files', () => {
-    const json = JSON.stringify(toDataset([], []));
+    const json = JSON.stringify(toDataset({ items: [], todos: [], budgets: [] }));
     expect(parseDataset(json).version).toBe(1);
+    expect(parseDataset('{"version":1,"items":[],"todos":[]}').budgets).toEqual([]);
     expect(() => parseDataset('{"foo":1}')).toThrow();
   });
 });

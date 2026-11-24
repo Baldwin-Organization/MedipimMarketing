@@ -3,7 +3,8 @@ import { todayIso } from './dates';
 import { IndexedDbRepository, newId, parseDataset, toDataset, type Repository } from './repository';
 import { moveItem, moveTodo, rollForward, todosFromTemplate, type ScheduledTodo } from './schedule';
 import { buildSeed } from './seed';
-import type { IsoDate, Item, Todo } from './types';
+import { HAS_PERIOD } from './meta';
+import type { Budget, IsoDate, Item, ItemType, Todo } from './types';
 
 export type ItemDraft = Omit<Item, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 
@@ -14,6 +15,8 @@ interface Store {
   itemsById: Map<string, Item>;
   todos: ScheduledTodo[];
   todosFor(itemId: string): ScheduledTodo[];
+  budgets: Budget[];
+  setBudget(year: number, type: ItemType, amount: number): Promise<void>;
   saveItem(draft: ItemDraft, todos: Todo[], opts?: { applyTemplate?: boolean }): Promise<Item>;
   deleteItem(id: string): Promise<void>;
   toggleTodo(id: string): Promise<void>;
@@ -32,6 +35,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
   const [ready, setReady] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [rawTodos, setRawTodos] = useState<Todo[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [today, setToday] = useState(todayIso);
 
   useEffect(() => {
@@ -42,6 +46,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
       if (!alive) return;
       setItems(data.items);
       setRawTodos(data.todos);
+      setBudgets(data.budgets);
       setReady(true);
     })();
     return () => {
@@ -96,8 +101,9 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         const item: Item = {
           ...draft,
           id: draft.id ?? newId(),
-          endDate: draft.type === 'event' ? draft.endDate || draft.date : undefined,
+          endDate: HAS_PERIOD.includes(draft.type) ? draft.endDate || draft.date : undefined,
           location: draft.type === 'event' ? draft.location : undefined,
+          medium: draft.type === 'pr' ? draft.medium : undefined,
           createdAt: existing?.createdAt ?? now,
           updatedAt: now,
         };
@@ -133,21 +139,29 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         if (!t) return;
         await upsertTodos([moveTodo(t, itemsById.get(t.itemId), date)]);
       },
-      exportJson: () => JSON.stringify(toDataset(items, rawTodos), null, 2),
+      budgets,
+      async setBudget(year, type, amount) {
+        const budget: Budget = { id: `${year}:${type}`, year, type, amount };
+        await repo.saveBudget(budget);
+        setBudgets((prev) => [...prev.filter((b) => b.id !== budget.id), budget]);
+      },
+      exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets }), null, 2),
       async importJson(json) {
         const data = parseDataset(json);
         await repo.replaceAll(data);
         setItems(data.items);
         setRawTodos(data.todos);
+        setBudgets(data.budgets);
       },
       async resetToSeed() {
         const data = buildSeed(newId);
         await repo.replaceAll(data);
         setItems(data.items);
         setRawTodos(data.todos);
+        setBudgets(data.budgets);
       },
     };
-  }, [ready, today, items, itemsById, todos, rawTodos, repo, upsertItems, upsertTodos]);
+  }, [ready, today, items, itemsById, todos, rawTodos, budgets, repo, upsertItems, upsertTodos]);
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
 }

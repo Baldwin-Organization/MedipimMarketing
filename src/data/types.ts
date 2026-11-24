@@ -1,7 +1,7 @@
 /** ISO calendar date, `YYYY-MM-DD`, always in local time. */
 export type IsoDate = string;
 
-export type ItemType = 'social' | 'email' | 'call' | 'event';
+export type ItemType = 'social' | 'email' | 'call' | 'event' | 'campaign' | 'pr';
 
 export type ItemStatus = 'idee' | 'gepland' | 'in_uitvoering' | 'klaar';
 
@@ -15,13 +15,19 @@ export interface Item {
   title: string;
   description: string;
   channel: string;
-  /** Publication, send or call date; the first day of an event. */
+  /** Publication, send or call date; the first day of an event or campaign. */
   date: IsoDate;
   /** `HH:mm`, optional. */
   time?: string;
-  /** Last day of an event (inclusive). Only events have a period. */
+  /** Last day (inclusive) for types with a period, see `HAS_PERIOD`. */
   endDate?: IsoDate;
   location?: string;
+  /** PR & vakmedia: the publication or outlet. */
+  medium?: string;
+  /** Euro, excl. btw. */
+  budgetPlanned?: number;
+  /** Euro, excl. btw. */
+  budgetActual?: number;
   status: ItemStatus;
   owner: string;
   campaign: string;
@@ -46,9 +52,20 @@ export interface Todo {
   owner?: string;
 }
 
+/** Annual budget for one item type. */
+export interface Budget {
+  /** `${year}:${type}` */
+  id: string;
+  year: number;
+  type: ItemType;
+  amount: number;
+}
+
 export interface Dataset {
   version: 1;
   exportedAt: string;
   items: Item[];
   todos: Todo[];
+  /** Absent in exports made before budgets existed. */
+  budgets?: Budget[];
 }

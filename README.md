@@ -1,8 +1,9 @@
 # Medipim marketingkalender
 
 Lokaal prototype van een marketing- en communicatieplanner voor Medipim: social posts,
-e-mailings, calls en beurzen/conferenties in één kalender, met to do's die automatisch
-naar voren schuiven als ze over datum zijn.
+e-mailings, calls, beurzen/conferenties, betalende campagnes en PR in vakmedia in één
+kalender, met budgetopvolging en to do's die automatisch naar voren schuiven als ze over
+datum zijn.
 
 De interface is in het Nederlands en volgt het
 [Medipim design system](https://github.com/Baldwin-Organization/medipim-design-system)
@@ -13,7 +14,7 @@ De interface is in het Nederlands en volgt het
 - **Kalender** als jaar- of kwartaaloverzicht (minikalender en items per maand), per maand,
   per week of als lijst met elke dag onder elkaar (per week gegroepeerd, lege dagen inbegrepen),
   met kleuren per type en filters op type,
-  kanaal, eigenaar, campagne, doelgroep, type product en land of markt.
+  kanaal, eigenaar, thema, doelgroep, type product en land of markt.
 - **Verrijking** van elk item met doelgroep (groothandels, producenten, apothekers,
   ziekenhuizen), type product (geneesmiddelen, medicinale cannabis, cosmetica, voeding &
   supplementen, baby) en landen. België, Frankrijk, Duitsland, VK, Luxemburg, Oostenrijk,
@@ -29,6 +30,16 @@ De interface is in het Nederlands en volgt het
   (bv. "Stand boeken" 8 weken voor een beurs, "Visual maken" 5 dagen voor een post).
   Een bestaand item zonder to do's kan die standaardlijst achteraf krijgen.
 - **Beurzen en conferenties** als tijdlijn, met een voorbereidingschecklist per event.
+- **Campagnes**: betalende advertenties op LinkedIn Ads, Google Ads en ChatGPT Ads, met
+  looptijd (start- en einddatum), budget en standaard-to do's (doel en KPI, visuals,
+  targeting, tussentijdse evaluatie, rapportering). Gegroepeerd als lopend, komend en
+  afgelopen, filterbaar per kanaal.
+- **PR & vakmedia**: advertenties, advertorials, persberichten, interviews, vakartikels en
+  opiniestukken, met het medium (titel) en de publicatiedatum, per maand gegroepeerd.
+- **Budget**: per jaar een budget per soort actie, tegenover het geplande en werkelijk
+  bestede bedrag van de items (elk item heeft de velden "Gepland" en "Werkelijk besteed",
+  excl. btw). Met opsplitsing per kwartaal, doelgroep en markt (bestaand of nieuw) en de
+  grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 
@@ -54,21 +65,22 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 | `npm run dev` | Ontwikkelserver |
 | `npm run build` | Typecheck en productiebuild in `dist/` |
 | `npm run typecheck` | Alleen TypeScript controleren |
-| `npm test` | Unit tests (planningslogica, opslag) |
+| `npm test` | Unit tests (planningslogica, budget, opslag) |
 
 ## Structuur
 
 ```
 src/
   data/
-    types.ts         Item, Todo, Dataset
+    types.ts         Item, Todo, Budget, Dataset
     dimensions.ts    doelgroepen, producttypes, landen en bestaande/nieuwe markten
     schedule.ts      doorschuiven, urgentie, item verplaatsen met to do's
     templates.ts     standaard-to do's per type
+    budget.ts        budgettotalen per type, kwartaal, doelgroep en markt
     repository.ts    opslaginterface + IndexedDB-implementatie
     store.tsx        React-state bovenop de repository
     seed.ts          startinhoud: eventkalender 2027
-  views/             Dashboard, Kalender, Beurzen, itemformulier
+  views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Budget, itemformulier
   components/        knoppen, chips, pills, kalenderitems (Medipim-stijl)
   styles/
     medipim-tokens.css  kopie van public/tokens uit het design system

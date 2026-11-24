@@ -1,5 +1,5 @@
 import { countryCode } from './dimensions';
-import type { Audience, IsoDate, Item, ProductType, Todo } from './types';
+import type { Audience, Budget, IsoDate, Item, ProductType, Todo } from './types';
 
 interface SeedEvent {
   title: string;
@@ -106,7 +106,7 @@ const EVENTS: SeedEvent[] = [
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country. */
-export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[] } {
+export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[]; budgets: Budget[] } {
   const now = new Date().toISOString();
   const items = EVENTS.map((e): Item => ({
     id: makeId(),
@@ -126,5 +126,5 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[] 
     createdAt: now,
     updatedAt: now,
   }));
-  return { items, todos: [] };
+  return { items, todos: [], budgets: [] };
 }
