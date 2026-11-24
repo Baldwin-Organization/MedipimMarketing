@@ -132,6 +132,7 @@ export function App() {
             </Routes>
           ) : (
             <div className="mc-loading" aria-busy="true">
+              {store.blocked && <p role="alert">{t.app.blocked}</p>}
               <div className="mc-skeleton" /><div className="mc-skeleton" /><div className="mc-skeleton" />
             </div>
           )}

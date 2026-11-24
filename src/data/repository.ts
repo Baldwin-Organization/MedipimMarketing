@@ -36,8 +36,12 @@ const DB_NAME = 'medipim-marketing-calendar-v2';
 export class IndexedDbRepository implements Repository {
   private db: Promise<IDBPDatabase<CalendarDb>>;
 
-  constructor(name = DB_NAME) {
+  /** `onBlocked` runs while a tab with an older version keeps the database open and the upgrade waits. */
+  constructor(name = DB_NAME, onBlocked?: () => void) {
     this.db = openDB<CalendarDb>(name, 3, {
+      blocked: () => onBlocked?.(),
+      // Tabs that never get the upgrade signal hang every newer version, so make way and load it.
+      blocking: () => location.reload(),
       upgrade(db, oldVersion) {
         if (oldVersion < 1) {
           db.createObjectStore('items', { keyPath: 'id' });

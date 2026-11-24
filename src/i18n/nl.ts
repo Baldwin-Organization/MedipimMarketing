@@ -45,6 +45,7 @@ export const nl = {
     darkMode: 'Donkere modus',
     language: 'Taal',
     localNote: 'Gegevens blijven lokaal in deze browser (IndexedDB).',
+    blocked: 'Een ander tabblad gebruikt nog een oudere versie van de marketingkalender. Sluit of herlaad dat tabblad; deze pagina laadt daarna vanzelf.',
     exportFile: 'marketingkalender',
   },
 

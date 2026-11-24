@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { todayIso } from './dates';
 import { IndexedDbRepository, newId, parseDataset, toDataset, type Contents, type Repository } from './repository';
 import { moveItem, moveTodo, rollForward, todosFromTemplate, type ScheduledTodo } from './schedule';
@@ -11,6 +11,8 @@ export type ContentDraft = Omit<ContentPiece, 'id' | 'createdAt' | 'updatedAt'> 
 
 interface Store {
   ready: boolean;
+  /** Another tab still runs an older version and holds the database. */
+  blocked: boolean;
   today: IsoDate;
   items: Item[];
   itemsById: Map<string, Item>;
@@ -40,7 +42,8 @@ interface Store {
 const StoreContext = createContext<Store | null>(null);
 
 export function StoreProvider({ children, repository }: { children: ReactNode; repository?: Repository }) {
-  const repo = useRef<Repository>(repository ?? new IndexedDbRepository()).current;
+  const [blocked, setBlocked] = useState(false);
+  const [repo] = useState<Repository>(() => repository ?? new IndexedDbRepository(undefined, () => setBlocked(true)));
   const [ready, setReady] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [rawTodos, setRawTodos] = useState<Todo[]>([]);
@@ -119,6 +122,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
     };
     return {
       ready,
+      blocked,
       today,
       items,
       itemsById,
@@ -211,7 +215,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         apply(data);
       },
     };
-  }, [ready, today, items, itemsById, todos, rawTodos, budgets, pillars, sortedPillars, content, repo, upsertItems, upsertTodos]);
+  }, [ready, blocked, today, items, itemsById, todos, rawTodos, budgets, pillars, sortedPillars, content, repo, upsertItems, upsertTodos]);
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
 }
