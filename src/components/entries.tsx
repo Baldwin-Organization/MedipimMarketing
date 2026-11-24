@@ -1,5 +1,6 @@
 import type { DragEvent } from 'react';
 import { TYPE_META } from '../data/meta';
+import { t, todoLabel, typeLabel } from '../i18n';
 import type { ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
@@ -40,10 +41,10 @@ export function useDayDrop(day: IsoDate) {
         const item = store.itemsById.get(p.id);
         if (!item || item.date === day) return;
         const n = await store.moveItemTo(p.id, day);
-        notify(`"${item.title}" verplaatst${n ? `, ${n} to do${n === 1 ? '' : "'s"} schoven mee` : ''}.`);
+        notify(t.entries.moved(item.title, n));
       } else {
         await store.moveTodoTo(p.id, day);
-        notify('To do verplaatst.');
+        notify(t.entries.todoMoved);
       }
     },
   };
@@ -64,7 +65,7 @@ export function ItemChip({ item, day, compact }: { item: Item; day?: IsoDate; co
       draggable
       onDragStart={(e) => startDrag(e, { kind: 'item', id: item.id })}
       onClick={() => openItem(item.id)}
-      title={`${m.label}: ${item.title}`}
+      title={`${typeLabel(item.type)}: ${item.title}`}
     >
       <Icon name={m.icon} size={14} />
       {!compact && item.time && !continued && <span className="mc-entry-time">{item.time}</span>}
@@ -87,9 +88,9 @@ export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledT
       draggable={!todo.done}
       onDragStart={(e) => startDrag(e, { kind: 'todo', id: todo.id })}
     >
-      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={`${todo.title} afvinken`} />
+      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo.title))} />
       <button type="button" className="mc-todo-body" onClick={() => item && openItem(item.id)}>
-        <span className="mc-entry-title">{todo.title}</span>
+        <span className="mc-entry-title">{todoLabel(todo.title)}</span>
         {showItem && item && <span className="mc-todo-item">{item.title}</span>}
       </button>
       <LateBadge days={todo.lateDays} compact={compact} />

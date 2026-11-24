@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { isExistingMarket } from './dimensions';
 import { ITEM_TYPES } from './meta';
 import type { Audience, Budget, Item, ItemType } from './types';
@@ -61,5 +62,5 @@ export function byMarket(items: Item[], year: number) {
   );
 }
 
-const euroFormat = new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-export const euro = (n: number) => euroFormat.format(n);
+export const euro = (n: number) =>
+  new Intl.NumberFormat(t.numberLocale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);

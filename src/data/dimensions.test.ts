@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NEW_MARKETS, countryCode, countryName, isExistingMarket, matchesCountry } from './dimensions';
+import { newMarkets, countryCode, countryName, isExistingMarket, matchesCountry } from './dimensions';
 import { normalizeItem } from './repository';
 import { buildSeed } from './seed';
 import type { Item } from './types';
@@ -10,8 +10,8 @@ describe('markets', () => {
   it('treats the nine current countries as existing and every other one as new', () => {
     expect(['BE', 'FR', 'DE', 'GB', 'LU', 'AT', 'ES', 'US', 'AU'].every(isExistingMarket)).toBe(true);
     expect(isExistingMarket('NL')).toBe(false);
-    expect(NEW_MARKETS).toContain('NL');
-    expect(NEW_MARKETS).not.toContain('BE');
+    expect(newMarkets()).toContain('NL');
+    expect(newMarkets()).not.toContain('BE');
   });
 
   it('maps Dutch country names to ISO codes and back', () => {

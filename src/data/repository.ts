@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Budget, Dataset, Item, Todo } from './types';
 
@@ -108,7 +109,7 @@ export function normalizeItem(item: Item): Item {
 export function parseDataset(json: string): Dataset & Contents {
   const data = JSON.parse(json) as Partial<Dataset>;
   if (data.version !== 1 || !Array.isArray(data.items) || !Array.isArray(data.todos)) {
-    throw new Error('Dit is geen geldig exportbestand van de marketingkalender.');
+    throw new Error(t.app.invalidFile);
   }
   return { ...(data as Dataset), items: data.items.map(normalizeItem), budgets: data.budgets ?? [] };
 }

@@ -1,10 +1,11 @@
 import { addMonths, endOfMonth, endOfWeek, getISOWeek, startOfMonth, startOfWeek } from 'date-fns';
 import { ItemChip, TodoEntry, useDayDrop } from '../components/entries';
-import { fmt, fmtDate, relativeDay, shiftIso, toIso } from '../data/dates';
+import { fmt, fmtDate, relativeDay, shiftIso, toIso, weekdayNames } from '../data/dates';
 import { TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
+import { t } from '../i18n';
 import { useUi } from '../ui-context';
 
 const WEEK = { weekStartsOn: 1 as const };
@@ -62,10 +63,10 @@ function MonthSummary({ month, items, limit = Infinity, onOpenMonth, onOpenDay }
     <section className="mc-month-card" aria-label={fmtDate(month, 'MMMM yyyy')}>
       <header className="mc-month-card-head">
         <button type="button" className="mc-month-card-title" onClick={() => onOpenMonth(start)}>{fmtDate(month, 'MMMM')}</button>
-        <span className="mc-muted">{inMonth.length ? `${inMonth.length} item${inMonth.length === 1 ? '' : 's'}` : 'leeg'}</span>
+        <span className="mc-muted">{inMonth.length ? t.calendar.items(inMonth.length) : t.calendar.empty}</span>
       </header>
-      <div className="mc-mini-cal" role="grid" aria-label={`Dagen in ${fmtDate(month, 'MMMM')}`}>
-        {['m', 'd', 'w', 'd', 'v', 'z', 'z'].map((d, k) => <span key={k} className="mc-mini-head" aria-hidden="true">{d}</span>)}
+      <div className="mc-mini-cal" role="grid" aria-label={t.calendar.daysIn(fmtDate(month, 'MMMM'))}>
+        {weekdayNames('EEEEE').map((d, k) => <span key={k} className="mc-mini-head" aria-hidden="true">{d}</span>)}
         {days.map((day) => {
           if (day < start || day > end) return <span key={day} />;
           const on = inMonth.filter((i) => itemOnDay(i, day));
@@ -77,7 +78,7 @@ function MonthSummary({ month, items, limit = Infinity, onOpenMonth, onOpenDay }
               className="mc-mini-day"
               data-today={day === today || undefined}
               data-busy={on.length > 0 || undefined}
-              aria-label={`${fmt(day, 'd MMMM')}${on.length ? `, ${on.length} item${on.length === 1 ? '' : 's'}` : ''}`}
+              aria-label={`${fmt(day, 'd MMMM')}${on.length ? `, ${t.calendar.items(on.length)}` : ''}`}
               title={on.map((i) => i.title).join('\n') || undefined}
               onClick={() => onOpenDay(day)}
             >
@@ -102,7 +103,7 @@ function MonthSummary({ month, items, limit = Infinity, onOpenMonth, onOpenDay }
         </ul>
       )}
       {inMonth.length > shown.length && (
-        <button type="button" className="mc-more" onClick={() => onOpenMonth(start)}>+{inMonth.length - shown.length} meer</button>
+        <button type="button" className="mc-more" onClick={() => onOpenMonth(start)}>{t.common.more(inMonth.length - shown.length)}</button>
       )}
     </section>
   );
@@ -127,9 +128,9 @@ function ListDay({ day, today, weekStart, items, todos }: { day: IsoDate; today:
   const weekend = Number(fmt(day, 'i')) >= 6;
   return (
     <>
-      {weekStart && <li className="mc-list-week" aria-hidden="true">Week {getISOWeek(new Date(`${day}T12:00`))}</li>}
+      {weekStart && <li className="mc-list-week" aria-hidden="true">{t.dates.week} {getISOWeek(new Date(`${day}T12:00`))}</li>}
       <li className="mc-agenda-day" data-today={day === today || undefined} data-empty={empty || undefined} data-weekend={weekend || undefined} data-day={day} {...drop}>
-        <button type="button" className="mc-agenda-date mc-list-date" aria-label={`Nieuw item op ${fmt(day, 'd MMMM')}`} onClick={() => openItem(undefined, { date: day })}>
+        <button type="button" className="mc-agenda-date mc-list-date" aria-label={t.common.newItemOn(fmt(day, 'd MMMM'))} onClick={() => openItem(undefined, { date: day })}>
           <span className="mc-day-num">{fmt(day, 'd')}</span>
           <span><span className="mc-day-name">{fmt(day, 'EEEE')}</span><span className="mc-muted">{relativeDay(day, today)}</span></span>
         </button>

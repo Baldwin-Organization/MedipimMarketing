@@ -3,9 +3,9 @@ import { PlanTable } from '../components/PlanTable';
 import { Button, Card, EmptyState, Stat, TypeBadge } from '../components/ui';
 import { byAudience, byMarket, byQuarter, byType, euro, yearOf, type Totals } from '../data/budget';
 import { AUDIENCES } from '../data/dimensions';
-import { TYPE_META } from '../data/meta';
 import { useStore } from '../data/store';
 import type { ItemType } from '../data/types';
+import { audienceLabel, t, typePlural } from '../i18n';
 import { PageHeader } from './PageHeader';
 
 const TOP_ITEMS = 10;
@@ -15,7 +15,7 @@ export function BudgetView() {
   const [year, setYear] = useState(() => Number(store.today.slice(0, 4)));
 
   const rows = byType(store.items, store.budgets, year);
-  const total = rows.reduce((t, r) => ({ budget: t.budget + r.budget, planned: t.planned + r.planned, actual: t.actual + r.actual }), { budget: 0, planned: 0, actual: 0 });
+  const total = rows.reduce((sum, r) => ({ budget: sum.budget + r.budget, planned: sum.planned + r.planned, actual: sum.actual + r.actual }), { budget: 0, planned: 0, actual: 0 });
   const withBudget = store.items
     .filter((i) => yearOf(i) === year && (i.budgetPlanned || i.budgetActual))
     .sort((a, b) => Math.max(b.budgetPlanned ?? 0, b.budgetActual ?? 0) - Math.max(a.budgetPlanned ?? 0, a.budgetActual ?? 0));
@@ -28,51 +28,51 @@ export function BudgetView() {
   return (
     <div className="mc-page">
       <PageHeader
-        title="Budget"
-        subtitle="Jaarbudget per soort actie, tegenover wat gepland en besteed is. Bedragen excl. btw."
+        title={t.budget.title}
+        subtitle={t.budget.subtitle}
         actions={
           <div className="mc-period-nav">
-            <Button variant="text" intent="secondary" icon="chevron_left" label="Vorig jaar" onClick={() => setYear((y) => y - 1)} />
+            <Button variant="text" intent="secondary" icon="chevron_left" label={t.budget.prevYear} onClick={() => setYear((y) => y - 1)} />
             <span className="mc-period-label">{year}</span>
-            <Button variant="text" intent="secondary" icon="chevron_right" label="Volgend jaar" onClick={() => setYear((y) => y + 1)} />
+            <Button variant="text" intent="secondary" icon="chevron_right" label={t.budget.nextYear} onClick={() => setYear((y) => y + 1)} />
           </div>
         }
       />
       <div className="mc-stats">
-        <Stat label="Jaarbudget" value={euro(total.budget)} tone="brand" icon="payments" hint={`totaal voor ${year}`} />
-        <Stat label="Gepland" value={euro(total.planned)} tone="neutral" icon="schedule" hint={total.budget ? `${pct(total.planned, total.budget)} van het budget` : 'stel een jaarbudget in'} />
-        <Stat label="Besteed" value={euro(total.actual)} tone="neutral" icon="history" hint={total.planned ? `${pct(total.actual, total.planned)} van gepland` : 'nog niets gepland'} />
-        <Stat label="Nog vrij" value={total.budget ? euro(free) : '–'} tone={total.budget && free < 0 ? 'error' : 'neutral'} icon="flag" hint={!total.budget ? 'nog geen jaarbudget' : free < 0 ? 'meer gepland dan budget' : 'budget min gepland'} />
+        <Stat label={t.budget.annual} value={euro(total.budget)} tone="brand" icon="payments" hint={t.budget.annualHint(year)} />
+        <Stat label={t.budget.planned} value={euro(total.planned)} tone="neutral" icon="schedule" hint={total.budget ? t.budget.plannedHint(pct(total.planned, total.budget)) : t.budget.setBudget} />
+        <Stat label={t.budget.spent} value={euro(total.actual)} tone="neutral" icon="history" hint={total.planned ? t.budget.spentHint(pct(total.actual, total.planned)) : t.budget.nothingPlanned} />
+        <Stat label={t.budget.free} value={total.budget ? euro(free) : '–'} tone={total.budget && free < 0 ? 'error' : 'neutral'} icon="flag" hint={!total.budget ? t.budget.noAnnual : free < 0 ? t.budget.overBudget : t.budget.freeHint} />
       </div>
 
-      <Card title="Per soort actie" icon="payments">
+      <Card title={t.budget.perType} icon="payments">
         <div className="mc-table-wrap">
-          <table className="mc-table mc-budget-table" aria-label="Budget per soort actie">
+          <table className="mc-table mc-budget-table" aria-label={t.budget.perType}>
             <thead>
               <tr>
-                <th>Soort</th>
-                <th className="mc-num">Jaarbudget</th>
-                <th className="mc-num">Gepland</th>
-                <th className="mc-num">Besteed</th>
-                <th className="mc-num">Nog vrij</th>
-                <th>Verbruik</th>
+                <th>{t.budget.kind}</th>
+                <th className="mc-num">{t.budget.annual}</th>
+                <th className="mc-num">{t.budget.planned}</th>
+                <th className="mc-num">{t.budget.spent}</th>
+                <th className="mc-num">{t.budget.free}</th>
+                <th>{t.budget.usage}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.type}>
-                  <td><span className="mc-table-title"><TypeBadge type={r.type} />{TYPE_META[r.type].plural}</span></td>
+                  <td><span className="mc-table-title"><TypeBadge type={r.type} />{typePlural(r.type)}</span></td>
                   <td className="mc-num"><BudgetInput year={year} type={r.type} amount={r.budget} /></td>
                   <td className="mc-num">{euro(r.planned)}</td>
                   <td className="mc-num">{euro(r.actual)}</td>
-                  <td className="mc-num" data-over={(r.budget > 0 && r.planned > r.budget) || undefined}>{r.budget ? euro(r.budget - r.planned) : <span className="mc-muted">{r.planned ? 'geen budget' : '–'}</span>}</td>
+                  <td className="mc-num" data-over={(r.budget > 0 && r.planned > r.budget) || undefined}>{r.budget ? euro(r.budget - r.planned) : <span className="mc-muted">{r.planned ? t.budget.noBudget : '–'}</span>}</td>
                   <td><BudgetBar {...r} /></td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr>
-                <th>Totaal</th>
+                <th>{t.budget.total}</th>
                 <th className="mc-num">{euro(total.budget)}</th>
                 <th className="mc-num">{euro(total.planned)}</th>
                 <th className="mc-num">{euro(total.actual)}</th>
@@ -83,44 +83,44 @@ export function BudgetView() {
           </table>
         </div>
         <p className="mc-muted mc-budget-legend">
-          <span className="mc-legend-swatch" data-kind="planned" /> gepland
-          <span className="mc-legend-swatch" data-kind="actual" /> besteed
-          · de balk is het jaarbudget
+          <span className="mc-legend-swatch" data-kind="planned" /> {t.budget.legendPlanned}
+          <span className="mc-legend-swatch" data-kind="actual" /> {t.budget.legendSpent}
+          {' '}{t.budget.legendBar}
         </p>
       </Card>
 
       <div className="mc-budget-grid">
-        <Card title="Per kwartaal" icon="calendar_month">
-          <Breakdown rows={byQuarter(store.items, year).map((q) => ({ label: `K${q.quarter}`, ...q }))} />
+        <Card title={t.budget.perQuarter} icon="calendar_month">
+          <Breakdown rows={byQuarter(store.items, year).map((q) => ({ label: `${t.dates.quarter}${q.quarter}`, ...q }))} />
         </Card>
-        <Card title="Per doelgroep" icon="person">
+        <Card title={t.budget.perAudience} icon="person">
           <Breakdown rows={[
-            ...AUDIENCES.map(({ value, label }) => ({ label, ...(audiences.get(value) ?? ZERO) })),
-            ...(audiences.has('geen') ? [{ label: 'Geen doelgroep', ...audiences.get('geen')! }] : []),
+            ...AUDIENCES.map((a) => ({ label: audienceLabel(a), ...(audiences.get(a) ?? ZERO) })),
+            ...(audiences.has('geen') ? [{ label: t.budget.noAudience, ...audiences.get('geen')! }] : []),
           ]} />
         </Card>
-        <Card title="Per markt" icon="flag">
+        <Card title={t.budget.perMarket} icon="flag">
           <Breakdown rows={[
-            { label: 'Bestaande markten', ...(markets.get('bestaand') ?? ZERO) },
-            { label: 'Nieuwe markten', ...(markets.get('nieuw') ?? ZERO) },
-            ...(markets.has('geen') ? [{ label: 'Geen land', ...markets.get('geen')! }] : []),
+            { label: t.budget.existing, ...(markets.get('bestaand') ?? ZERO) },
+            { label: t.budget.new, ...(markets.get('nieuw') ?? ZERO) },
+            ...(markets.has('geen') ? [{ label: t.budget.noCountry, ...markets.get('geen')! }] : []),
           ]} />
         </Card>
       </div>
-      <p className="mc-muted">Een actie met meerdere doelgroepen of markten wordt gelijk over die groepen verdeeld.</p>
+      <p className="mc-muted">{t.budget.splitNote}</p>
 
       <section className="mc-plan-group">
-        <div className="mc-section-bar"><h2>Grootste posten {year}</h2></div>
+        <div className="mc-section-bar"><h2>{t.budget.biggest(year)}</h2></div>
         {withBudget.length === 0 ? (
-          <EmptyState icon="payments" title="Nog geen bedragen ingevuld">
-            Vul bij een actie onder "Budget" het geplande en het werkelijke bedrag in.
+          <EmptyState icon="payments" title={t.budget.noAmounts}>
+            {t.budget.noAmountsHint}
           </EmptyState>
         ) : (
-          <PlanTable items={withBudget.slice(0, TOP_ITEMS)} label={`Grootste posten ${year}`} showType />
+          <PlanTable items={withBudget.slice(0, TOP_ITEMS)} label={t.budget.biggest(year)} showType />
         )}
         {paidWithoutBudget.length > 0 && (
           <p className="mc-muted">
-            {paidWithoutBudget.length} {paidWithoutBudget.length === 1 ? 'beurs, campagne of PR-item heeft' : 'beurzen, campagnes en PR-items hebben'} nog geen gepland bedrag.
+            {t.budget.withoutBudget(paidWithoutBudget.length)}
           </p>
         )}
       </section>
@@ -147,7 +147,7 @@ function BudgetInput({ year, type, amount }: { year: number; type: ItemType; amo
       step={500}
       inputMode="decimal"
       className="mc-input mc-budget-input"
-      aria-label={`Jaarbudget ${TYPE_META[type].plural} ${year}`}
+      aria-label={t.budget.inputLabel(typePlural(type), year)}
       placeholder="0"
       value={value}
       onChange={(e) => setValue(e.target.value)}
@@ -162,7 +162,7 @@ function BudgetBar({ budget, planned, actual }: Totals & { budget: number }) {
   const scale = Math.max(budget, planned, actual);
   if (!scale) return <span className="mc-muted">–</span>;
   return (
-    <span className="mc-budget-bar" data-over={(budget > 0 && planned > budget) || undefined} title={`${euro(planned)} gepland, ${euro(actual)} besteed van ${euro(budget)}`}>
+    <span className="mc-budget-bar" data-over={(budget > 0 && planned > budget) || undefined} title={t.budget.barTitle(euro(planned), euro(actual), euro(budget))}>
       <span data-kind="planned" style={{ width: `${(planned / scale) * 100}%` }} />
       <span data-kind="actual" style={{ width: `${(actual / scale) * 100}%` }} />
       {budget > 0 && budget < scale && <span className="mc-budget-limit" style={{ left: `${(budget / scale) * 100}%` }} />}
@@ -172,14 +172,14 @@ function BudgetBar({ budget, planned, actual }: Totals & { budget: number }) {
 
 function Breakdown({ rows }: { rows: (Totals & { label: string })[] }) {
   const max = Math.max(...rows.map((r) => Math.max(r.planned, r.actual)));
-  if (!max) return <p className="mc-muted">Nog geen bedragen voor deze periode.</p>;
+  if (!max) return <p className="mc-muted">{t.budget.noPeriodAmounts}</p>;
   return (
     <ul className="mc-breakdown">
       {rows.map((r) => (
         <li key={r.label}>
           <span className="mc-breakdown-label">{r.label}</span>
           <span className="mc-num">{euro(r.planned)}</span>
-          <span className="mc-budget-bar" title={`${euro(r.planned)} gepland, ${euro(r.actual)} besteed`}>
+          <span className="mc-budget-bar" title={t.budget.barTitleShort(euro(r.planned), euro(r.actual))}>
             <span data-kind="planned" style={{ width: `${(r.planned / max) * 100}%` }} />
             <span data-kind="actual" style={{ width: `${(r.actual / max) * 100}%` }} />
           </span>

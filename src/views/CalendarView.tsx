@@ -4,12 +4,13 @@ import { TodayPanel } from '../components/TodayPanel';
 import { ItemChip, TodoEntry, useDayDrop } from '../components/entries';
 import { CountrySelect, FilterSelect } from '../components/filters';
 import { Button, Segmented, ToggleChipGroup } from '../components/ui';
-import { fmt, fmtDate, fromIso, shiftIso, toIso } from '../data/dates';
-import { AUDIENCES, PRODUCT_TYPES, matchesCountry, type CountryFilter } from '../data/dimensions';
+import { fmt, fmtDate, fromIso, shiftIso, toIso, weekdayNames } from '../data/dates';
+import { audienceOptions, matchesCountry, productOptions, type CountryFilter } from '../data/dimensions';
 import { ITEM_TYPES, OWNERS, TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { Audience, IsoDate, Item, ItemType, ProductType } from '../data/types';
+import { channelLabel, t, typePlural } from '../i18n';
 import { useUi } from '../ui-context';
 import { DayList, QuarterOverview, YearOverview } from './CalendarOverview';
 import { PageHeader } from './PageHeader';
@@ -89,9 +90,9 @@ export function CalendarView() {
   const quarterStart = startOfQuarter(fromIso(anchor));
   const periodLabel = {
     jaar: fmt(anchor, 'yyyy'),
-    kwartaal: `K${getQuarter(quarterStart)} ${fmtDate(quarterStart, 'yyyy')} · ${fmtDate(quarterStart, 'MMMM')} – ${fmtDate(addMonths(quarterStart, 2), 'MMMM')}`,
+    kwartaal: `${t.dates.quarter}${getQuarter(quarterStart)} ${fmtDate(quarterStart, 'yyyy')} · ${fmtDate(quarterStart, 'MMMM')} – ${fmtDate(addMonths(quarterStart, 2), 'MMMM')}`,
     maand: fmt(anchor, 'MMMM yyyy'),
-    week: `Week ${fmt(range.start, 'I')} · ${fmt(range.start, 'd MMM')} – ${fmt(range.end, 'd MMM yyyy')}`,
+    week: `${t.dates.week} ${fmt(range.start, 'I')} · ${fmt(range.start, 'd MMM')} – ${fmt(range.end, 'd MMM yyyy')}`,
     lijst: fmt(anchor, 'MMMM yyyy'),
   }[view];
   const openMonth = (day: IsoDate) => { setAnchor(day); setView('maand'); };
@@ -105,56 +106,56 @@ export function CalendarView() {
   return (
     <div className="mc-page mc-page-calendar">
       <PageHeader
-        title="Kalender"
-        subtitle="Sleep items of to do's naar een andere dag. To do's die over datum zijn, schuiven automatisch door naar vandaag."
-        actions={<Button startIcon="add" onClick={() => openItem(undefined, { date: store.today })}>Nieuw item</Button>}
+        title={t.calendar.title}
+        subtitle={t.calendar.subtitle}
+        actions={<Button startIcon="add" onClick={() => openItem(undefined, { date: store.today })}>{t.common.newItem}</Button>}
       />
 
       <TodayPanel todos={todos} />
 
       <div className="mc-cal-toolbar">
         <div className="mc-cal-nav">
-          <Button variant="outlined" intent="secondary" icon="chevron_left" label="Vorige" onClick={() => step(-1)} />
-          <Button variant="outlined" intent="secondary" onClick={() => setAnchor(store.today)}>Vandaag</Button>
-          <Button variant="outlined" intent="secondary" icon="chevron_right" label="Volgende" onClick={() => step(1)} />
+          <Button variant="outlined" intent="secondary" icon="chevron_left" label={t.common.previous} onClick={() => step(-1)} />
+          <Button variant="outlined" intent="secondary" onClick={() => setAnchor(store.today)}>{t.common.today}</Button>
+          <Button variant="outlined" intent="secondary" icon="chevron_right" label={t.common.next} onClick={() => step(1)} />
           <h2 className="mc-cal-period">{periodLabel}</h2>
         </div>
         <Segmented
-          label="Weergave"
+          label={t.calendar.view}
           value={view}
           onChange={setView}
           options={[
-            { value: 'jaar', label: 'Jaar', icon: 'calendar_month' },
-            { value: 'kwartaal', label: 'Kwartaal', icon: 'space_dashboard' },
-            { value: 'maand', label: 'Maand', icon: 'grid_view' },
-            { value: 'week', label: 'Week', icon: 'view_column' },
-            { value: 'lijst', label: 'Lijst', icon: 'view_list' },
+            { value: 'jaar', label: t.calendar.views.jaar, icon: 'calendar_month' },
+            { value: 'kwartaal', label: t.calendar.views.kwartaal, icon: 'space_dashboard' },
+            { value: 'maand', label: t.calendar.views.maand, icon: 'grid_view' },
+            { value: 'week', label: t.calendar.views.week, icon: 'view_column' },
+            { value: 'lijst', label: t.calendar.views.lijst, icon: 'view_list' },
           ]}
         />
       </div>
 
-      <div className="mc-filters" aria-label="Filters">
+      <div className="mc-filters" aria-label={t.common.filters}>
         <ToggleChipGroup
-          label="Type"
+          label={t.calendar.type}
           value={filters.types}
           onChange={(types) => setFilters((f) => ({ ...f, types }))}
-          options={ITEM_TYPES.map((t) => ({ value: t, label: TYPE_META[t].plural, icon: TYPE_META[t].icon, accent: TYPE_META[t].accent }))}
+          options={ITEM_TYPES.map((type) => ({ value: type, label: typePlural(type), icon: TYPE_META[type].icon, accent: TYPE_META[type].accent }))}
         />
-        <FilterSelect label="Kanaal" value={filters.channel} options={channels} onChange={(channel) => setFilters((f) => ({ ...f, channel }))} />
-        <FilterSelect label="Eigenaar" value={filters.owner} options={OWNERS} onChange={(owner) => setFilters((f) => ({ ...f, owner }))} />
-        <FilterSelect label="Thema" value={filters.campaign} options={campaigns} onChange={(campaign) => setFilters((f) => ({ ...f, campaign }))} />
-        <FilterSelect label="Doelgroep" value={filters.audience} options={AUDIENCES} onChange={(audience) => setFilters((f) => ({ ...f, audience }))} />
-        <FilterSelect label="Product" value={filters.product} options={PRODUCT_TYPES} onChange={(product) => setFilters((f) => ({ ...f, product }))} />
+        <FilterSelect label={t.calendar.channel} value={filters.channel} options={channels.map((c) => ({ value: c, label: channelLabel(c) }))} onChange={(channel) => setFilters((f) => ({ ...f, channel }))} />
+        <FilterSelect label={t.calendar.owner} value={filters.owner} options={OWNERS} onChange={(owner) => setFilters((f) => ({ ...f, owner }))} />
+        <FilterSelect label={t.calendar.theme} value={filters.campaign} options={campaigns} onChange={(campaign) => setFilters((f) => ({ ...f, campaign }))} />
+        <FilterSelect label={t.dims.audience} value={filters.audience} options={audienceOptions()} onChange={(audience) => setFilters((f) => ({ ...f, audience }))} />
+        <FilterSelect label={t.dims.productShort} value={filters.product} options={productOptions()} onChange={(product) => setFilters((f) => ({ ...f, product }))} />
         <CountrySelect value={filters.country} items={store.items} onChange={(country) => setFilters((f) => ({ ...f, country }))} />
         <ToggleChipGroup
-          label="To do's"
+          label={t.calendar.todos}
           value={filters.showTodos ? ['todos'] : []}
           onChange={(v) => setFilters((f) => ({ ...f, showTodos: v.includes('todos') }))}
-          options={[{ value: 'todos', label: "To do's tonen", icon: 'checklist' }]}
+          options={[{ value: 'todos', label: t.calendar.showTodos, icon: 'checklist' }]}
         />
         {activeFilters > 0 && (
           <Button variant="text" size="small" onClick={() => setFilters((f) => ({ ...f, ...NO_FILTERS }))}>
-            Filters wissen ({activeFilters})
+            {t.common.clearFilters(activeFilters)}
           </Button>
         )}
       </div>
@@ -167,7 +168,7 @@ export function CalendarView() {
         <DayList days={days} itemsOn={itemsOn} todosOn={todosOn} />
       ) : (
         <div className="mc-grid" data-view={view}>
-          {['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'].map((d) => <div key={d} className="mc-grid-head">{d}</div>)}
+          {weekdayNames('EEEEEE').map((d) => <div key={d} className="mc-grid-head">{d}</div>)}
           {days.map((day) => (
             <DayCell
               key={day}
@@ -197,14 +198,14 @@ function DayCell({ day, view, outside, items, todos, onMore }: { day: IsoDate; v
   return (
     <div className="mc-cell" data-outside={outside || undefined} data-today={isToday || undefined} data-past={day < store.today || undefined} data-day={day} {...drop}>
       <div className="mc-cell-head">
-        <button type="button" className="mc-cell-date" aria-label={`Nieuw item op ${fmt(day, 'd MMMM')}`} onClick={() => openItem(undefined, { date: day })}>
+        <button type="button" className="mc-cell-date" aria-label={t.common.newItemOn(fmt(day, 'd MMMM'))} onClick={() => openItem(undefined, { date: day })}>
           {view === 'week' && <span className="mc-cell-weekday">{fmt(day, 'EEEE')}</span>}
           <span className="mc-cell-num">{fmt(day, 'd')}</span>
         </button>
       </div>
       <div className="mc-cell-body">
         {shown.map((e) => (e.kind === 'item' ? <ItemChip key={e.i.id} item={e.i} day={day} /> : <TodoEntry key={e.t.id} todo={e.t} showItem={view === 'week'} compact />))}
-        {hidden > 0 && <button type="button" className="mc-more" onClick={onMore}>+{hidden} meer</button>}
+        {hidden > 0 && <button type="button" className="mc-more" onClick={onMore}>{t.common.more(hidden)}</button>}
       </div>
     </div>
   );

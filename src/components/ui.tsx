@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { ICON_PATHS, type IconName } from '../icons.generated';
 import { STATUS_META, TYPE_META } from '../data/meta';
+import { statusLabel, t, typeLabel } from '../i18n';
 import type { ItemStatus, ItemType } from '../data/types';
 
 export function Icon({ name, size = 20, className }: { name: IconName; size?: number; className?: string }) {
@@ -50,26 +51,26 @@ export function Pill({ tone = 'neutral', children }: { tone?: 'neutral' | 'info'
 }
 
 export const StatusPill = ({ status }: { status: ItemStatus }) => (
-  <Pill tone={STATUS_META[status].tone}>{STATUS_META[status].label}</Pill>
+  <Pill tone={STATUS_META[status].tone}>{statusLabel(status)}</Pill>
 );
 
 export function TypeBadge({ type, withLabel = false }: { type: ItemType; withLabel?: boolean }) {
   const m = TYPE_META[type];
   return (
-    <span className="mc-type" data-accent={m.accent} title={withLabel ? undefined : m.label}>
+    <span className="mc-type" data-accent={m.accent} title={withLabel ? undefined : typeLabel(type)}>
       <Icon name={m.icon} size={16} />
-      {withLabel && <span>{m.label}</span>}
+      {withLabel && <span>{typeLabel(type)}</span>}
     </span>
   );
 }
 
 export function LateBadge({ days, compact }: { days: number; compact?: boolean }) {
   if (days <= 0) return null;
-  const full = `${days} ${days === 1 ? 'dag' : 'dagen'} te laat`;
+  const full = t.late.full(days);
   return (
-    <span className="mc-late" title={`${full}: oorspronkelijk ${days} dag${days === 1 ? '' : 'en'} geleden gepland`} aria-label={full}>
+    <span className="mc-late" title={t.late.title(days)} aria-label={full}>
       <Icon name="history" size={12} />
-      {compact ? `${days} d` : full}
+      {compact ? `${days} ${t.dates.dayShort}` : full}
     </span>
   );
 }
@@ -126,7 +127,7 @@ export function Field({ label, optional, children, className }: { label: string;
     <div className={`mc-field ${className ?? ''}`}>
       <label htmlFor={id}>
         {label}
-        {optional && <span className="mc-optional"> (optioneel)</span>}
+        {optional && <span className="mc-optional"> {t.common.optional}</span>}
       </label>
       {children(id)}
     </div>
@@ -181,7 +182,7 @@ export function Drawer({ open, onClose, title, children, footer }: { open: boole
       <div className="mc-drawer" role="dialog" aria-modal="true" aria-label={title} ref={panel}>
         <header className="mc-drawer-header">
           <h2>{title}</h2>
-          <Button variant="text" intent="secondary" icon="close" label="Sluiten" onClick={onClose} />
+          <Button variant="text" intent="secondary" icon="close" label={t.common.close} onClick={onClose} />
         </header>
         <div className="mc-drawer-body">{children}</div>
         <footer className="mc-drawer-footer">{footer}</footer>

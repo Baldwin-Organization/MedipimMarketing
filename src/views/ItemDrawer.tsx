@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { DimensionFields } from '../components/dimensions';
 import { Button, Checkbox, Drawer, Field, Icon, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
-import { CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, STATUS_META, TYPE_META } from '../data/meta';
+import { CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, TYPE_META } from '../data/meta';
 import { newId } from '../data/repository';
 import { rollForward } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
 import type { ItemType, Todo } from '../data/types';
+import { channelLabel, statusLabel, t, todoLabel, typeLabel } from '../i18n';
 import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
@@ -57,100 +58,100 @@ export function ItemDrawer() {
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
 
   const save = async () => {
-    if (!draft.title.trim()) return setError('Geef het item een titel.');
-    if (!draft.date) return setError('Kies een datum.');
-    if (draft.endDate && draft.endDate < draft.date) return setError('De einddatum ligt voor de startdatum.');
+    if (!draft.title.trim()) return setError(t.drawer.errTitle);
+    if (!draft.date) return setError(t.drawer.errDate);
+    if (draft.endDate && draft.endDate < draft.date) return setError(t.drawer.errEnd);
     const saved = await store.saveItem({ ...draft, title: draft.title.trim(), time: draft.time || undefined }, todos, { applyTemplate: offerTemplate && applyTemplate });
-    notify(isNew ? `"${saved.title}" toegevoegd.` : 'Wijzigingen bewaard.');
+    notify(isNew ? t.drawer.added(saved.title) : t.drawer.saved);
     closeItem();
   };
 
   const remove = async () => {
     if (!draft.id) return;
     await store.deleteItem(draft.id);
-    notify(`"${draft.title}" verwijderd.`);
+    notify(t.drawer.deleted(draft.title));
     closeItem();
   };
 
   const addTodo = () => {
     if (!newTodo.trim()) return;
     const due = draft.date ? shiftIso(draft.date, -1) : store.today;
-    setTodos((t) => [...t, { id: newId(), itemId: draft.id ?? '', title: newTodo.trim(), dueDate: due, done: false, offsetDays: -1, owner: draft.owner }]);
+    setTodos((list) => [...list, { id: newId(), itemId: draft.id ?? '', title: newTodo.trim(), dueDate: due, done: false, offsetDays: -1, owner: draft.owner }]);
     setNewTodo('');
   };
 
-  const updateTodo = (id: string, patch: Partial<Todo>) => setTodos((list) => list.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const updateTodo = (id: string, patch: Partial<Todo>) => setTodos((list) => list.map((todo) => (todo.id === id ? { ...todo, ...patch } : todo)));
 
   return (
     <Drawer
       open={!!editing}
       onClose={closeItem}
-      title={isNew ? 'Nieuw item' : 'Item bewerken'}
+      title={isNew ? t.drawer.newTitle : t.drawer.editTitle}
       footer={
         <>
           {!isNew && (confirmDelete ? (
             <span className="mc-confirm">
-              Item en to do's verwijderen?
-              <Button variant="contained" intent="destructive" size="small" onClick={remove}>Verwijderen</Button>
-              <Button variant="text" intent="secondary" size="small" onClick={() => setConfirmDelete(false)}>Nee</Button>
+              {t.drawer.confirmDelete}
+              <Button variant="contained" intent="destructive" size="small" onClick={remove}>{t.drawer.delete}</Button>
+              <Button variant="text" intent="secondary" size="small" onClick={() => setConfirmDelete(false)}>{t.drawer.no}</Button>
             </span>
           ) : (
-            <Button variant="text" intent="destructive" startIcon="delete" onClick={() => setConfirmDelete(true)}>Verwijderen</Button>
+            <Button variant="text" intent="destructive" startIcon="delete" onClick={() => setConfirmDelete(true)}>{t.drawer.delete}</Button>
           ))}
           <span className="mc-spacer" />
-          <Button variant="text" intent="secondary" onClick={closeItem}>Annuleren</Button>
-          <Button onClick={save}>{isNew ? 'Toevoegen' : 'Bewaren'}</Button>
+          <Button variant="text" intent="secondary" onClick={closeItem}>{t.drawer.cancel}</Button>
+          <Button onClick={save}>{isNew ? t.drawer.add : t.drawer.save}</Button>
         </>
       }
     >
       <div className="mc-form">
         <Segmented
-          label="Type"
+          label={t.drawer.type}
           value={draft.type}
           onChange={setType}
-          options={ITEM_TYPES.map((t) => ({ value: t, label: TYPE_META[t].label.split(' /')[0], icon: TYPE_META[t].icon }))}
+          options={ITEM_TYPES.map((type) => ({ value: type, label: t.types[type].short, icon: TYPE_META[type].icon }))}
         />
-        <Field label="Titel">{(id) => <input id={id} className="mc-input" value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Bv. Nieuwsbrief december" />}</Field>
-        <Field label="Beschrijving" optional>{(id) => <textarea id={id} className="mc-input" rows={3} value={draft.description} onChange={(e) => set('description', e.target.value)} />}</Field>
+        <Field label={t.drawer.title}>{(id) => <input id={id} className="mc-input" value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder={t.drawer.titlePlaceholder} />}</Field>
+        <Field label={t.drawer.description} optional>{(id) => <textarea id={id} className="mc-input" rows={3} value={draft.description} onChange={(e) => set('description', e.target.value)} />}</Field>
         <div className="mc-form-row">
-          <Field label="Kanaal">{(id) => (
+          <Field label={t.drawer.channel}>{(id) => (
             <select id={id} className="mc-input" value={draft.channel} onChange={(e) => set('channel', e.target.value)}>
-              {[...new Set([...CHANNELS[draft.type], draft.channel])].map((c) => <option key={c}>{c}</option>)}
+              {[...new Set([...CHANNELS[draft.type], draft.channel])].map((c) => <option key={c} value={c}>{channelLabel(c)}</option>)}
             </select>
           )}</Field>
-          <Field label="Status">{(id) => (
+          <Field label={t.drawer.status}>{(id) => (
             <select id={id} className="mc-input" value={draft.status} onChange={(e) => set('status', e.target.value as ItemDraft['status'])}>
-              {STATUSES.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
+              {STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
             </select>
           )}</Field>
         </div>
         <div className="mc-form-row">
-          <Field label={hasPeriod ? 'Startdatum' : draft.type === 'pr' ? 'Publicatiedatum' : 'Datum'}>{(id) => <input id={id} type="date" className="mc-input" value={draft.date} onChange={(e) => set('date', e.target.value)} />}</Field>
+          <Field label={hasPeriod ? t.drawer.startDate : draft.type === 'pr' ? t.drawer.publicationDate : t.drawer.date}>{(id) => <input id={id} type="date" className="mc-input" value={draft.date} onChange={(e) => set('date', e.target.value)} />}</Field>
           {hasPeriod ? (
-            <Field label="Einddatum">{(id) => <input id={id} type="date" className="mc-input" value={draft.endDate ?? ''} min={draft.date} onChange={(e) => set('endDate', e.target.value)} />}</Field>
+            <Field label={t.drawer.endDate}>{(id) => <input id={id} type="date" className="mc-input" value={draft.endDate ?? ''} min={draft.date} onChange={(e) => set('endDate', e.target.value)} />}</Field>
           ) : (
-            <Field label="Tijd" optional>{(id) => <input id={id} type="time" className="mc-input" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} />}</Field>
+            <Field label={t.drawer.time} optional>{(id) => <input id={id} type="time" className="mc-input" value={draft.time ?? ''} onChange={(e) => set('time', e.target.value)} />}</Field>
           )}
         </div>
         {draft.type === 'pr' && (
-          <Field label="Medium" optional>{(id) => (
+          <Field label={t.drawer.medium} optional>{(id) => (
             <>
-              <input id={id} className="mc-input" list={`${id}-list`} value={draft.medium ?? ''} onChange={(e) => set('medium', e.target.value)} placeholder="Bv. Farmaceutisch Weekblad" />
+              <input id={id} className="mc-input" list={`${id}-list`} value={draft.medium ?? ''} onChange={(e) => set('medium', e.target.value)} placeholder={t.drawer.mediumPlaceholder} />
               <datalist id={`${id}-list`}>{media.map((m) => <option key={m} value={m} />)}</datalist>
             </>
           )}</Field>
         )}
         {draft.type === 'event' && (
-          <Field label="Locatie" optional>{(id) => <input id={id} className="mc-input" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder="Stad, locatie · standnummer" />}</Field>
+          <Field label={t.drawer.location} optional>{(id) => <input id={id} className="mc-input" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder={t.drawer.locationPlaceholder} />}</Field>
         )}
         <div className="mc-form-row">
-          <Field label="Eigenaar">{(id) => (
+          <Field label={t.drawer.owner}>{(id) => (
             <select id={id} className="mc-input" value={draft.owner} onChange={(e) => set('owner', e.target.value)}>
-              <option value="">Nog niemand</option>
+              <option value="">{t.drawer.nobodyYet}</option>
               {OWNERS.map((o) => <option key={o}>{o}</option>)}
             </select>
           )}</Field>
-          <Field label="Thema" optional>{(id) => (
+          <Field label={t.drawer.theme} optional>{(id) => (
             <>
               <input id={id} className="mc-input" list={`${id}-list`} value={draft.campaign} onChange={(e) => set('campaign', e.target.value)} />
               <datalist id={`${id}-list`}>{campaigns.map((c) => <option key={c} value={c} />)}</datalist>
@@ -158,57 +159,57 @@ export function ItemDrawer() {
           )}</Field>
         </div>
 
-        <section className="mc-form-section" aria-label="Budget">
-          <h3>Budget</h3>
+        <section className="mc-form-section" aria-label={t.drawer.budget}>
+          <h3>{t.drawer.budget}</h3>
           <div className="mc-form-row">
-            <Field label="Gepland (€, excl. btw)" optional>{(id) => (
+            <Field label={t.drawer.planned} optional>{(id) => (
               <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetPlanned ?? ''} onChange={(e) => set('budgetPlanned', euro(e.target.value))} />
             )}</Field>
-            <Field label="Werkelijk besteed (€)" optional>{(id) => (
+            <Field label={t.drawer.actual} optional>{(id) => (
               <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetActual ?? ''} onChange={(e) => set('budgetActual', euro(e.target.value))} />
             )}</Field>
           </div>
         </section>
 
-        <section className="mc-form-section" aria-label="Verrijking">
-          <h3>Verrijking</h3>
+        <section className="mc-form-section" aria-label={t.drawer.enrichment}>
+          <h3>{t.drawer.enrichment}</h3>
           <DimensionFields value={draft} onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))} />
         </section>
 
-        <section className="mc-form-section" aria-label="To do's">
-          <h3>To do's</h3>
+        <section className="mc-form-section" aria-label={t.drawer.todos}>
+          <h3>{t.drawer.todos}</h3>
           {offerTemplate && (
             <label className="mc-switch-row">
-              <Checkbox checked={applyTemplate} onChange={() => setApplyTemplate((v) => !v)} label="Standaard to do's toevoegen" />
-              <span>Standaard to do's voor {TYPE_META[draft.type].label.toLowerCase()} toevoegen</span>
+              <Checkbox checked={applyTemplate} onChange={() => setApplyTemplate((v) => !v)} label={t.drawer.addTemplate} />
+              <span>{t.drawer.addTemplateFor(typeLabel(draft.type).toLowerCase())}</span>
             </label>
           )}
           {preview.length > 0 && (
             <ul className="mc-template-list">
-              {preview.map((t) => (
-                <li key={t.id}><Icon name="checklist" size={16} /><span>{t.title}</span><span className="mc-muted">{fmt(t.dueDate, 'EEE d MMM')}</span></li>
+              {preview.map((todo) => (
+                <li key={todo.id}><Icon name="checklist" size={16} /><span>{todoLabel(todo.title)}</span><span className="mc-muted">{fmt(todo.dueDate, 'EEE d MMM')}</span></li>
               ))}
             </ul>
           )}
           {todos.length > 0 && (
             <ul className="mc-todo-edit">
-              {todos.map((t) => {
-                const late = rollForward(t, store.today).lateDays;
+              {todos.map((todo) => {
+                const late = rollForward(todo, store.today).lateDays;
                 return (
-                  <li key={t.id} data-done={t.done || undefined}>
-                    <Checkbox checked={t.done} onChange={() => updateTodo(t.id, { done: !t.done, doneAt: t.done ? undefined : new Date().toISOString() })} label={`${t.title} afvinken`} />
-                    <input className="mc-input mc-input-inline" aria-label="To do" value={t.title} onChange={(e) => updateTodo(t.id, { title: e.target.value })} />
+                  <li key={todo.id} data-done={todo.done || undefined}>
+                    <Checkbox checked={todo.done} onChange={() => updateTodo(todo.id, { done: !todo.done, doneAt: todo.done ? undefined : new Date().toISOString() })} label={t.common.check(todoLabel(todo.title))} />
+                    <input className="mc-input mc-input-inline" aria-label={t.drawer.todo} value={todoLabel(todo.title)} onChange={(e) => updateTodo(todo.id, { title: e.target.value })} />
                     <LateBadge days={late} />
-                    <input type="date" className="mc-input mc-input-date" aria-label="Vervaldatum" value={t.dueDate} onChange={(e) => updateTodo(t.id, { dueDate: e.target.value })} />
-                    <Button variant="text" intent="secondary" size="small" icon="delete" label="To do verwijderen" onClick={() => setTodos((list) => list.filter((x) => x.id !== t.id))} />
+                    <input type="date" className="mc-input mc-input-date" aria-label={t.drawer.dueDate} value={todo.dueDate} onChange={(e) => updateTodo(todo.id, { dueDate: e.target.value })} />
+                    <Button variant="text" intent="secondary" size="small" icon="delete" label={t.drawer.removeTodo} onClick={() => setTodos((list) => list.filter((x) => x.id !== todo.id))} />
                   </li>
                 );
               })}
             </ul>
           )}
           <div className="mc-add-todo">
-            <input className="mc-input" aria-label="Nieuwe to do" placeholder="Nieuwe to do…" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTodo()} />
-            <Button variant="outlined" intent="secondary" startIcon="add" onClick={addTodo}>To do toevoegen</Button>
+            <input className="mc-input" aria-label={t.drawer.newTodo} placeholder={t.drawer.newTodoPlaceholder} value={newTodo} onChange={(e) => setNewTodo(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTodo()} />
+            <Button variant="outlined" intent="secondary" startIcon="add" onClick={addTodo}>{t.drawer.addTodo}</Button>
           </div>
         </section>
         {error && <p className="mc-error" role="alert"><Icon name="warning" size={16} />{error}</p>}

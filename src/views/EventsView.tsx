@@ -4,10 +4,11 @@ import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
 import { Button, Checkbox, EmptyState, Icon, LateBadge, Segmented, StatusPill } from '../components/ui';
 import { daysBetween, fmt, fmtDate, fromIso, toIso } from '../data/dates';
-import { AUDIENCES, PRODUCT_TYPES, matchesCountry, type CountryFilter } from '../data/dimensions';
-import { CHANNELS, OWNERS, STATUSES, STATUS_META } from '../data/meta';
+import { audienceOptions, matchesCountry, productOptions, type CountryFilter } from '../data/dimensions';
+import { CHANNELS, OWNERS, STATUSES } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Audience, Item, ItemStatus, ProductType } from '../data/types';
+import { channelLabel, statusLabel, t, todoLabel } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -51,32 +52,32 @@ export function EventsView() {
   return (
     <div className="mc-page">
       <PageHeader
-        title="Beurzen en conferenties"
-        subtitle="Tijdlijn van de komende events, met de voorbereidingschecklist per event."
-        actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'event', channel: 'Beurs', date: today, endDate: today })}>Nieuw event</Button>}
+        title={t.events.title}
+        subtitle={t.events.subtitle}
+        actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'event', channel: 'Beurs', date: today, endDate: today })}>{t.events.newEvent}</Button>}
       />
-      <div className="mc-filters" aria-label="Filters">
+      <div className="mc-filters" aria-label={t.common.filters}>
         <CountrySelect value={filters.country} items={allEvents} onChange={set('country')} />
-        <FilterSelect label="Product" value={filters.product} options={PRODUCT_TYPES} onChange={set('product')} />
-        <FilterSelect label="Doelgroep" value={filters.audience} options={AUDIENCES} onChange={set('audience')} />
-        <FilterSelect label="Soort" value={filters.channel} options={channels} onChange={set('channel')} />
-        <FilterSelect label="Status" value={filters.status} options={STATUSES.map((s) => ({ value: s, label: STATUS_META[s].label }))} onChange={set('status')} />
-        <FilterSelect label="Eigenaar" value={filters.owner} options={OWNERS} onChange={set('owner')} />
+        <FilterSelect label={t.dims.productShort} value={filters.product} options={productOptions()} onChange={set('product')} />
+        <FilterSelect label={t.dims.audience} value={filters.audience} options={audienceOptions()} onChange={set('audience')} />
+        <FilterSelect label={t.events.kind} value={filters.channel} options={channels.map((c) => ({ value: c, label: channelLabel(c) }))} onChange={set('channel')} />
+        <FilterSelect label={t.events.status} value={filters.status} options={STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))} onChange={set('status')} />
+        <FilterSelect label={t.events.owner} value={filters.owner} options={OWNERS} onChange={set('owner')} />
         {active > 0 && (
           <Button variant="text" size="small" onClick={() => setFilters(NO_FILTERS)}>
-            Filters wissen ({active})
+            {t.common.clearFilters(active)}
           </Button>
         )}
-        <span className="mc-muted">{upcoming.length} {upcoming.length === 1 ? 'komend event' : 'komende events'}</span>
+        <span className="mc-muted">{t.events.upcomingCount(upcoming.length)}</span>
       </div>
       <Timeline events={upcoming} />
       <div className="mc-section-bar">
-        <h2>Voorbereiding</h2>
-        <Segmented label="Toon" value={scope} onChange={setScope} options={[{ value: 'komend', label: 'Komend' }, { value: 'alle', label: 'Alle' }]} />
+        <h2>{t.events.prep}</h2>
+        <Segmented label={t.common.show} value={scope} onChange={setScope} options={[{ value: 'komend', label: t.common.upcoming }, { value: 'alle', label: t.common.all }]} />
       </div>
       {events.length === 0 ? (
-        <EmptyState icon="storefront" title={allEvents.length ? 'Geen events gevonden' : 'Geen events gepland'}>
-          {allEvents.length ? 'Pas de filters aan of toon ook afgelopen events.' : 'Voeg een beurs of conferentie toe om de voorbereiding te plannen.'}
+        <EmptyState icon="storefront" title={allEvents.length ? t.events.noneFound : t.events.nonePlanned}>
+          {allEvents.length ? t.events.noneFoundHint : t.events.nonePlannedHint}
         </EmptyState>
       ) : (
         <ol className="mc-event-timeline">
@@ -122,12 +123,12 @@ function Timeline({ events }: { events: Item[] }) {
   const scrollBy = (months: number) => scroller.current?.scrollBy({ left: months * MONTH_PX, behavior: 'smooth' });
 
   return (
-    <section className="mc-timeline" aria-label="Tijdlijn van de komende events">
+    <section className="mc-timeline" aria-label={t.events.timeline}>
       <div className="mc-timeline-nav">
-        <Button variant="text" intent="secondary" size="small" icon="chevron_left" label="Eerder" onClick={() => scrollBy(-3)} />
-        <Button variant="text" intent="secondary" size="small" icon="chevron_right" label="Later" onClick={() => scrollBy(3)} />
+        <Button variant="text" intent="secondary" size="small" icon="chevron_left" label={t.events.earlier} onClick={() => scrollBy(-3)} />
+        <Button variant="text" intent="secondary" size="small" icon="chevron_right" label={t.events.later} onClick={() => scrollBy(3)} />
       </div>
-      <div className="mc-timeline-scroll" ref={scroller} tabIndex={0} aria-label="Scroll horizontaal door de maanden">
+      <div className="mc-timeline-scroll" ref={scroller} tabIndex={0} aria-label={t.events.scrollHint}>
         <div className="mc-timeline-canvas" style={{ width: monthCount * MONTH_PX, ['--lanes' as string]: Math.max(1, laneEnds.length) }}>
           <div className="mc-timeline-months">
             {months.map((m, k) => (
@@ -138,7 +139,7 @@ function Timeline({ events }: { events: Item[] }) {
           </div>
           <div className="mc-timeline-track">
             {months.map((m) => <span key={m.toISOString()} className="mc-timeline-tick" style={{ left: x(toIso(m)) }} />)}
-            <span className="mc-timeline-today" style={{ left: x(today) }}><span>vandaag</span></span>
+            <span className="mc-timeline-today" style={{ left: x(today) }}><span>{t.dates.today}</span></span>
             {placed.map(({ e, left, width, lane }) => (
               <button
                 key={e.id}
@@ -189,31 +190,31 @@ function EventCard({ event }: { event: Item }) {
           </div>
           <div className="mc-event-side">
             <StatusPill status={event.status} />
-            <span className="mc-countdown">{past ? 'afgelopen' : n <= 0 ? 'nu bezig' : `nog ${n} dagen`}</span>
-            <Button variant="text" intent="secondary" size="small" icon="edit" label="Event bewerken" onClick={() => openItem(event.id)} />
+            <span className="mc-countdown">{past ? t.common.countdown.ended : n <= 0 ? t.common.countdown.running : t.common.countdown.days(n)}</span>
+            <Button variant="text" intent="secondary" size="small" icon="edit" label={t.events.edit} onClick={() => openItem(event.id)} />
           </div>
         </header>
         <DimensionTags item={event} />
         {event.description && <p className="mc-event-desc">{event.description}</p>}
         {prep.length === 0 ? (
           <p className="mc-muted mc-checklist-empty">
-            Nog geen voorbereiding. Beslissen jullie te gaan? Open het event en voeg de standaard to do's toe.
+            {t.events.noPrep}
           </p>
         ) : (
           <div className="mc-checklist-head">
-            <span>Voorbereiding</span>
-            <span className="mc-muted">{done} van {prep.length} klaar</span>
+            <span>{t.events.prep}</span>
+            <span className="mc-muted">{t.events.prepProgress(done, prep.length)}</span>
             <span className="mc-progress" aria-hidden="true"><span style={{ width: `${(done / prep.length) * 100}%` }} /></span>
           </div>
         )}
         <ul className="mc-checklist">
-          {prep.map((t) => (
-            <li key={t.id} data-done={t.done || undefined}>
-              <Checkbox checked={t.done} onChange={() => store.toggleTodo(t.id)} label={`${t.title} afvinken`} />
-              <span className="mc-checklist-title">{t.title}</span>
-              <LateBadge days={t.lateDays} />
+          {prep.map((todo) => (
+            <li key={todo.id} data-done={todo.done || undefined}>
+              <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo.title))} />
+              <span className="mc-checklist-title">{todoLabel(todo.title)}</span>
+              <LateBadge days={todo.lateDays} />
               <span className="mc-muted mc-checklist-date">
-                {fmt(t.dueDate, 'd MMM')} · {t.offsetDays < 0 ? `${Math.abs(t.offsetDays) >= 14 && Math.abs(t.offsetDays) % 7 === 0 ? `${Math.abs(t.offsetDays) / 7} weken` : `${Math.abs(t.offsetDays)} d`} vooraf` : t.offsetDays === 0 ? 'op de dag' : `${t.offsetDays} d na`}
+                {fmt(todo.dueDate, 'd MMM')} · {offsetText(todo.offsetDays)}
               </span>
             </li>
           ))}
@@ -221,4 +222,11 @@ function EventCard({ event }: { event: Item }) {
       </div>
     </li>
   );
+}
+
+function offsetText(days: number): string {
+  if (days === 0) return t.events.onTheDay;
+  if (days > 0) return t.events.daysAfter(days);
+  const n = -days;
+  return n >= 14 && n % 7 === 0 ? t.events.weeksBefore(n / 7) : t.events.daysBefore(n);
 }

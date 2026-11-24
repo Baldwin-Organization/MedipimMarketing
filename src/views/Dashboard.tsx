@@ -4,6 +4,7 @@ import { ItemChip, TodoEntry } from '../components/entries';
 import { Button, Card, EmptyState, Stat, StatusPill, TypeBadge } from '../components/ui';
 import { daysBetween, fmt, relativeDay, shiftIso } from '../data/dates';
 import { useStore } from '../data/store';
+import { channelLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -27,22 +28,22 @@ export function Dashboard() {
   return (
     <div className="mc-page">
       <PageHeader
-        title="Dashboard"
-        subtitle={`${greeting()}. Vandaag is het ${fmt(today, 'EEEE d MMMM yyyy')}.`}
-        actions={<Button startIcon="add" onClick={() => openItem()}>Nieuw item</Button>}
+        title={t.dashboard.title}
+        subtitle={`${t.dashboard.greeting(new Date().getHours())}. ${t.dashboard.todayIs(fmt(today, 'EEEE d MMMM yyyy'))}`}
+        actions={<Button startIcon="add" onClick={() => openItem()}>{t.common.newItem}</Button>}
       />
 
       <div className="mc-stats">
-        <Stat label="Te laat" value={groups.late.length} tone="error" icon="warning" hint="Rollen door naar vandaag" />
-        <Stat label="Vandaag" value={groups.today.length + groups.late.length} tone="brand" icon="today" hint="To do's op je lijst" />
-        <Stat label="Komende 14 dagen" value={upcoming.length} tone="neutral" icon="calendar_month" hint="Posts, mailings en calls" />
-        <Stat label="Beurzen gepland" value={store.items.filter((i) => i.type === 'event' && i.date >= today).length} tone="neutral" icon="storefront" hint="Vanaf vandaag" />
+        <Stat label={t.dashboard.statLate} value={groups.late.length} tone="error" icon="warning" hint={t.dashboard.statLateHint} />
+        <Stat label={t.dashboard.statToday} value={groups.today.length + groups.late.length} tone="brand" icon="today" hint={t.dashboard.statTodayHint} />
+        <Stat label={t.dashboard.statUpcoming} value={upcoming.length} tone="neutral" icon="calendar_month" hint={t.dashboard.statUpcomingHint} />
+        <Stat label={t.dashboard.statEvents} value={store.items.filter((i) => i.type === 'event' && i.date >= today).length} tone="neutral" icon="storefront" hint={t.dashboard.statEventsHint} />
       </div>
 
       <div className="mc-dash-grid">
-        <Card title="Wat komt eraan" icon="schedule" className="mc-dash-upcoming" action={<Link className="mc-card-link" to="/kalender">Naar kalender</Link>}>
+        <Card title={t.dashboard.upcoming} icon="schedule" className="mc-dash-upcoming" action={<Link className="mc-card-link" to="/kalender">{t.dashboard.toCalendar}</Link>}>
           {byDay.size === 0 ? (
-            <EmptyState icon="calendar_month" title="Niets gepland de komende 14 dagen" />
+            <EmptyState icon="calendar_month" title={t.dashboard.nothingPlanned} />
           ) : (
             <ol className="mc-day-list">
               {[...byDay.entries()].map(([day, list]) => (
@@ -58,7 +59,7 @@ export function Dashboard() {
                           <TypeBadge type={i.type} />
                           <span className="mc-row-main">
                             <span className="mc-row-title">{i.title}</span>
-                            <span className="mc-muted">{[i.time, i.channel, i.owner].filter(Boolean).join(' · ')}</span>
+                            <span className="mc-muted">{[i.time, channelLabel(i.channel), i.owner].filter(Boolean).join(' · ')}</span>
                           </span>
                           <StatusPill status={i.status} />
                         </button>
@@ -71,21 +72,21 @@ export function Dashboard() {
           )}
         </Card>
 
-        <Card title="Te laat" icon="warning" className="mc-dash-late">
+        <Card title={t.dashboard.late} icon="warning" className="mc-dash-late">
           {groups.late.length ? (
             <div className="mc-stack">{groups.late.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
           ) : (
-            <EmptyState icon="check_circle" title="Alles bij">Geen to do's over datum.</EmptyState>
+            <EmptyState icon="check_circle" title={t.dashboard.allDone}>{t.dashboard.noLate}</EmptyState>
           )}
           {groups.today.length > 0 && (
             <>
-              <h3 className="mc-subhead">Vandaag</h3>
+              <h3 className="mc-subhead">{t.dashboard.today}</h3>
               <div className="mc-stack">{groups.today.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
             </>
           )}
         </Card>
 
-        <Card title="Beurzen en conferenties" icon="storefront" className="mc-dash-events" action={<Link className="mc-card-link" to="/beurzen">Tijdlijn</Link>}>
+        <Card title={t.dashboard.events} icon="storefront" className="mc-dash-events" action={<Link className="mc-card-link" to="/beurzen">{t.dashboard.timeline}</Link>}>
           <div className="mc-event-mini-list">
             {events.map((e) => {
               const prep = store.todosFor(e.id);
@@ -100,18 +101,18 @@ export function Dashboard() {
                   <span className="mc-row-main">
                     <span className="mc-row-title">{e.title}</span>
                     <span className="mc-muted">{e.location}</span>
-                    <span className="mc-progress" aria-label={`${done} van ${prep.length} voorbereidingen klaar`}>
+                    <span className="mc-progress" aria-label={t.dashboard.prepDone(done, prep.length)}>
                       <span style={{ width: `${prep.length ? (done / prep.length) * 100 : 0}%` }} />
                     </span>
                   </span>
-                  <span className="mc-countdown">{n <= 0 ? 'nu bezig' : `nog ${n} d`}</span>
+                  <span className="mc-countdown">{n <= 0 ? t.common.countdown.running : t.common.countdown.daysShort(n)}</span>
                 </button>
               );
             })}
           </div>
         </Card>
 
-        <Card title="Deze week in de kalender" icon="calendar_month" className="mc-dash-week">
+        <Card title={t.dashboard.thisWeek} icon="calendar_month" className="mc-dash-week">
           <div className="mc-week-strip">
             {Array.from({ length: 7 }, (_, k) => shiftIso(today, k)).map((d) => (
               <div key={d} className="mc-week-strip-day" data-today={d === today || undefined}>
@@ -124,9 +125,4 @@ export function Dashboard() {
       </div>
     </div>
   );
-}
-
-function greeting(): string {
-  const h = new Date().getHours();
-  return h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond';
 }

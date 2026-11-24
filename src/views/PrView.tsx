@@ -6,6 +6,7 @@ import { fmt } from '../data/dates';
 import { CHANNELS } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
+import { channelLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -36,38 +37,38 @@ export function PrView() {
   return (
     <div className="mc-page">
       <PageHeader
-        title="PR & vakmedia"
-        subtitle="Advertenties, advertorials, persberichten en artikels in vakmedia."
-        actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'pr', channel: format === ALL ? CHANNELS.pr[0] : format, medium: medium === ALL ? '' : medium, date: today })}>Nieuw PR-item</Button>}
+        title={t.pr.title}
+        subtitle={t.pr.subtitle}
+        actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'pr', channel: format === ALL ? CHANNELS.pr[0] : format, medium: medium === ALL ? '' : medium, date: today })}>{t.pr.newItem}</Button>}
       />
       <div className="mc-stats">
-        <Stat label="Komend" value={upcoming.length} tone="brand" icon="article" hint="publicaties gepland" />
-        <Stat label="Media" value={new Set(upcoming.map((i) => i.medium).filter(Boolean)).size} tone="neutral" icon="forum" hint="verschillende titels" />
-        <Stat label={`Budget ${year}`} value={euro(planned)} tone="neutral" icon="payments" hint="gepland, excl. btw" />
-        <Stat label={`Besteed ${year}`} value={euro(spent)} tone={spent > planned ? 'error' : 'neutral'} icon="history" hint={planned ? `${Math.round((spent / planned) * 100)}% van gepland` : 'nog geen budget gepland'} />
+        <Stat label={t.pr.upcoming} value={upcoming.length} tone="brand" icon="article" hint={t.pr.upcomingHint} />
+        <Stat label={t.pr.media} value={new Set(upcoming.map((i) => i.medium).filter(Boolean)).size} tone="neutral" icon="forum" hint={t.pr.mediaHint} />
+        <Stat label={t.plan.budgetYear(year)} value={euro(planned)} tone="neutral" icon="payments" hint={t.plan.plannedHint} />
+        <Stat label={t.plan.spentYear(year)} value={euro(spent)} tone={spent > planned ? 'error' : 'neutral'} icon="history" hint={planned ? t.plan.ofPlanned(Math.round((spent / planned) * 100)) : t.plan.noBudget} />
       </div>
       <div className="mc-section-bar mc-filters">
         <div className="mc-filters">
-          <select className="mc-input mc-filter-select" aria-label="Formaat" value={format} data-active={format !== ALL || undefined} onChange={(e) => setFormat(e.target.value)}>
-            <option value={ALL}>Formaat: alle</option>
-            {formats.map((f) => <option key={f} value={f}>Formaat: {f}</option>)}
+          <select className="mc-input mc-filter-select" aria-label={t.pr.format} value={format} data-active={format !== ALL || undefined} onChange={(e) => setFormat(e.target.value)}>
+            <option value={ALL}>{t.common.filterAll(t.pr.format)}</option>
+            {formats.map((f) => <option key={f} value={f}>{t.common.filterValue(t.pr.format, channelLabel(f))}</option>)}
           </select>
-          <select className="mc-input mc-filter-select" aria-label="Medium" value={medium} data-active={medium !== ALL || undefined} onChange={(e) => setMedium(e.target.value)}>
-            <option value={ALL}>Medium: alle</option>
-            {media.map((m) => <option key={m} value={m}>Medium: {m}</option>)}
+          <select className="mc-input mc-filter-select" aria-label={t.pr.medium} value={medium} data-active={medium !== ALL || undefined} onChange={(e) => setMedium(e.target.value)}>
+            <option value={ALL}>{t.common.filterAll(t.pr.medium)}</option>
+            {media.map((m) => <option key={m} value={m}>{t.common.filterValue(t.pr.medium, m)}</option>)}
           </select>
         </div>
-        <Segmented label="Toon" value={scope} onChange={setScope} options={[{ value: 'komend', label: 'Komend' }, { value: 'alle', label: 'Alle' }]} />
+        <Segmented label={t.common.show} value={scope} onChange={setScope} options={[{ value: 'komend', label: t.common.upcoming }, { value: 'alle', label: t.common.all }]} />
       </div>
       {shown.length === 0 ? (
-        <EmptyState icon="article" title={all.length ? 'Niets gevonden' : 'Nog geen PR gepland'}>
-          {all.length ? 'Pas de filters aan of toon ook afgelopen items.' : 'Plan een advertentie, advertorial, persbericht of artikel in een vakmedium.'}
+        <EmptyState icon="article" title={all.length ? t.pr.noneFound : t.pr.nonePlanned}>
+          {all.length ? t.pr.noneFoundHint : t.pr.nonePlannedHint}
         </EmptyState>
       ) : (
         [...months].map(([month, items]) => (
           <section key={month} className="mc-plan-group">
             <div className="mc-section-bar"><h2 className="mc-capitalize">{fmt(`${month}-01`, 'MMMM yyyy')} <span className="mc-muted">· {items.length}</span></h2></div>
-            <PlanTable items={items} label={`PR in ${fmt(`${month}-01`, 'MMMM yyyy')}`} showMedium />
+            <PlanTable items={items} label={t.pr.tableLabel(fmt(`${month}-01`, 'MMMM yyyy'))} showMedium />
           </section>
         ))
       )}

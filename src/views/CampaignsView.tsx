@@ -6,6 +6,7 @@ import { shiftIso } from '../data/dates';
 import { CHANNELS } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
+import { channelLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -39,31 +40,31 @@ export function CampaignsView() {
   return (
     <div className="mc-page">
       <PageHeader
-        title="Campagnes"
-        subtitle="Betalende advertenties en campagnes op LinkedIn, Google en ChatGPT."
-        actions={<Button startIcon="add" onClick={create}>Nieuwe campagne</Button>}
+        title={t.campaigns.title}
+        subtitle={t.campaigns.subtitle}
+        actions={<Button startIcon="add" onClick={create}>{t.campaigns.newCampaign}</Button>}
       />
       <Segmented
-        label="Kanaal"
+        label={t.campaigns.channel}
         value={channel}
         onChange={setChannel}
-        options={[{ value: ALL, label: 'Alle kanalen' }, ...channels.map((c) => ({ value: c, label: c }))]}
+        options={[{ value: ALL, label: t.campaigns.allChannels }, ...channels.map((c) => ({ value: c, label: channelLabel(c) }))]}
       />
       <div className="mc-stats">
-        <Stat label="Lopend" value={running.length} tone="brand" icon="ads_click" hint="campagnes die nu draaien" />
-        <Stat label="Gepland" value={upcoming.length} tone="neutral" icon="schedule" hint="starten later" />
-        <Stat label={`Budget ${year}`} value={euro(planned)} tone="neutral" icon="payments" hint="gepland, excl. btw" />
-        <Stat label={`Besteed ${year}`} value={euro(spent)} tone={spent > planned ? 'error' : 'neutral'} icon="history" hint={planned ? `${Math.round((spent / planned) * 100)}% van gepland` : 'nog geen budget gepland'} />
+        <Stat label={t.campaigns.running} value={running.length} tone="brand" icon="ads_click" hint={t.campaigns.runningHint} />
+        <Stat label={t.campaigns.planned} value={upcoming.length} tone="neutral" icon="schedule" hint={t.campaigns.plannedHint} />
+        <Stat label={t.plan.budgetYear(year)} value={euro(planned)} tone="neutral" icon="payments" hint={t.plan.plannedHint} />
+        <Stat label={t.plan.spentYear(year)} value={euro(spent)} tone={spent > planned ? 'error' : 'neutral'} icon="history" hint={planned ? t.plan.ofPlanned(Math.round((spent / planned) * 100)) : t.plan.noBudget} />
       </div>
       {shown.length === 0 ? (
-        <EmptyState icon="ads_click" title="Nog geen campagnes">
-          Plan een betalende campagne op LinkedIn, Google of ChatGPT, met looptijd, doelgroep en budget.
+        <EmptyState icon="ads_click" title={t.campaigns.empty}>
+          {t.campaigns.emptyHint}
         </EmptyState>
       ) : (
         <>
-          <Group title="Lopend" items={running} />
-          <Group title="Komend" items={upcoming} />
-          <Group title="Afgelopen" items={past} />
+          <Group title={t.campaigns.groups.running} items={running} />
+          <Group title={t.campaigns.groups.upcoming} items={upcoming} />
+          <Group title={t.campaigns.groups.past} items={past} />
         </>
       )}
     </div>
@@ -75,7 +76,7 @@ function Group({ title, items }: { title: string; items: Item[] }) {
   return (
     <section className="mc-plan-group">
       <div className="mc-section-bar"><h2>{title} <span className="mc-muted">· {items.length}</span></h2></div>
-      <PlanTable items={items} label={`${title} campagnes`} showElapsed />
+      <PlanTable items={items} label={t.campaigns.tableLabel(title)} showElapsed />
     </section>
   );
 }

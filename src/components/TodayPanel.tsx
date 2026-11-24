@@ -1,12 +1,13 @@
 import { urgencyOf, type ScheduledTodo, type Urgency } from '../data/schedule';
 import { useStore } from '../data/store';
 import { TodoEntry } from './entries';
+import { t } from '../i18n';
 import { Icon } from './ui';
 
-const COLUMNS: { key: Urgency; label: string; empty: string }[] = [
-  { key: 'late', label: 'Te laat', empty: 'Niets te laat.' },
-  { key: 'today', label: 'Vandaag', empty: 'Niets meer voor vandaag.' },
-  { key: 'week', label: 'Deze week', empty: 'Geen to do\u2019s de komende 7 dagen.' },
+const columns = (): { key: Urgency; label: string; empty: string }[] => [
+  { key: 'late', label: t.urgency.late, empty: t.urgency.lateEmpty },
+  { key: 'today', label: t.urgency.today, empty: t.urgency.todayEmpty },
+  { key: 'week', label: t.urgency.week, empty: t.urgency.weekEmpty },
 ];
 
 export function groupByUrgency(todos: ScheduledTodo[], today: string) {
@@ -22,8 +23,8 @@ export function TodayPanel({ todos }: { todos: ScheduledTodo[] }) {
   const { today } = useStore();
   const groups = groupByUrgency(todos, today);
   return (
-    <section className="mc-today-panel" aria-label="Vandaag en deze week">
-      {COLUMNS.map((c) => (
+    <section className="mc-today-panel" aria-label={t.urgency.region}>
+      {columns().map((c) => (
         <div key={c.key} className="mc-today-col" data-urgency={c.key}>
           <h3>
             {c.key === 'late' && <Icon name="warning" size={16} />}

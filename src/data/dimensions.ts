@@ -1,22 +1,11 @@
+import { audienceLabel, productLabel, t } from '../i18n';
 import type { Audience, Item, ProductType } from './types';
 
-export const AUDIENCES: { value: Audience; label: string }[] = [
-  { value: 'groothandels', label: 'Groothandels' },
-  { value: 'producenten', label: 'Producenten' },
-  { value: 'apothekers', label: 'Apothekers' },
-  { value: 'ziekenhuizen', label: 'Ziekenhuizen' },
-];
+export const AUDIENCES: Audience[] = ['groothandels', 'producenten', 'apothekers', 'ziekenhuizen'];
+export const PRODUCT_TYPES: ProductType[] = ['geneesmiddelen', 'cannabis', 'cosmetica', 'voeding', 'baby'];
 
-export const PRODUCT_TYPES: { value: ProductType; label: string }[] = [
-  { value: 'geneesmiddelen', label: 'Geneesmiddelen' },
-  { value: 'cannabis', label: 'Medicinale cannabis' },
-  { value: 'cosmetica', label: 'Cosmetica' },
-  { value: 'voeding', label: 'Voeding & supplementen' },
-  { value: 'baby', label: 'Baby' },
-];
-
-export const audienceLabel = (a: Audience) => AUDIENCES.find((x) => x.value === a)?.label ?? a;
-export const productLabel = (p: ProductType) => PRODUCT_TYPES.find((x) => x.value === p)?.label ?? p;
+export const audienceOptions = () => AUDIENCES.map((value) => ({ value, label: audienceLabel(value) }));
+export const productOptions = () => PRODUCT_TYPES.map((value) => ({ value, label: productLabel(value) }));
 
 /** Countries where Medipim is already active; every other country is a new market. */
 export const EXISTING_MARKETS = ['BE', 'FR', 'DE', 'GB', 'LU', 'AT', 'ES', 'US', 'AU'];
@@ -31,21 +20,27 @@ const ISO_CODES = (
   'UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW'
 ).split(' ');
 
-const regionNames = new Intl.DisplayNames('nl', { type: 'region' });
-export const countryName = (code: string) => regionNames.of(code) ?? code;
+const regionNames = new Map<string, Intl.DisplayNames>();
+function namesFor(locale: string) {
+  if (!regionNames.has(locale)) regionNames.set(locale, new Intl.DisplayNames(locale, { type: 'region' }));
+  return regionNames.get(locale)!;
+}
 
-const byName = (a: string, b: string) => countryName(a).localeCompare(countryName(b), 'nl');
+/** Country name in the current language. */
+export const countryName = (code: string) => namesFor(t.regionLocale).of(code) ?? code;
+
+export const byCountryName = (a: string, b: string) => countryName(a).localeCompare(countryName(b), t.regionLocale);
 
 export const isExistingMarket = (code: string) => EXISTING_MARKETS.includes(code);
 
-export const NEW_MARKETS = ISO_CODES.filter((c) => !isExistingMarket(c)).sort(byName);
+export const newMarkets = () => ISO_CODES.filter((c) => !isExistingMarket(c)).sort(byCountryName);
 
-export const EXISTING_MARKETS_SORTED = [...EXISTING_MARKETS].sort(byName);
+export const existingMarketsSorted = () => [...EXISTING_MARKETS].sort(byCountryName);
 
-/** Dutch country name (as `Intl.DisplayNames` writes it) to ISO code. */
+/** Dutch country name (as `Intl.DisplayNames` writes it) to ISO code; used to read seed locations. */
 export function countryCode(name: string): string | undefined {
   const n = name.trim().toLocaleLowerCase('nl');
-  return ISO_CODES.find((c) => countryName(c).toLocaleLowerCase('nl') === n);
+  return ISO_CODES.find((c) => (namesFor('nl').of(c) ?? '').toLocaleLowerCase('nl') === n);
 }
 
 /** Filter values for the country filter: a single ISO code or one of the two market groups. */

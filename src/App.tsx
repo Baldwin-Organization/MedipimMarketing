@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { HashRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { Button, Icon } from './components/ui';
+import { Button, Icon, Segmented } from './components/ui';
 import { useStore } from './data/store';
 import type { IconName } from './icons.generated';
+import { LANGS, lang, setLang, t, type Lang } from './i18n';
 import { useUi } from './ui-context';
 import { BudgetView } from './views/BudgetView';
 import { CalendarView } from './views/CalendarView';
@@ -12,14 +13,24 @@ import { EventsView } from './views/EventsView';
 import { ItemDrawer } from './views/ItemDrawer';
 import { PrView } from './views/PrView';
 
-const NAV: { to: string; label: string; icon: IconName }[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: 'space_dashboard' },
-  { to: '/kalender', label: 'Kalender', icon: 'calendar_month' },
-  { to: '/beurzen', label: 'Beurzen & conferenties', icon: 'storefront' },
-  { to: '/campagnes', label: 'Campagnes', icon: 'ads_click' },
-  { to: '/pr', label: 'PR & vakmedia', icon: 'article' },
-  { to: '/budget', label: 'Budget', icon: 'payments' },
+const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName }[] = [
+  { to: '/dashboard', key: 'dashboard', icon: 'space_dashboard' },
+  { to: '/kalender', key: 'calendar', icon: 'calendar_month' },
+  { to: '/beurzen', key: 'events', icon: 'storefront' },
+  { to: '/campagnes', key: 'campaigns', icon: 'ads_click' },
+  { to: '/pr', key: 'pr', icon: 'article' },
+  { to: '/budget', key: 'budget', icon: 'payments' },
 ];
+
+function useLanguage() {
+  const [current, setCurrent] = useState<Lang>(lang);
+  useEffect(() => { document.documentElement.lang = current; }, [current]);
+  const change = (next: Lang) => {
+    setLang(next);
+    setCurrent(next);
+  };
+  return [current, change] as const;
+}
 
 function useColorMode() {
   const [mode, setMode] = useState<'light' | 'dark'>(() => (localStorage.getItem('mc-color-mode') as 'dark' | null) ?? 'light');
@@ -38,26 +49,26 @@ function DataActions() {
     const blob = new Blob([store.exportJson()], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `marketingkalender-${store.today}.json`;
+    a.download = `${t.app.exportFile}-${store.today}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    notify('Export gedownload.');
+    notify(t.app.exported);
   };
   const upload = async (f: File | undefined) => {
     if (!f) return;
     try {
       await store.importJson(await f.text());
-      notify('Gegevens geïmporteerd.');
+      notify(t.app.imported);
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Import mislukt.');
+      notify(err instanceof Error ? err.message : t.app.importFailed);
     }
     if (file.current) file.current.value = '';
   };
   return (
     <div className="mc-sidebar-actions">
-      <Button variant="text" intent="secondary" size="small" startIcon="download" onClick={download}>Exporteren (JSON)</Button>
-      <Button variant="text" intent="secondary" size="small" startIcon="upload" onClick={() => file.current?.click()}>Importeren</Button>
-      <Button variant="text" intent="secondary" size="small" startIcon="restart_alt" onClick={async () => { await store.resetToSeed(); notify('Startinhoud hersteld.'); }}>Startinhoud herstellen</Button>
+      <Button variant="text" intent="secondary" size="small" startIcon="download" onClick={download}>{t.app.export}</Button>
+      <Button variant="text" intent="secondary" size="small" startIcon="upload" onClick={() => file.current?.click()}>{t.app.import}</Button>
+      <Button variant="text" intent="secondary" size="small" startIcon="restart_alt" onClick={async () => { await store.resetToSeed(); notify(t.app.resetDone); }}>{t.app.reset}</Button>
       <input ref={file} type="file" accept="application/json" hidden onChange={(e) => upload(e.target.files?.[0])} />
     </div>
   );
@@ -67,22 +78,23 @@ export function App() {
   const store = useStore();
   const { toast } = useUi();
   const [mode, setMode] = useColorMode();
+  const [language, setLanguage] = useLanguage();
   return (
-    <HashRouter>
+    <HashRouter key={language}>
       <div className="mc-app">
         <aside className="mc-sidebar">
           <div className="mc-brand">
             <span className="mc-brand-mark"><Icon name="calendar_month" size={20} /></span>
             <span>
               <span className="mc-brand-name">medipim</span>
-              <span className="mc-brand-sub">Marketingkalender</span>
+              <span className="mc-brand-sub">{t.app.brandSub}</span>
             </span>
           </div>
-          <nav className="mc-nav" aria-label="Hoofdnavigatie">
+          <nav className="mc-nav" aria-label={t.app.mainNav}>
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} className="mc-nav-link">
                 <Icon name={n.icon} size={20} />
-                {n.label}
+                {t.app.nav[n.key]}
               </NavLink>
             ))}
           </nav>
@@ -95,12 +107,18 @@ export function App() {
               startIcon={mode === 'dark' ? 'light_mode' : 'dark_mode'}
               onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
             >
-              {mode === 'dark' ? 'Lichte modus' : 'Donkere modus'}
+              {mode === 'dark' ? t.app.lightMode : t.app.darkMode}
             </Button>
-            <p className="mc-sidebar-note">Gegevens blijven lokaal in deze browser (IndexedDB).</p>
+            <Segmented
+              label={t.app.language}
+              value={language}
+              onChange={setLanguage}
+              options={LANGS.map((l) => ({ value: l, label: l.toUpperCase() }))}
+            />
+            <p className="mc-sidebar-note">{t.app.localNote}</p>
           </div>
         </aside>
-        <main className="mc-main" aria-label="Inhoud">
+        <main className="mc-main" aria-label={t.app.content}>
           {store.ready ? (
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />

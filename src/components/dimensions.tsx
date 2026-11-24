@@ -1,20 +1,18 @@
 import { useId, type ReactNode } from 'react';
-import {
-  AUDIENCES, EXISTING_MARKETS_SORTED, NEW_MARKETS, PRODUCT_TYPES,
-  audienceLabel, countryName, isExistingMarket, productLabel,
-} from '../data/dimensions';
+import { audienceOptions, countryName, existingMarketsSorted, isExistingMarket, newMarkets, productOptions } from '../data/dimensions';
+import { audienceLabel, productLabel, t } from '../i18n';
 import type { Audience, Item, ProductType } from '../data/types';
 import { Icon, Pill, ToggleChipGroup } from './ui';
 
 export function DimensionTags({ item }: { item: Pick<Item, 'audiences' | 'productTypes' | 'countries'> }) {
   if (!item.audiences.length && !item.productTypes.length && !item.countries.length) return null;
   return (
-    <div className="mc-tags" aria-label="Verrijking">
+    <div className="mc-tags" aria-label={t.dims.region}>
       {item.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{audienceLabel(a)}</span>)}
       {item.productTypes.map((p) => <span key={p} className="mc-pill" data-accent="7">{productLabel(p)}</span>)}
       {item.countries.map((c) => (
         <Pill key={c} tone={isExistingMarket(c) ? 'neutral' : 'warning'}>
-          {countryName(c)}{isExistingMarket(c) ? '' : ' · nieuwe markt'}
+          {countryName(c)}{isExistingMarket(c) ? '' : t.dims.newMarketSuffix}
         </Pill>
       ))}
     </div>
@@ -38,21 +36,21 @@ export function DimensionFields({ value, onChange }: { value: Value; onChange: (
   const added = value.countries.filter((c) => !isExistingMarket(c));
   return (
     <>
-      <Group label="Doelgroep">
-        <ToggleChipGroup label="Doelgroep" value={value.audiences} onChange={(audiences) => onChange({ audiences })} options={AUDIENCES} />
+      <Group label={t.dims.audience}>
+        <ToggleChipGroup label={t.dims.audience} value={value.audiences} onChange={(audiences) => onChange({ audiences })} options={audienceOptions()} />
       </Group>
-      <Group label="Type product">
-        <ToggleChipGroup label="Type product" value={value.productTypes} onChange={(productTypes) => onChange({ productTypes })} options={PRODUCT_TYPES} />
+      <Group label={t.dims.product}>
+        <ToggleChipGroup label={t.dims.product} value={value.productTypes} onChange={(productTypes) => onChange({ productTypes })} options={productOptions()} />
       </Group>
-      <Group label="Bestaande markten">
+      <Group label={t.dims.existingMarkets}>
         <ToggleChipGroup
-          label="Bestaande markten"
+          label={t.dims.existingMarkets}
           value={existing}
           onChange={(next) => onChange({ countries: [...next, ...added] })}
-          options={EXISTING_MARKETS_SORTED.map((c) => ({ value: c, label: countryName(c) }))}
+          options={existingMarketsSorted().map((c) => ({ value: c, label: countryName(c) }))}
         />
       </Group>
-      <Group label="Nieuwe markten">
+      <Group label={t.dims.newMarkets}>
         <div className="mc-chip-group">
           {added.map((c) => (
             <button
@@ -60,7 +58,7 @@ export function DimensionFields({ value, onChange }: { value: Value; onChange: (
               type="button"
               className="mc-toggle-chip"
               aria-pressed="true"
-              aria-label={`${countryName(c)} verwijderen`}
+              aria-label={t.dims.remove(countryName(c))}
               onClick={() => onChange({ countries: value.countries.filter((x) => x !== c) })}
             >
               {countryName(c)}
@@ -69,12 +67,12 @@ export function DimensionFields({ value, onChange }: { value: Value; onChange: (
           ))}
           <select
             className="mc-input mc-filter-select"
-            aria-label="Nieuwe markt toevoegen"
+            aria-label={t.dims.addNewMarket}
             value=""
             onChange={(e) => e.target.value && onChange({ countries: [...value.countries, e.target.value] })}
           >
-            <option value="">Land toevoegen…</option>
-            {NEW_MARKETS.filter((c) => !added.includes(c)).map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
+            <option value="">{t.dims.addCountry}</option>
+            {newMarkets().filter((c) => !added.includes(c)).map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
           </select>
         </div>
       </Group>

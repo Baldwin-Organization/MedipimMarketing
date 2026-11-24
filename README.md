@@ -5,7 +5,7 @@ e-mailings, calls, beurzen/conferenties, betalende campagnes en PR in vakmedia i
 kalender, met budgetopvolging en to do's die automatisch naar voren schuiven als ze over
 datum zijn.
 
-De interface is in het Nederlands en volgt het
+De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk) en volgt het
 [Medipim design system](https://github.com/Baldwin-Organization/medipim-design-system)
 (tokens, kleuren, IBM Plex-typografie, Material Symbols Rounded 300).
 
@@ -44,6 +44,10 @@ De interface is in het Nederlands en volgt het
   grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
+- **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser
+  onthouden. Alle interfacetekst, kanalen, statussen, doelgroepen, producttypes,
+  standaard-to do's, landnamen, datums en bedragen volgen de taal. Wat je zelf invult
+  (titels, beschrijvingen, locaties, thema's) blijft zoals je het schreef.
 
 ## Aan de slag
 
@@ -90,6 +94,10 @@ src/
     repository.ts    opslaginterface + IndexedDB-implementatie
     store.tsx        React-state bovenop de repository
     seed.ts          startinhoud: eventkalender 2027
+  i18n/
+    nl.ts            Nederlandse interfacetekst (bron, bepaalt de vorm van het woordenboek)
+    en.ts            Engelse vertaling
+    index.ts         huidige taal, t, labels voor kanalen, statussen en to do's
   views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Budget, itemformulier
   components/        knoppen, chips, pills, kalenderitems (Medipim-stijl)
   styles/
