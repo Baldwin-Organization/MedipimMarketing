@@ -216,6 +216,7 @@ function PieceCard({ piece, onOpen }: { piece: ContentPiece; onOpen: () => void 
       <span className="mc-piece-title">{local(piece, 'title')}</span>
       <span className="mc-piece-meta">
         <span><Icon name={CONTENT_FORMAT_ICONS[piece.format]} size={14} />{formatLabel(piece.format)}</span>
+        {piece.recurring && <span className="mc-piece-series"><Icon name="update" size={14} />{t.content.recurringBadge}</span>}
         <span>{piece.month ? monthLabel(piece.month) : t.content.noMonth}</span>
         {piece.owner && <span>{piece.owner}</span>}
         {linked > 0 && <span className="mc-piece-linked"><Icon name="calendar_month" size={14} />{t.content.linked(linked)}</span>}

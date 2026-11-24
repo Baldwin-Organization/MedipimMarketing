@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addBudgetAndContent, addSeedTranslations, buildSeed, markExhibitors } from './seed';
+import { contentIdeasUpdate } from './seed-content';
 
 const seed = () => {
   let n = 0;
@@ -83,5 +84,19 @@ describe('budget plan and content mix', () => {
     const filled = full();
     const none = addBudgetAndContent(filled);
     expect([none.budgets, none.pillars, none.content, none.items].every((list) => list?.length === 0)).toBe(true);
+  });
+});
+
+describe('content ideas from the team', () => {
+  it('adds the new ideas and revises only seed pieces nobody edited', () => {
+    const { content, pillars } = buildSeed(() => 'x');
+    const before = content
+      .filter((p) => !['content-did-you-know', 'content-photography'].includes(p.id))
+      .map((p) => (p.id === 'content-customer-quotes' ? { ...p, title: 'old', description: 'Reeks van vier LinkedIn-posts met telkens één citaat van een klant en een portretfoto.' } : p))
+      .map((p) => (p.id === 'content-behind-scenes' ? { ...p, description: 'Door het team aangepast' } : p));
+    const changes = contentIdeasUpdate(before, pillars, '');
+    expect(changes.map((p) => p.id).sort()).toEqual(['content-customer-quotes', 'content-did-you-know', 'content-photography']);
+    expect(changes.find((p) => p.id === 'content-customer-quotes')).toMatchObject({ title: 'Een klant aan het woord', recurring: true });
+    expect(contentIdeasUpdate(content, pillars, '')).toHaveLength(0);
   });
 });

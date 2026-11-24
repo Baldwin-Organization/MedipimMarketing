@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, Field, Icon, ToggleChipGroup, TypeBadge } from '../components/ui';
+import { Button, Checkbox, Drawer, Field, Icon, ToggleChipGroup, TypeBadge } from '../components/ui';
 import { fmt } from '../data/dates';
 import { AUDIENCES } from '../data/dimensions';
 import { CONTENT_FORMATS, CONTENT_FORMAT_ICONS, CONTENT_STATUSES, OWNERS } from '../data/meta';
@@ -118,6 +118,10 @@ export function ContentDrawer({ editing, onClose }: { editing: ContentEditing | 
             </select>
           )}</Field>
         </div>
+        <label className="mc-switch-row">
+          <Checkbox checked={!!draft.recurring} onChange={() => set('recurring', draft.recurring ? undefined : true)} label={t.content.recurring} />
+          <span>{t.content.recurring} <span className="mc-muted">· {t.content.recurringHint}</span></span>
+        </label>
         <div className="mc-form-row">
           <Field label={t.content.status}>{(id) => (
             <select id={id} className="mc-input" value={draft.status} onChange={(e) => set('status', e.target.value as ContentDraft['status'])}>

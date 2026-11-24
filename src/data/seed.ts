@@ -1,7 +1,7 @@
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import type { Contents } from './repository';
-import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent } from './seed-content';
+import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate } from './seed-content';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
@@ -170,6 +170,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-1', apply: (data) => ({ items: markExhibitors(data.items) }) },
   { key: 'mc-seed-updates-2', apply: (data) => ({ items: addSeedTranslations(data.items) }) },
   { key: 'mc-seed-updates-3', apply: addBudgetAndContent },
+  { key: 'mc-seed-updates-4', apply: (data) => ({ content: contentIdeasUpdate(data.content, data.pillars, new Date().toISOString()) }) },
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */

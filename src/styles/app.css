@@ -546,6 +546,7 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 .mc-piece-meta { display: flex; flex-wrap: wrap; gap: var(--mp-space-0-5) var(--mp-space-2); color: var(--mp-content-tertiary); font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); }
 .mc-piece-meta > span { display: inline-flex; align-items: center; gap: var(--mp-space-0-5); }
 .mc-piece-linked { color: var(--mp-brand-content); }
+.mc-piece-series { color: var(--acc-content, var(--mp-content-secondary)); font-weight: var(--mp-font-weight-medium); }
 .mc-linked-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-linked-items button { display: flex; align-items: center; gap: var(--mp-space-2); width: 100%; padding: var(--mp-space-1-5, var(--mp-space-2)) var(--mp-space-2); border: 0; border-radius: var(--mp-shape-nav); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .mc-linked-items button:hover { background: var(--mp-hover-row-tint-brand-bg); }

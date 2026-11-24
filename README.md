@@ -50,7 +50,9 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   video, infographic, whitepaper, webinar, nieuwsbrief), status (idee, in productie, klaar om te
   delen, gedeeld), geplande maand, doelgroep en eigenaar, en staat op een bord per status.
   "Inplannen in de kalender" maakt een post of mailing aan die naar het stuk verwijst; bij elk
-  kalenderitem kun je ook zelf een contentstuk kiezen. De startinhoud bevat 17 ideeën.
+  kalenderitem kun je ook zelf een contentstuk kiezen. Een stuk kan een terugkerende reeks
+  zijn (bv. "Een vraag die sales vaak krijgt", één vraag per post); het telt als één stuk in de
+  mix. De startinhoud bevat 28 ideeën, waaronder de ideeën van het team van november 2026.
 - **Budget**: per jaar een budget per budgetpost (beurzen als exposant, beurzen als bezoeker,
   e-mailmarketing, LinkedIn, Google Ads, vakmedia en gezamenlijke campagnes, lidmaatschappen,
   ChatGPT Ads, reserve), tegenover het geplande en werkelijk bestede bedrag van de items (elk
@@ -95,10 +97,12 @@ een LinkedIn-post vanuit de Medipim-pagina op 25 november en een nieuwsbrief aan
 Belgische apothekers op 27 november om 9:00, met to do's. Die drie items verwijzen naar het
 contentstuk "Lancering nieuwe UX Belgisch platform".
 
-Het budget 2027, de vijf contentpijlers en de 17 contentideeën staan in
+Het budget 2027, de vijf contentpijlers en de 28 contentideeën staan in
 `src/data/seed-content.ts`. Een browser met oudere startinhoud krijgt ze eenmalig bij het
 opstarten, enkel voor wat nog leeg is (het budget als er voor 2027 nog niets is ingevuld, de
-pijlers en ideeën als er nog geen pijlers zijn).
+pijlers en ideeën als er nog geen pijlers zijn). De ideeën van het team kwamen later en worden
+apart toegevoegd; bestaande startideeën die erop lijken, worden enkel bijgewerkt als niemand ze
+al aanpaste.
 
 Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
 (Medipim, Maarten (CEO), Medipim Australia, Medipim USA).

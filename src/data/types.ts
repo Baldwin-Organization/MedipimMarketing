@@ -119,6 +119,8 @@ export interface ContentPiece {
   description: string;
   pillarId: string;
   format: ContentFormat;
+  /** A formula that yields several posts over time (one question per post, one fair per post), rather than one piece. */
+  recurring?: boolean;
   status: ContentStatus;
   audiences: Audience[];
   owner: string;
