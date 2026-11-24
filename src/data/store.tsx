@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { todayIso } from './dates';
 import { IndexedDbRepository, newId, parseDataset, toDataset, type Repository } from './repository';
 import { moveItem, moveTodo, rollForward, todosFromTemplate, type ScheduledTodo } from './schedule';
-import { buildSeed } from './seed';
+import { buildSeed, seedUpdates } from './seed';
 import { HAS_PERIOD } from './meta';
 import type { Budget, IsoDate, Item, ItemType, Todo } from './types';
 
@@ -30,6 +30,9 @@ interface Store {
 
 const StoreContext = createContext<Store | null>(null);
 
+/** Set once `seedUpdates` has run in this browser, so later edits are never overwritten. */
+const SEED_UPDATES_KEY = 'mc-seed-updates-1';
+
 export function StoreProvider({ children, repository }: { children: ReactNode; repository?: Repository }) {
   const repo = useRef<Repository>(repository ?? new IndexedDbRepository()).current;
   const [ready, setReady] = useState(false);
@@ -43,6 +46,15 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
     (async () => {
       if (await repo.isEmpty()) await repo.replaceAll(buildSeed(newId));
       const data = await repo.load();
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(SEED_UPDATES_KEY)) {
+        const updated = seedUpdates(data.items);
+        if (updated.length) {
+          await repo.saveItems(updated);
+          const byId = new Map(updated.map((i) => [i.id, i]));
+          data.items = data.items.map((i) => byId.get(i.id) ?? i);
+        }
+        localStorage.setItem(SEED_UPDATES_KEY, '1');
+      }
       if (!alive) return;
       setItems(data.items);
       setRawTodos(data.todos);

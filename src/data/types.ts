@@ -9,6 +9,9 @@ export type Audience = 'groothandels' | 'producenten' | 'apothekers' | 'ziekenhu
 
 export type ProductType = 'geneesmiddelen' | 'cannabis' | 'cosmetica' | 'voeding' | 'baby';
 
+/** How Medipim takes part in an event; absent while still undecided. */
+export type Participation = 'exposant' | 'bezoeker' | 'campagne' | 'geen';
+
 export interface Item {
   id: string;
   type: ItemType;
@@ -22,6 +25,8 @@ export interface Item {
   /** Last day (inclusive) for types with a period, see `HAS_PERIOD`. */
   endDate?: IsoDate;
   location?: string;
+  /** Events only. */
+  participation?: Participation;
   /** PR & vakmedia: the publication or outlet. */
   medium?: string;
   /** Euro, excl. btw. */

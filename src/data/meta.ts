@@ -1,5 +1,5 @@
 import type { IconName } from '../icons.generated';
-import type { ItemStatus, ItemType } from './types';
+import type { ItemStatus, ItemType, Participation } from './types';
 
 export const ITEM_TYPES: ItemType[] = ['social', 'email', 'call', 'event', 'campaign', 'pr'];
 
@@ -15,6 +15,13 @@ export const TYPE_META: Record<ItemType, { icon: IconName; accent: string }> = {
   campaign: { icon: 'ads_click', accent: '3' },
   pr: { icon: 'article', accent: '2' },
 };
+
+export const PARTICIPATIONS: Participation[] = ['exposant', 'bezoeker', 'campagne', 'geen'];
+
+/** Filter and colour key for events without a participation yet. */
+export const UNDECIDED = 'open';
+export type ParticipationKey = Participation | typeof UNDECIDED;
+export const participationKey = (p?: Participation): ParticipationKey => p ?? UNDECIDED;
 
 export const STATUSES: ItemStatus[] = ['idee', 'gepland', 'in_uitvoering', 'klaar'];
 

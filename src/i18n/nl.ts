@@ -1,3 +1,4 @@
+import type { ParticipationKey } from '../data/meta';
 import type { Audience, ItemStatus, ItemType, ProductType } from '../data/types';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -57,6 +58,14 @@ export const nl = {
   } satisfies Record<ItemType, { label: string; plural: string; short: string }>,
 
   status: { idee: 'Idee', gepland: 'Gepland', in_uitvoering: 'In uitvoering', klaar: 'Klaar' } satisfies Record<ItemStatus, string>,
+  participation: {
+    exposant: { label: 'We gaan als exposant', short: 'Exposant' },
+    bezoeker: { label: 'We gaan als bezoeker', short: 'Bezoeker' },
+    campagne: { label: 'We gaan niet, wel campagnes', short: 'Enkel campagnes' },
+    geen: { label: 'We gaan niet en doen niets', short: 'Niet' },
+    open: { label: 'Nog te beslissen', short: 'Te beslissen' },
+  } satisfies Record<ParticipationKey, { label: string; short: string }>,
+  participationTitle: 'Deelname',
 
   audiences: { groothandels: 'Groothandels', producenten: 'Producenten', apothekers: 'Apothekers', ziekenhuizen: 'Ziekenhuizen' } satisfies Record<Audience, string>,
 
@@ -224,6 +233,7 @@ export const nl = {
     scrollHint: 'Scroll horizontaal door de maanden',
     edit: 'Event bewerken',
     noPrep: "Nog geen voorbereiding. Beslissen jullie te gaan? Open het event en voeg de standaard to do's toe.",
+    noPrepGoing: "Nog geen voorbereiding. Open het event en voeg de standaard to do's toe.",
     prepProgress: (done: number, total: number) => `${done} van ${total} klaar`,
     weeksBefore: (n: number) => `${n} weken vooraf`,
     daysBefore: (n: number) => `${n} d vooraf`,

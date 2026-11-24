@@ -30,8 +30,12 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   (bv. "Stand boeken" 8 weken voor een beurs, "Visual maken" 5 dagen voor een post).
   Een bestaand item zonder to do's kan die standaardlijst achteraf krijgen.
 - **Beurzen en conferenties** als horizontaal scrollbare tijdlijn over alle komende maanden,
-  met filters op land of markt, type product, doelgroep, soort, status en eigenaar, en een
-  voorbereidingschecklist per event.
+  met filters op deelname, land of markt, type product, doelgroep, soort, status en eigenaar,
+  en een voorbereidingschecklist per event.
+- **Deelname per event**, met kleurcode op de tijdlijn, de eventkaarten, het dashboard en in de
+  kalender: we gaan als exposant (groen), als bezoeker (blauw), we gaan niet maar draaien wel
+  campagnes (koraal), we gaan niet en doen niets (grijs), of nog te beslissen (gestippeld).
+  De legende boven de tijdlijn telt per keuze en werkt ook als filter.
 - **Campagnes**: betalende advertenties op LinkedIn Ads, Google Ads en ChatGPT Ads, met
   looptijd (start- en einddatum), budget en standaard-to do's (doel en KPI, visuals,
   targeting, tussentijdse evaluatie, rapportering). Gegroepeerd als lopend, komend en
@@ -60,7 +64,10 @@ npm run dev        # http://localhost:5173
 
 Bij de eerste start vult de app zichzelf met de eventkalender 2027: 56 internationale
 beurzen en congressen (november 2026 tot november 2027, plus CPHI Frankfurt), als idee,
-zonder eigenaar en zonder to do's. Elk event is verrijkt met doelgroep, type product en
+zonder eigenaar en zonder to do's. Bij PharmagoraPlus, APP (Gold Coast), GIRP PharmaConnect
+(Sofia), Expopharm en The Pharmacy Show (Birmingham) staat Medipim als exposant (status
+gepland); de andere events zijn nog te beslissen. Een browser met oudere startinhoud krijgt die
+vijf markeringen eenmalig bij het opstarten (`seedUpdates` in `src/data/seed.ts`). Elk event is verrijkt met doelgroep, type product en
 het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
 "(datum te bevestigen)" in de titel.
 

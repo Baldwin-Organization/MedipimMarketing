@@ -1,10 +1,11 @@
 import type { DragEvent } from 'react';
 import { TYPE_META } from '../data/meta';
-import { t, todoLabel, typeLabel } from '../i18n';
+import { participationLabel, t, todoLabel, typeLabel } from '../i18n';
 import type { ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
 import { useUi } from '../ui-context';
+import { ParticipationDot } from './participation';
 import { Checkbox, Icon, LateBadge } from './ui';
 
 const MIME = 'application/x-mc-entry';
@@ -65,9 +66,10 @@ export function ItemChip({ item, day, compact }: { item: Item; day?: IsoDate; co
       draggable
       onDragStart={(e) => startDrag(e, { kind: 'item', id: item.id })}
       onClick={() => openItem(item.id)}
-      title={`${typeLabel(item.type)}: ${item.title}`}
+      title={`${typeLabel(item.type)}: ${item.title}${item.type === 'event' ? ` · ${participationLabel(item.participation)}` : ''}`}
     >
       <Icon name={m.icon} size={14} />
+      {item.type === 'event' && <ParticipationDot value={item.participation} />}
       {!compact && item.time && !continued && <span className="mc-entry-time">{item.time}</span>}
       <span className="mc-entry-title">{continued ? `↳ ${item.title}` : item.title}</span>
     </button>

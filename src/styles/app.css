@@ -114,6 +114,21 @@ button { font: inherit; color: inherit; }
 .mc-pill[data-tone="success"] { background: var(--mp-success-bg); color: var(--mp-success-content); }
 .mc-pill[data-tone="error"] { background: var(--mp-error-bg); color: var(--mp-error-content); }
 .mc-pill[data-accent] { background: var(--acc-bg); color: var(--acc-content); }
+
+/* ── Event participation ─────────────────────────────── */
+[data-participation="exposant"] { --acc: var(--mp-success-main); --acc-bg: var(--mp-success-bg); --acc-content: var(--mp-success-content); --acc-border: var(--mp-success-border); }
+[data-participation="bezoeker"] { --acc: var(--mp-info-main); --acc-bg: var(--mp-info-bg); --acc-content: var(--mp-info-content); --acc-border: var(--mp-info-border); }
+[data-participation="campagne"] { --acc: var(--mp-accent-3); --acc-bg: var(--mp-accent-3-bg); --acc-content: var(--mp-accent-3-content); --acc-border: var(--mp-accent-3-border); }
+[data-participation="geen"] { --acc: var(--mp-content-tertiary); --acc-bg: var(--mp-bg-sunken); --acc-content: var(--mp-content-secondary); --acc-border: var(--mp-border-default); }
+[data-participation="open"] { --acc: transparent; --acc-bg: var(--mp-bg-sunken); --acc-content: var(--mp-content-secondary); --acc-border: var(--mp-border-strong); }
+.mc-participation-dot { display: inline-block; flex: none; width: var(--mp-space-2); height: var(--mp-space-2); border-radius: var(--mp-shape-pill); background: var(--acc); }
+[data-participation="open"] .mc-participation-dot, .mc-participation-dot[data-participation="open"] { box-shadow: inset 0 0 0 var(--mp-border-width-strong) var(--mp-content-tertiary); }
+.mc-participation-pill { display: inline-flex; align-items: center; gap: var(--mp-space-1); background: var(--acc-bg); color: var(--acc-content); }
+.mc-toggle-chip[data-participation] { gap: var(--mp-space-2); }
+.mc-participation-legend { display: flex; flex-wrap: wrap; gap: var(--mp-space-2); }
+.mc-participation-legend-item { display: inline-flex; align-items: center; gap: var(--mp-space-2); height: var(--mp-height-sm); padding: 0 var(--mp-space-3); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-pill); background: var(--mp-bg-elevated); color: var(--mp-content-primary); font-size: var(--mp-text-xs); font-weight: var(--mp-font-weight-medium); cursor: pointer; transition: border-color var(--mp-transition-fast); }
+.mc-participation-legend-item:hover { border-color: var(--mp-border-strong); }
+.mc-participation-legend-item[aria-pressed="true"] { background: var(--acc-bg); border-color: var(--acc-border); color: var(--acc-content); }
 .mc-tags { display: flex; flex-wrap: wrap; gap: var(--mp-space-1); }
 .mc-type {
   display: inline-flex; align-items: center; gap: var(--mp-space-1); flex: none;
@@ -333,6 +348,8 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 .mc-event-mini:active { transform: scale(0.98); }
 .mc-event-date { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; width: var(--mp-height-lg); height: var(--mp-height-lg); border-radius: var(--mp-shape-icon-box); background: var(--mp-accent-4-bg); color: var(--mp-accent-4-content); }
 .mc-event-day { font-size: var(--mp-text-lg); line-height: 1; font-weight: var(--mp-font-weight-medium); font-variant-numeric: tabular-nums; }
+.mc-event-date[data-participation] { background: var(--acc-bg); color: var(--acc-content); }
+.mc-event-date[data-participation="open"] { background: var(--mp-bg-sunken); color: var(--mp-content-secondary); outline: var(--mp-border-width) dashed var(--mp-border-strong); outline-offset: calc(-1 * var(--mp-border-width)); }
 .mc-event-month { font-size: var(--mp-text-2xs); text-transform: uppercase; letter-spacing: var(--mp-text-eyebrow-tracking); }
 .mc-countdown { flex: none; font-size: var(--mp-text-xs); font-weight: var(--mp-font-weight-medium); color: var(--mp-accent-4-content); font-variant-numeric: tabular-nums; }
 .mc-progress { display: block; height: var(--mp-space-1); border-radius: var(--mp-shape-track); background: var(--mp-bg-sunken-deep); overflow: hidden; margin-top: var(--mp-space-1); }
@@ -358,8 +375,9 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 .mc-timeline-today { position: absolute; top: calc(-1 * var(--mp-space-1)); bottom: 0; z-index: 1; border-left: var(--mp-border-width-strong) solid var(--mp-brand-bg); pointer-events: none; }
 .mc-timeline-today > span { position: absolute; bottom: 0; left: var(--mp-space-1); color: var(--mp-brand-content); font-size: var(--mp-text-2xs); font-weight: var(--mp-font-weight-medium); }
 .mc-timeline-event { position: absolute; top: calc(var(--lane) * var(--mp-height-sm) + var(--mp-space-2)); display: flex; align-items: center; gap: var(--mp-space-1-5, var(--mp-space-2)); height: var(--mp-space-6); padding: 0; border: 0; background: none; text-align: left; cursor: pointer; color: var(--mp-content-primary); }
-.mc-timeline-bar { display: block; flex: none; height: var(--mp-space-2); min-width: var(--mp-space-2); border-radius: var(--mp-shape-pill); background: var(--mp-accent-4); transition: filter var(--mp-transition-fast); }
-.mc-timeline-event[data-status="idee"] .mc-timeline-bar { background: var(--mp-accent-4-bg); box-shadow: inset 0 0 0 var(--mp-border-width) var(--mp-accent-4-border); }
+.mc-timeline-bar { display: block; flex: none; height: var(--mp-space-2); min-width: var(--mp-space-2); border-radius: var(--mp-shape-pill); background: var(--acc, var(--mp-accent-4)); transition: filter var(--mp-transition-fast); }
+.mc-timeline-event[data-participation="open"] .mc-timeline-bar { background: var(--mp-bg-sunken); outline: var(--mp-border-width) dashed var(--mp-border-strong); outline-offset: calc(-1 * var(--mp-border-width)); }
+.mc-timeline-event[data-participation="geen"] .mc-timeline-label { color: var(--mp-content-tertiary); font-weight: var(--mp-font-weight-regular); }
 .mc-timeline-label { display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); }
 .mc-timeline-label { font-weight: var(--mp-font-weight-medium); }
 .mc-timeline-sub { color: var(--mp-content-tertiary); font-weight: var(--mp-font-weight-regular); }

@@ -2,12 +2,13 @@ import { addMonths, differenceInCalendarMonths, getDate, getDaysInMonth, startOf
 import { useEffect, useRef, useState } from 'react';
 import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
+import { ParticipationLegend, ParticipationPill, participationOptions } from '../components/participation';
 import { Button, Checkbox, EmptyState, Icon, LateBadge, Segmented, StatusPill } from '../components/ui';
 import { daysBetween, fmt, fmtDate, fromIso, toIso } from '../data/dates';
 import { audienceOptions, matchesCountry, productOptions, type CountryFilter } from '../data/dimensions';
-import { CHANNELS, OWNERS, STATUSES } from '../data/meta';
+import { CHANNELS, OWNERS, STATUSES, participationKey, type ParticipationKey } from '../data/meta';
 import { useStore } from '../data/store';
-import type { Audience, Item, ItemStatus, ProductType } from '../data/types';
+import type { Audience, Item, ItemStatus, Participation, ProductType } from '../data/types';
 import { channelLabel, statusLabel, t, todoLabel } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
@@ -17,8 +18,10 @@ const MONTH_PX = 320;
 const MIN_MONTHS = 6;
 /** Room a label needs before the next event can share its lane. */
 const LABEL_PX = 210;
+const ATTENDING: Participation[] = ['exposant', 'bezoeker'];
 
 interface EventFilters {
+  participation: ParticipationKey | '';
   channel: string;
   status: ItemStatus | '';
   owner: string;
@@ -26,7 +29,7 @@ interface EventFilters {
   product: ProductType | '';
   country: CountryFilter;
 }
-const NO_FILTERS: EventFilters = { channel: '', status: '', owner: '', audience: '', product: '', country: '' };
+const NO_FILTERS: EventFilters = { participation: '', channel: '', status: '', owner: '', audience: '', product: '', country: '' };
 
 export function EventsView() {
   const store = useStore();
@@ -38,14 +41,19 @@ export function EventsView() {
   const allEvents = store.items.filter((i) => i.type === 'event');
   const channels = [...new Set([...CHANNELS.event, ...allEvents.map((e) => e.channel)])];
   const active = Object.values(filters).filter(Boolean).length;
-  const matches = (i: Item) =>
+  const matchesOthers = (i: Item) =>
     (!filters.channel || i.channel === filters.channel) &&
     (!filters.status || i.status === filters.status) &&
     (!filters.owner || i.owner === filters.owner) &&
     (!filters.audience || i.audiences.includes(filters.audience)) &&
     (!filters.product || i.productTypes.includes(filters.product)) &&
     matchesCountry(i, filters.country);
+  const matches = (i: Item) => matchesOthers(i) && (!filters.participation || participationKey(i.participation) === filters.participation);
   const filtered = allEvents.filter(matches).sort((a, b) => a.date.localeCompare(b.date));
+  const participationCounts = new Map<ParticipationKey, number>();
+  allEvents
+    .filter((e) => (e.endDate ?? e.date) >= today && matchesOthers(e))
+    .forEach((e) => participationCounts.set(participationKey(e.participation), (participationCounts.get(participationKey(e.participation)) ?? 0) + 1));
   const upcoming = filtered.filter((e) => (e.endDate ?? e.date) >= today);
   const events = scope === 'alle' ? filtered : upcoming;
 
@@ -57,6 +65,7 @@ export function EventsView() {
         actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'event', channel: 'Beurs', date: today, endDate: today })}>{t.events.newEvent}</Button>}
       />
       <div className="mc-filters" aria-label={t.common.filters}>
+        <FilterSelect label={t.participationTitle} value={filters.participation} options={participationOptions()} onChange={set('participation')} />
         <CountrySelect value={filters.country} items={allEvents} onChange={set('country')} />
         <FilterSelect label={t.dims.productShort} value={filters.product} options={productOptions()} onChange={set('product')} />
         <FilterSelect label={t.dims.audience} value={filters.audience} options={audienceOptions()} onChange={set('audience')} />
@@ -70,6 +79,7 @@ export function EventsView() {
         )}
         <span className="mc-muted">{t.events.upcomingCount(upcoming.length)}</span>
       </div>
+      <ParticipationLegend counts={participationCounts} active={filters.participation} onSelect={(k) => set('participation')(k as EventFilters['participation'])} />
       <Timeline events={upcoming} />
       <div className="mc-section-bar">
         <h2>{t.events.prep}</h2>
@@ -145,7 +155,7 @@ function Timeline({ events }: { events: Item[] }) {
                 key={e.id}
                 type="button"
                 className="mc-timeline-event"
-                data-status={e.status}
+                data-participation={participationKey(e.participation)}
                 style={{ left, ['--lane' as string]: lane }}
                 title={`${e.title} · ${fmt(e.date, 'd MMM')}${e.location ? ` · ${e.location}` : ''}`}
                 onClick={() => openItem(e.id)}
@@ -172,7 +182,7 @@ function EventCard({ event }: { event: Item }) {
   return (
     <li className="mc-event-card" data-past={past || undefined}>
       <div className="mc-event-rail">
-        <span className="mc-event-date mc-event-date-lg">
+        <span className="mc-event-date mc-event-date-lg" data-participation={participationKey(event.participation)}>
           <span className="mc-event-day">{fmt(event.date, 'd')}</span>
           <span className="mc-event-month">{fmt(event.date, 'MMM yyyy')}</span>
         </span>
@@ -189,6 +199,7 @@ function EventCard({ event }: { event: Item }) {
             </p>
           </div>
           <div className="mc-event-side">
+            <ParticipationPill value={event.participation} />
             <StatusPill status={event.status} />
             <span className="mc-countdown">{past ? t.common.countdown.ended : n <= 0 ? t.common.countdown.running : t.common.countdown.days(n)}</span>
             <Button variant="text" intent="secondary" size="small" icon="edit" label={t.events.edit} onClick={() => openItem(event.id)} />
@@ -197,9 +208,11 @@ function EventCard({ event }: { event: Item }) {
         <DimensionTags item={event} />
         {event.description && <p className="mc-event-desc">{event.description}</p>}
         {prep.length === 0 ? (
-          <p className="mc-muted mc-checklist-empty">
-            {t.events.noPrep}
-          </p>
+          (!event.participation || ATTENDING.includes(event.participation)) && (
+            <p className="mc-muted mc-checklist-empty">
+              {event.participation ? t.events.noPrepGoing : t.events.noPrep}
+            </p>
+          )
         ) : (
           <div className="mc-checklist-head">
             <span>{t.events.prep}</span>

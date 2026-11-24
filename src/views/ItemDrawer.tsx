@@ -8,6 +8,7 @@ import { rollForward } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
 import type { ItemType, Todo } from '../data/types';
 import { channelLabel, statusLabel, t, todoLabel, typeLabel } from '../i18n';
+import { ParticipationPicker } from '../components/participation';
 import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
@@ -50,7 +51,7 @@ export function ItemDrawer() {
   }, [editing]);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
-  const setType = (type: ItemType) => setDraft((d) => ({ ...d, type, channel: CHANNELS[type][0], endDate: HAS_PERIOD.includes(type) ? d.endDate ?? d.date : undefined }));
+  const setType = (type: ItemType) => setDraft((d) => ({ ...d, type, channel: CHANNELS[type][0], endDate: HAS_PERIOD.includes(type) ? d.endDate ?? d.date : undefined, participation: type === 'event' ? d.participation : undefined }));
   const hasPeriod = HAS_PERIOD.includes(draft.type);
   const media = [...new Set(store.items.map((i) => i.medium).filter((m): m is string => !!m))].sort();
   const euro = (v: string) => (v === '' ? undefined : Math.max(0, Number(v)));
@@ -140,6 +141,12 @@ export function ItemDrawer() {
               <datalist id={`${id}-list`}>{media.map((m) => <option key={m} value={m} />)}</datalist>
             </>
           )}</Field>
+        )}
+        {draft.type === 'event' && (
+          <div className="mc-field" role="group" aria-label={t.participationTitle}>
+            <span className="mc-field-label">{t.participationTitle}</span>
+            <ParticipationPicker value={draft.participation} onChange={(p) => set('participation', p)} />
+          </div>
         )}
         {draft.type === 'event' && (
           <Field label={t.drawer.location} optional>{(id) => <input id={id} className="mc-input" value={draft.location ?? ''} onChange={(e) => set('location', e.target.value)} placeholder={t.drawer.locationPlaceholder} />}</Field>

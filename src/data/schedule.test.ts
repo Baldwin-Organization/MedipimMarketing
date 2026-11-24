@@ -59,13 +59,13 @@ describe('templates and seed', () => {
     const t = todosFromTemplate(item, () => `id${n++}`);
     expect(t[0]).toMatchObject({ title: 'Stand boeken', dueDate: '2026-10-15', offsetDays: -56 });
   });
-  it('seeds the 2027 conference calendar as unassigned ideas without to-dos', () => {
+  it('seeds the 2027 conference calendar unassigned and without to-dos, undecided events as ideas', () => {
     let n = 0;
     const { items, todos } = buildSeed(() => `id${n++}`);
     const events = items.filter((i) => i.type === 'event');
     expect(events.length).toBe(56);
     expect(todos.every((t) => !events.some((e) => e.id === t.itemId))).toBe(true);
-    expect(events.every((i) => i.status === 'idee' && i.owner === '')).toBe(true);
+    expect(events.every((i) => i.status === (i.participation ? 'gepland' : 'idee') && i.owner === '')).toBe(true);
     expect(events.every((i) => /^2027-\d\d-\d\d$/.test(i.date) && i.endDate! >= i.date && itemOnDay(i, i.date))).toBe(true);
   });
 

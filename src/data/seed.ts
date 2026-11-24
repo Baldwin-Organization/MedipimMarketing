@@ -106,6 +106,20 @@ const EVENTS: SeedEvent[] = [
   { title: 'CPHI Frankfurt', date: '2027-11-09', endDate: '2027-11-11', location: 'Frankfurt, Duitsland', channel: 'Beurs', audiences: PRODUCENTEN, relevance: 'Middel voor fabrikantdata', description: 'Belangrijke beurs voor producenten en leveranciers. Valt net buiten de periode van de eventkalender (tot 4 november 2027).' },
 ];
 
+/** Events where Medipim has a stand. */
+const EXHIBITING = ['PharmagoraPlus', 'APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027', 'Expopharm', 'The Pharmacy Show'];
+
+/**
+ * Seed decisions made after the seed shipped, applied once to data that already exists in a browser.
+ * Returns only the items that change.
+ */
+export function seedUpdates(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items
+    .filter((i) => i.type === 'event' && !i.participation && EXHIBITING.includes(i.title))
+    .map((i) => ({ ...i, participation: 'exposant', status: i.status === 'idee' ? 'gepland' : i.status, updatedAt: now }));
+}
+
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country. */
 export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[]; budgets: Budget[] } {
   const now = new Date().toISOString();
@@ -118,7 +132,7 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
     date: e.date,
     endDate: e.endDate ?? e.date,
     location: e.location,
-    status: 'idee',
+    ...(EXHIBITING.includes(e.title) ? { participation: 'exposant' as const, status: 'gepland' as const } : { status: 'idee' as const }),
     owner: '',
     campaign: '',
     audiences: e.audiences,

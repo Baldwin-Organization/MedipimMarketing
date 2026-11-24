@@ -3,8 +3,9 @@ import { groupByUrgency } from '../components/TodayPanel';
 import { ItemChip, TodoEntry } from '../components/entries';
 import { Button, Card, EmptyState, Stat, StatusPill, TypeBadge } from '../components/ui';
 import { daysBetween, fmt, relativeDay, shiftIso } from '../data/dates';
+import { participationKey } from '../data/meta';
 import { useStore } from '../data/store';
-import { channelLabel, t } from '../i18n';
+import { channelLabel, participationLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -94,7 +95,7 @@ export function Dashboard() {
               const n = daysBetween(today, e.date);
               return (
                 <button key={e.id} type="button" className="mc-event-mini" onClick={() => openItem(e.id)}>
-                  <span className="mc-event-date">
+                  <span className="mc-event-date" data-participation={participationKey(e.participation)} title={participationLabel(e.participation)}>
                     <span className="mc-event-day">{fmt(e.date, 'd')}</span>
                     <span className="mc-event-month">{fmt(e.date, 'MMM')}</span>
                   </span>

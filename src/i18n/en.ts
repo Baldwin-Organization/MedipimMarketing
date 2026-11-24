@@ -57,6 +57,14 @@ export const en: Dict = {
   },
 
   status: { idee: 'Idea', gepland: 'Planned', in_uitvoering: 'In progress', klaar: 'Done' },
+  participation: {
+    exposant: { label: 'We exhibit', short: 'Exhibitor' },
+    bezoeker: { label: 'We attend as visitors', short: 'Visitor' },
+    campagne: { label: 'Not attending, running campaigns', short: 'Campaigns only' },
+    geen: { label: 'Not attending, no action', short: 'Not going' },
+    open: { label: 'To be decided', short: 'To decide' },
+  },
+  participationTitle: 'Participation',
 
   audiences: { groothandels: 'Wholesalers', producenten: 'Manufacturers', apothekers: 'Pharmacists', ziekenhuizen: 'Hospitals' },
 
@@ -274,6 +282,7 @@ export const en: Dict = {
     scrollHint: 'Scroll horizontally through the months',
     edit: 'Edit event',
     noPrep: 'No preparation yet. Decided to go? Open the event and add the default to-dos.',
+    noPrepGoing: 'No preparation yet. Open the event and add the default to-dos.',
     prepProgress: (done, total) => `${done} of ${total} done`,
     weeksBefore: (n) => `${n} weeks before`,
     daysBefore: (n) => `${n} d before`,

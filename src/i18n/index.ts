@@ -1,5 +1,6 @@
 import { enGB, nl as nlDates } from 'date-fns/locale';
-import type { Audience, ItemStatus, ItemType, ProductType } from '../data/types';
+import { participationKey } from '../data/meta';
+import type { Audience, ItemStatus, ItemType, Participation, ProductType } from '../data/types';
 import { en } from './en';
 import { nl, type Dict } from './nl';
 
@@ -33,6 +34,8 @@ export const dateLocale = () => (lang === 'en' ? enGB : nlDates);
 export const typeLabel = (type: ItemType) => t.types[type].label;
 export const typePlural = (type: ItemType) => t.types[type].plural;
 export const statusLabel = (status: ItemStatus) => t.status[status];
+export const participationLabel = (p?: Participation) => t.participation[participationKey(p)].label;
+export const participationShort = (p?: Participation) => t.participation[participationKey(p)].short;
 export const audienceLabel = (a: Audience) => t.audiences[a];
 export const productLabel = (p: ProductType) => t.products[p];
 export const channelLabel = (channel: string) => t.channels[channel] ?? channel;
