@@ -98,7 +98,7 @@ src/
 ### Online versie (Railway)
 
 De app draait op Railway, project `medipim-marketingkalender`, service `web`:
-<https://web-production-712f2c74.up.railway.app>. Railway bouwt met `npm run build` en
+<https://medipim-marketing.up.railway.app>. Railway bouwt met `npm run build` en
 serveert `dist/` als statische site. Opnieuw deployen vanuit een lokale checkout:
 
 ```bash
