@@ -95,6 +95,20 @@ src/
     app.css             app-stijlen, uitsluitend via --mp-* tokens
 ```
 
+### Online versie (Railway)
+
+De app draait op Railway, project `medipim-marketingkalender`, service `web`:
+<https://web-production-712f2c74.up.railway.app>. Railway bouwt met `npm run build` en
+serveert `dist/` als statische site. Opnieuw deployen vanuit een lokale checkout:
+
+```bash
+railway link        # eenmalig: project medipim-marketingkalender, service web
+railway up
+```
+
+Gegevens blijven ook online lokaal per browser; collega's zien elkaars wijzigingen
+pas met een gedeelde database (zie hieronder).
+
 ### Naar een gedeelde database
 
 Alle opslag loopt via de interface `Repository` in `src/data/repository.ts`. Voor een
