@@ -16,15 +16,16 @@ import { EventsView } from './views/EventsView';
 import { ItemDrawer } from './views/ItemDrawer';
 import { PrView } from './views/PrView';
 
-const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName }[] = [
+/** Overview, then the brand, then the work that carries it, then the money; `group` starts a new block. */
+const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName; group?: true }[] = [
   { to: '/dashboard', key: 'dashboard', icon: 'space_dashboard' },
   { to: '/kalender', key: 'calendar', icon: 'calendar_month' },
-  { to: '/beurzen', key: 'events', icon: 'storefront' },
+  { to: '/merk', key: 'brand', icon: 'verified', group: true },
+  { to: '/content', key: 'content', icon: 'lightbulb', group: true },
   { to: '/campagnes', key: 'campaigns', icon: 'ads_click' },
+  { to: '/beurzen', key: 'events', icon: 'storefront' },
   { to: '/pr', key: 'pr', icon: 'article' },
-  { to: '/content', key: 'content', icon: 'lightbulb' },
-  { to: '/merk', key: 'brand', icon: 'verified' },
-  { to: '/budget', key: 'budget', icon: 'payments' },
+  { to: '/budget', key: 'budget', icon: 'payments', group: true },
 ];
 
 function useLanguage() {
@@ -93,7 +94,7 @@ export function App() {
           </div>
           <nav className="mc-nav" aria-label={t.app.mainNav}>
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} className="mc-nav-link">
+              <NavLink key={n.to} to={n.to} className="mc-nav-link" data-group={n.group || undefined}>
                 <Icon name={n.icon} size={20} />
                 {t.app.nav[n.key]}
               </NavLink>

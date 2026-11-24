@@ -51,6 +51,7 @@ button { font: inherit; color: inherit; }
   transition: background var(--mp-transition-fast), color var(--mp-transition-fast);
 }
 .mc-nav-link:hover { background: var(--mp-hover-row-tint-bg); color: var(--mp-hover-row-tint-color); }
+.mc-nav-link[data-group] { margin-top: var(--mp-space-3); }
 .mc-nav-link.active { background: var(--mp-hover-brand-active-tint-bg); color: var(--mp-brand-content-strong); }
 .mc-sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-sidebar-foot .mc-button { justify-content: flex-start; }
@@ -513,6 +514,7 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
   .mc-sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .mc-sidebar-foot { display: none; }
   .mc-nav { flex-direction: row; }
+  .mc-nav-link[data-group] { margin-top: 0; margin-left: var(--mp-space-3); }
   .mc-page { padding: var(--mp-space-4); }
   .mc-stats, .mc-today-panel { grid-template-columns: 1fr 1fr; }
   .mc-budget-grid { grid-template-columns: 1fr; }
