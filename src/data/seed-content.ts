@@ -160,7 +160,24 @@ const PIECES: SeedPiece[] = [
   { id: 'content-team-sales', pillar: 'pillar-team', format: 'post', month: '2027-07', audiences: EVERYONE, title: 'Maak kennis met het team: iemand van sales', description: 'Uit de reeks "Maak kennis met het team": het eerste aanspreekpunt voor nieuwe klanten.', en: { title: 'Meet the team: someone from sales', description: 'From the "Meet the team" series: the first point of contact for new customers.' } },
   { id: 'content-team-dev', pillar: 'pillar-team', format: 'post', month: '2027-10', audiences: EVERYONE, title: 'Maak kennis met het team: iemand van development', description: 'Uit de reeks "Maak kennis met het team": wie het platform bouwt.', en: { title: 'Meet the team: someone from development', description: 'From the "Meet the team" series: who builds the platform.' } },
   { id: 'content-team-support', pillar: 'pillar-team', format: 'post', month: '2027-12', audiences: EVERYONE, title: 'Maak kennis met het team: iemand van support', description: 'Uit de reeks "Maak kennis met het team": wie je vragen beantwoordt.', en: { title: 'Meet the team: someone from support', description: 'From the "Meet the team" series: who answers your questions.' } },
+
+  // December 2026, after the UX launch, and the end of 2027
+  { id: 'content-new-ux-highlights', pillar: 'pillar-product', format: 'post', month: '2026-12', audiences: PHARMACISTS, title: 'Drie dingen die je misschien nog niet zag in de nieuwe UX', description: 'Drie kleinere verbeteringen in het vernieuwde platform, elk met een schermafbeelding.', en: { title: 'Three things you may not have noticed in the new UX', description: 'Three smaller improvements in the redesigned platform, each with a screenshot.' } },
+  { id: 'content-new-ux-question', pillar: 'pillar-product', format: 'post', month: '2026-12', audiences: PHARMACISTS, title: 'Vraag van sales: wat verandert er voor mij met de nieuwe UX?', description: 'Uit de reeks "Een vraag die sales vaak krijgt": wat hetzelfde blijft en wat sneller gaat.', en: { title: 'A sales question: what changes for me with the new UX?', description: 'From the "A question sales often gets" series: what stays the same and what gets faster.' } },
+  { id: 'content-year-greeting', pillar: 'pillar-team', format: 'post', month: '2026-12', audiences: EVERYONE, title: 'Eindejaarsgroet van het team', description: 'Teamfoto met een bedankje aan klanten en partners voor 2026.', en: { title: 'Season\'s greetings from the team', description: 'Team photo with thanks to customers and partners for 2026.' } },
+  { id: 'content-2026-numbers', pillar: 'pillar-data', format: 'infographic', month: '2026-12', audiences: EVERYONE, title: 'Ons jaar 2026 in cijfers', description: 'Hoeveel producten, fiches, foto\'s en landen er dit jaar bijkwamen op het platform.', en: { title: 'Our 2026 in numbers', description: 'How many products, sheets, photos and countries were added to the platform this year.' } },
+  { id: 'content-2027-numbers', pillar: 'pillar-data', format: 'infographic', month: '2027-12', audiences: EVERYONE, title: 'Ons jaar 2027 in cijfers', description: 'Hoeveel producten, fiches, foto\'s en landen er dit jaar bijkwamen op het platform.', en: { title: 'Our 2027 in numbers', description: 'How many products, sheets, photos and countries were added to the platform this year.' } },
 ];
+
+/** Pieces that close their month: they go to its last weeks, in this order. The GIRP article follows the conference of 19–20 May. */
+export const MONTH_END_PIECES = ['content-girp-trends', 'content-year-greeting', 'content-2026-numbers', 'content-year-review', 'content-2027-numbers'];
+
+const DECEMBER_FILL = ['content-new-ux-highlights', 'content-new-ux-question', 'content-year-greeting', 'content-2026-numbers', 'content-2027-numbers'];
+
+/** The pieces for December 2026 and 2027, for data seeded before them. */
+export function decemberFillUpdate(existing: ContentPiece[], pillars: ContentPillar[], now: string): ContentPiece[] {
+  return missingPieces(DECEMBER_FILL, existing, pillars, now);
+}
 
 /** The single posts above that fill the weekly rhythm of 2027. */
 const WEEKLY_FILL = PIECES.filter((p) => /^content-(dyk|sq|mf|cq|team)-|^content-(autumn-fairs|year-review)$/.test(p.id)).map((p) => p.id);

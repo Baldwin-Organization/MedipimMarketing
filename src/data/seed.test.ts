@@ -118,7 +118,7 @@ describe('budget plan and content mix', () => {
     expect(budgets.find((b) => b.line === 'beurzen_exposant')?.amount).toBe(60000);
     expect(pillars.reduce((n, p) => n + p.target, 0)).toBe(100);
     expect(content.every((c) => pillars.some((p) => p.id === c.pillarId) && c.translations?.en?.title)).toBe(true);
-    expect(items.filter((i) => i.contentId)).toHaveLength(3);
+    expect(items.filter((i) => i.contentId === 'content-ux-launch')).toHaveLength(3);
   });
 
   it('adds them to existing data only where that part is still empty', () => {

@@ -2,7 +2,8 @@ import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { planEvents } from './seed-events';
-import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
+import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
+import { scheduleWeekly } from './seed-weekly';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
@@ -211,7 +212,21 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-7', apply: addRetargeting },
   { key: 'mc-seed-updates-8', apply: (data) => planEvents(data, newId) },
   { key: 'mc-seed-updates-9', apply: (data) => ({ content: weeklyFillUpdate(data.content, data.pillars, new Date().toISOString()) }) },
+  { key: 'mc-seed-updates-10', apply: fillAndScheduleWeekly },
 ];
+
+/** The December pieces, then one post a week in the calendar. */
+export function fillAndScheduleWeekly(data: Contents): Partial<Contents> {
+  const added = decemberFillUpdate(data.content, data.pillars, new Date().toISOString());
+  const plan = scheduleWeekly({ ...data, content: [...data.content, ...added] }, newId);
+  return { items: plan.items, todos: plan.todos, content: mergeById(added, plan.content) };
+}
+
+/** `base` with every record in `changes` replacing the one with its id, or appended. */
+function mergeById<T extends { id: string }>(base: T[], changes: T[]): T[] {
+  const byId = new Map(changes.map((r) => [r.id, r]));
+  return [...base.map((r) => byId.get(r.id) ?? r), ...changes.filter((r) => !base.some((b) => b.id === r.id))];
+}
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
 export function buildSeed(makeId: () => string): Contents {
@@ -276,12 +291,15 @@ export function buildSeed(makeId: () => string): Contents {
   }
   const retargeting = buildRetargeting(makeId, now);
   const events = planEvents({ items, todos }, makeId);
+  const planned = [...items, retargeting.item, ...events.items];
+  const content = buildSeedContent(now);
+  const weekly = scheduleWeekly({ items: planned, content, pillars: SEED_PILLARS }, makeId);
   return {
-    items: [...items, retargeting.item, ...events.items],
-    todos: [...todos, ...retargeting.todos, ...events.todos],
+    items: mergeById(planned, weekly.items),
+    todos: [...todos, ...retargeting.todos, ...events.todos, ...weekly.todos],
     budgets: SEED_BUDGETS,
     pillars: SEED_PILLARS,
-    content: buildSeedContent(now),
+    content: mergeById(content, weekly.content),
   };
 }
 
