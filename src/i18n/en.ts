@@ -28,7 +28,7 @@ export const en: Dict = {
   },
 
   app: {
-    brandSub: 'Marketing calendar',
+    brandSub: 'Marketing System',
     mainNav: 'Main navigation',
     content: 'Content',
     nav: { dashboard: 'Dashboard', calendar: 'Calendar', events: 'Trade fairs & conferences', campaigns: 'Campaigns', pr: 'PR & trade media', budget: 'Budget' },

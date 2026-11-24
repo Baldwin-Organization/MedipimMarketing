@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { HashRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { MedipimLogo } from './components/logo';
 import { Button, Icon, Segmented } from './components/ui';
 import { useStore } from './data/store';
 import type { IconName } from './icons.generated';
@@ -84,11 +85,8 @@ export function App() {
       <div className="mc-app">
         <aside className="mc-sidebar">
           <div className="mc-brand">
-            <span className="mc-brand-mark"><Icon name="calendar_month" size={20} /></span>
-            <span>
-              <span className="mc-brand-name">medipim</span>
-              <span className="mc-brand-sub">{t.app.brandSub}</span>
-            </span>
+            <MedipimLogo />
+            <span className="mc-brand-sub">{t.app.brandSub}</span>
           </div>
           <nav className="mc-nav" aria-label={t.app.mainNav}>
             {NAV.map((n) => (

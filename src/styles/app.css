@@ -38,13 +38,11 @@ button { font: inherit; color: inherit; }
   background: var(--mp-bg-elevated);
   border-right: var(--mp-border-width) solid var(--mp-border-weak);
 }
-.mc-brand { display: flex; align-items: center; gap: var(--mp-space-3); padding: var(--mp-space-1) var(--mp-space-2); }
-.mc-brand-mark {
-  display: grid; place-items: center; width: var(--mp-height-md); height: var(--mp-height-md);
-  border-radius: var(--mp-shape-icon-box); background: var(--mp-brand-bg); color: var(--mp-content-stay-light);
-}
-.mc-brand-name { display: block; font-size: var(--mp-text-lg); line-height: var(--mp-text-lg-line); font-weight: var(--mp-font-weight-medium); color: var(--mp-brand-content); letter-spacing: var(--mp-text-title-tracking); }
-.mc-brand-sub { display: block; font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); color: var(--mp-content-tertiary); }
+.mc-brand { display: flex; flex-direction: column; align-items: flex-start; gap: var(--mp-space-1); padding: var(--mp-space-2) var(--mp-space-2) var(--mp-space-1); }
+.mc-logo { display: block; width: auto; }
+.mc-logo-accent { fill: var(--mp-brand-original); }
+.mc-logo-fg { fill: var(--mp-content-primary); }
+.mc-brand-sub { display: block; font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); font-weight: var(--mp-font-weight-medium); color: var(--mp-content-tertiary); letter-spacing: var(--mp-text-title-tracking); }
 .mc-nav { display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-nav-link {
   display: flex; align-items: center; gap: var(--mp-space-3); min-height: var(--mp-height-md);

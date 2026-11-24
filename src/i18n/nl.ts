@@ -29,7 +29,7 @@ export const nl = {
   },
 
   app: {
-    brandSub: 'Marketingkalender',
+    brandSub: 'Marketing System',
     mainNav: 'Hoofdnavigatie',
     content: 'Inhoud',
     nav: { dashboard: 'Dashboard', calendar: 'Kalender', events: 'Beurzen & conferenties', campaigns: 'Campagnes', pr: 'PR & vakmedia', budget: 'Budget' },
