@@ -1,0 +1,22 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource/ibm-plex-serif/400.css';
+import '@fontsource/ibm-plex-serif/500.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import './styles/medipim-tokens.css';
+import './styles/app.css';
+import { App } from './App';
+import { StoreProvider } from './data/store';
+import { UiProvider } from './ui-context';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <StoreProvider>
+      <UiProvider>
+        <App />
+      </UiProvider>
+    </StoreProvider>
+  </StrictMode>,
+);
