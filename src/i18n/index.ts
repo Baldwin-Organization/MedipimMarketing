@@ -1,6 +1,6 @@
 import { enGB, nl as nlDates } from 'date-fns/locale';
 import { participationKey } from '../data/meta';
-import type { Audience, Item, ItemStatus, ItemText, ItemType, Participation, ProductType, Todo } from '../data/types';
+import type { Audience, BudgetLine, ContentFormat, ContentStatus, Item, ItemStatus, ItemText, ItemType, Participation, ProductType, Todo } from '../data/types';
 import { en } from './en';
 import { nl, type Dict } from './nl';
 
@@ -39,6 +39,9 @@ export const participationShort = (p?: Participation) => t.participation[partici
 export const audienceLabel = (a: Audience) => t.audiences[a];
 export const productLabel = (p: ProductType) => t.products[p];
 export const channelLabel = (channel: string) => t.channels[channel] ?? channel;
+export const budgetLineLabel = (line: BudgetLine) => t.budgetLines[line].label;
+export const formatLabel = (format: ContentFormat) => t.contentFormats[format];
+export const contentStatusLabel = (status: ContentStatus) => t.contentStatus[status];
 
 export type TextField = keyof ItemText;
 type Texts = Pick<Item, 'title' | 'description' | 'location' | 'campaign' | 'translations'>;
@@ -51,6 +54,12 @@ export const textIn = (item: Texts, l: Lang, field: TextField): string => (l ===
 /** The item's text in the current language, or in the other language when it has none. */
 export const itemText = (item: Texts, field: TextField): string => textIn(item, lang, field) || textIn(item, otherLang(), field);
 export const itemTitle = (item: Texts) => itemText(item, 'title');
+
+type Bilingual<F extends string> = Partial<Record<F, string>> & { translations?: { en?: Partial<Record<F, string>> } };
+
+/** A Dutch field with its English version in `translations.en`, as on pillars and content pieces. */
+export const localIn = <F extends string>(o: Bilingual<F>, l: Lang, field: F): string => (l === 'nl' ? o[field] : o.translations?.en?.[field]) ?? '';
+export const local = <F extends string>(o: Bilingual<F>, field: F): string => localIn(o, lang, field) || localIn(o, otherLang(), field);
 
 /** Template to-dos are stored in Dutch and translated through the dictionary. */
 export const todoTextIn = (todo: Pick<Todo, 'title' | 'translations'>, l: Lang): string =>

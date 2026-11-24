@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { byAudience, byMarket, byQuarter, byType, quarterOf } from './budget';
+import { autoBudgetLine, byAudience, byLine, byMarket, byQuarter, quarterOf } from './budget';
 import type { Budget, Item } from './types';
 
 const item = (over: Partial<Item>): Item => ({
@@ -27,7 +27,7 @@ describe('budget', () => {
     item({ type: 'event', date: '2027-11-20', budgetPlanned: 3000, budgetActual: 3200, audiences: ['apothekers'] }),
     item({ date: '2026-12-01', budgetPlanned: 9999 }),
   ];
-  const budgets: Budget[] = [{ id: '2027:campaign', year: 2027, type: 'campaign', amount: 5000 }];
+  const budgets: Budget[] = [{ id: '2027:linkedin', year: 2027, line: 'linkedin', amount: 5000 }];
 
   it('assigns quarters from the start date', () => {
     expect(quarterOf(item({ date: '2027-03-31' }))).toBe(1);
@@ -35,11 +35,23 @@ describe('budget', () => {
     expect(quarterOf(item({ date: '2027-12-31' }))).toBe(4);
   });
 
-  it('totals per type for the selected year only', () => {
-    const rows = byType(items, budgets, 2027);
-    expect(rows.find((r) => r.type === 'campaign')).toMatchObject({ budget: 5000, planned: 1000, actual: 800 });
-    expect(rows.find((r) => r.type === 'event')).toMatchObject({ budget: 0, planned: 3000, actual: 3200 });
-    expect(rows.find((r) => r.type === 'social')).toMatchObject({ planned: 0, actual: 0 });
+  it('derives the budget line from type, channel and participation', () => {
+    expect(autoBudgetLine(item({ type: 'event', participation: 'exposant' }))).toBe('beurzen_exposant');
+    expect(autoBudgetLine(item({ type: 'event', participation: 'bezoeker' }))).toBe('beurzen_bezoeker');
+    expect(autoBudgetLine(item({ type: 'event' }))).toBeUndefined();
+    expect(autoBudgetLine(item({ channel: 'Google Ads' }))).toBe('google');
+    expect(autoBudgetLine(item({ channel: 'ChatGPT Ads' }))).toBe('chatgpt');
+    expect(autoBudgetLine(item({ channel: 'Gezamenlijke campagne' }))).toBe('vakmedia');
+    expect(autoBudgetLine(item({ type: 'pr' }))).toBe('vakmedia');
+    expect(autoBudgetLine(item({ type: 'call' }))).toBeUndefined();
+  });
+
+  it('totals per budget line for the selected year only, with an override and the unassigned rest', () => {
+    const { rows, unassigned } = byLine([...items, item({ type: 'pr', budgetPlanned: 400, budgetLine: 'lidmaatschappen' })], budgets, 2027);
+    expect(rows.find((r) => r.line === 'linkedin')).toMatchObject({ budget: 5000, planned: 1000, actual: 800 });
+    expect(rows.find((r) => r.line === 'vakmedia')).toMatchObject({ budget: 0, planned: 600 });
+    expect(rows.find((r) => r.line === 'lidmaatschappen')).toMatchObject({ planned: 400 });
+    expect(unassigned).toEqual({ planned: 3000, actual: 3200 });
   });
 
   it('totals per quarter', () => {

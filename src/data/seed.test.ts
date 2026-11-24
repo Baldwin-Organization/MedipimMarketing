@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addSeedTranslations, buildSeed, markExhibitors } from './seed';
+import { addBudgetAndContent, addSeedTranslations, buildSeed, markExhibitors } from './seed';
 
 const seed = () => {
   let n = 0;
@@ -56,5 +56,32 @@ describe('bilingual seed', () => {
     expect(updated[0].translations?.en?.description).toBeUndefined();
     expect(updated[1].translations?.en?.description).toBeTruthy();
     expect(addSeedTranslations(all())).toHaveLength(0);
+  });
+});
+
+describe('budget plan and content mix', () => {
+  const full = () => buildSeed(() => Math.random().toString(36));
+
+  it('seeds the 2027 budget of € 189,294 and a content mix that adds up to 100%', () => {
+    const { budgets, pillars, content, items } = full();
+    expect(budgets.reduce((n, b) => n + b.amount, 0)).toBe(189294);
+    expect(budgets.find((b) => b.line === 'beurzen_exposant')?.amount).toBe(60000);
+    expect(pillars.reduce((n, p) => n + p.target, 0)).toBe(100);
+    expect(content.every((c) => pillars.some((p) => p.id === c.pillarId) && c.translations?.en?.title)).toBe(true);
+    expect(items.filter((i) => i.contentId)).toHaveLength(3);
+  });
+
+  it('adds them to existing data only where that part is still empty', () => {
+    const { items, todos } = full();
+    const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [] };
+    const changes = addBudgetAndContent(old);
+    expect(changes.budgets).toHaveLength(9);
+    expect(changes.pillars).toHaveLength(5);
+    expect(changes.items?.every((i) => i.contentId)).toBe(true);
+    expect(changes.items).toHaveLength(3);
+
+    const filled = full();
+    const none = addBudgetAndContent(filled);
+    expect([none.budgets, none.pillars, none.content, none.items].every((list) => list?.length === 0)).toBe(true);
   });
 });

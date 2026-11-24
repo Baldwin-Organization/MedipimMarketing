@@ -1,7 +1,9 @@
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
+import type { Contents } from './repository';
+import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent } from './seed-content';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
-import type { Audience, Budget, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
+import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
   title: string;
@@ -144,14 +146,34 @@ export function addSeedTranslations(items: Item[]): Item[] {
   });
 }
 
-/** Seed changes applied once to data that already exists in a browser, in order. */
-export const SEED_UPDATES: { key: string; apply: (items: Item[]) => Item[] }[] = [
-  { key: 'mc-seed-updates-1', apply: markExhibitors },
-  { key: 'mc-seed-updates-2', apply: addSeedTranslations },
+/**
+ * The 2027 budget plan, the content mix and its starter ideas, for data seeded before they existed.
+ * Each part is only added while that part is still empty, so nothing the team entered is overwritten.
+ */
+export function addBudgetAndContent(data: Contents): Partial<Contents> {
+  const now = new Date().toISOString();
+  const seedPillars = !data.pillars.length;
+  return {
+    budgets: data.budgets.some((b) => b.year === 2027) ? [] : SEED_BUDGETS,
+    pillars: seedPillars ? SEED_PILLARS : [],
+    content: seedPillars && !data.content.length ? buildSeedContent(now) : [],
+    items: seedPillars
+      ? data.items
+        .filter((i) => !i.contentId && ACTIONS.some((a) => a.type === i.type && a.title === i.title))
+        .map((i) => ({ ...i, contentId: UX_LAUNCH_CONTENT_ID, updatedAt: now }))
+      : [],
+  };
+}
+
+/** Seed changes applied once to data that already exists in a browser, in order. Each returns only the records that change. */
+export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Contents> }[] = [
+  { key: 'mc-seed-updates-1', apply: (data) => ({ items: markExhibitors(data.items) }) },
+  { key: 'mc-seed-updates-2', apply: (data) => ({ items: addSeedTranslations(data.items) }) },
+  { key: 'mc-seed-updates-3', apply: addBudgetAndContent },
 ];
 
-/** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country. */
-export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[]; budgets: Budget[] } {
+/** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
+export function buildSeed(makeId: () => string): Contents {
   const now = new Date().toISOString();
   const items = EVENTS.map((e): Item => {
     const en = EVENTS_EN[e.title];
@@ -199,6 +221,7 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
       productTypes: ALL_PRODUCTS,
       countries: a.countries,
       translations: { en: { ...ACTIONS_EN[a.title], campaign: UX_LAUNCH_EN } },
+      contentId: UX_LAUNCH_CONTENT_ID,
       createdAt: now,
       updatedAt: now,
     });
@@ -206,7 +229,7 @@ export function buildSeed(makeId: () => string): { items: Item[]; todos: Todo[];
       todos.push({ id: makeId(), itemId: id, title: t.title, dueDate: t.dueDate, done: false, offsetDays: daysBetween(a.date, t.dueDate) });
     }
   }
-  return { items, todos, budgets: [] };
+  return { items, todos, budgets: SEED_BUDGETS, pillars: SEED_PILLARS, content: buildSeedContent(now) };
 }
 
 const UX_LAUNCH = 'Nieuwe UX Belgisch platform';

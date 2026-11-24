@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { DimensionFields } from '../components/dimensions';
 import { Button, Checkbox, Drawer, Field, Icon, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
-import { CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, TYPE_META } from '../data/meta';
+import { autoBudgetLine } from '../data/budget';
+import { BUDGET_LINES, CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, TYPE_META } from '../data/meta';
 import { newId } from '../data/repository';
 import { rollForward } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
-import type { ItemType, Todo } from '../data/types';
-import { channelLabel, itemTitle, lang, otherLang, statusLabel, t, textIn, todoText, todoTextIn, typeLabel, type Lang, type TextField } from '../i18n';
+import type { BudgetLine, ItemType, Todo } from '../data/types';
+import { budgetLineLabel, channelLabel, itemTitle, lang, local, otherLang, statusLabel, t, textIn, todoText, todoTextIn, typeLabel, type Lang, type TextField } from '../i18n';
 import { ParticipationPicker } from '../components/participation';
 import { useUi } from '../ui-context';
 
@@ -66,6 +67,7 @@ export function ItemDrawer() {
     const known = store.items.find((i) => textIn(i, l, 'campaign') === value && textIn(i, otherLang(l), 'campaign'));
     if (known && !text(otherLang(l), 'campaign')) setText(otherLang(l), 'campaign', textIn(known, otherLang(l), 'campaign'));
   };
+  const auto = autoBudgetLine(draft);
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
 
   const save = async () => {
@@ -181,6 +183,14 @@ export function ItemDrawer() {
             </>
           )}</Field>
         </div>
+        {store.content.length > 0 && (
+          <Field label={t.drawer.content} optional>{(id) => (
+            <select id={id} className="mc-input" value={draft.contentId ?? ''} onChange={(e) => set('contentId', e.target.value || undefined)}>
+              <option value="">{t.drawer.contentNone}</option>
+              {[...store.content].sort((a, b) => local(a, 'title').localeCompare(local(b, 'title'))).map((c) => <option key={c.id} value={c.id}>{local(c, 'title')}</option>)}
+            </select>
+          )}</Field>
+        )}
 
         <section className="mc-form-section" aria-label={t.drawer.translation}>
           <h3>{t.drawer.translation}</h3>
@@ -202,6 +212,13 @@ export function ItemDrawer() {
 
         <section className="mc-form-section" aria-label={t.drawer.budget}>
           <h3>{t.drawer.budget}</h3>
+          <Field label={t.drawer.budgetLine}>{(id) => (
+            <select id={id} className="mc-input" value={draft.budgetLine ?? ''} onChange={(e) => set('budgetLine', (e.target.value || undefined) as BudgetLine | 'geen' | undefined)}>
+              <option value="">{auto ? t.drawer.budgetLineAuto(budgetLineLabel(auto)) : t.drawer.budgetLineAutoNone}</option>
+              {BUDGET_LINES.map((l) => <option key={l} value={l}>{budgetLineLabel(l)}</option>)}
+              <option value="geen">{t.drawer.budgetLineNone}</option>
+            </select>
+          )}</Field>
           <div className="mc-form-row">
             <Field label={t.drawer.planned} optional>{(id) => (
               <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetPlanned ?? ''} onChange={(e) => set('budgetPlanned', euro(e.target.value))} />

@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { todayIso } from './dates';
-import { IndexedDbRepository, newId, parseDataset, toDataset, type Repository } from './repository';
+import { IndexedDbRepository, newId, parseDataset, toDataset, type Contents, type Repository } from './repository';
 import { moveItem, moveTodo, rollForward, todosFromTemplate, type ScheduledTodo } from './schedule';
 import { SEED_UPDATES, buildSeed } from './seed';
 import { HAS_PERIOD } from './meta';
-import type { Budget, IsoDate, Item, ItemType, Todo } from './types';
+import type { Budget, BudgetLine, ContentPiece, ContentPillar, IsoDate, Item, Todo } from './types';
 
 export type ItemDraft = Omit<Item, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
+export type ContentDraft = Omit<ContentPiece, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 
 interface Store {
   ready: boolean;
@@ -16,7 +17,15 @@ interface Store {
   todos: ScheduledTodo[];
   todosFor(itemId: string): ScheduledTodo[];
   budgets: Budget[];
-  setBudget(year: number, type: ItemType, amount: number): Promise<void>;
+  setBudget(year: number, line: BudgetLine, amount: number): Promise<void>;
+  /** Sorted by `order`. */
+  pillars: ContentPillar[];
+  savePillars(pillars: ContentPillar[]): Promise<void>;
+  deletePillar(id: string): Promise<void>;
+  content: ContentPiece[];
+  saveContent(draft: ContentDraft): Promise<ContentPiece>;
+  /** Also unlinks the calendar items that shared it. */
+  deleteContent(id: string): Promise<void>;
   saveItem(draft: ItemDraft, todos: Todo[], opts?: { applyTemplate?: boolean }): Promise<Item>;
   deleteItem(id: string): Promise<void>;
   toggleTodo(id: string): Promise<void>;
@@ -36,6 +45,8 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
   const [items, setItems] = useState<Item[]>([]);
   const [rawTodos, setRawTodos] = useState<Todo[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [pillars, setPillars] = useState<ContentPillar[]>([]);
+  const [content, setContent] = useState<ContentPiece[]>([]);
   const [today, setToday] = useState(todayIso);
 
   useEffect(() => {
@@ -45,18 +56,18 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
       const data = await repo.load();
       for (const update of SEED_UPDATES) {
         if (typeof localStorage === 'undefined' || localStorage.getItem(update.key)) continue;
-        const updated = update.apply(data.items);
-        if (updated.length) {
-          await repo.saveItems(updated);
-          const byId = new Map(updated.map((i) => [i.id, i]));
-          data.items = data.items.map((i) => byId.get(i.id) ?? i);
+        const changes = update.apply(data);
+        if (changes.items?.length) await repo.saveItems(changes.items);
+        if (changes.budgets?.length) await repo.saveBudgets(changes.budgets);
+        if (changes.pillars?.length) await repo.savePillars(changes.pillars);
+        if (changes.content?.length) await repo.saveContent(changes.content);
+        for (const key of ['items', 'budgets', 'pillars', 'content'] as const) {
+          data[key] = merge(data[key] as { id: string }[], (changes[key] ?? []) as { id: string }[]) as never;
         }
         localStorage.setItem(update.key, '1');
       }
       if (!alive) return;
-      setItems(data.items);
-      setRawTodos(data.todos);
-      setBudgets(data.budgets);
+      apply(data);
       setReady(true);
     })();
     return () => {
@@ -70,7 +81,16 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
     return () => window.clearInterval(t);
   }, []);
 
+  const apply = (data: Contents) => {
+    setItems(data.items);
+    setRawTodos(data.todos);
+    setBudgets(data.budgets);
+    setPillars(data.pillars);
+    setContent(data.content);
+  };
+
   const todos = useMemo(() => rawTodos.map((t) => rollForward(t, today)), [rawTodos, today]);
+  const sortedPillars = useMemo(() => [...pillars].sort((a, b) => a.order - b.order), [pillars]);
   const itemsById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
 
   const upsertItems = useCallback(async (next: Item[]) => {
@@ -150,30 +170,57 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         await upsertTodos([moveTodo(t, itemsById.get(t.itemId), date)]);
       },
       budgets,
-      async setBudget(year, type, amount) {
-        const budget: Budget = { id: `${year}:${type}`, year, type, amount };
-        await repo.saveBudget(budget);
-        setBudgets((prev) => [...prev.filter((b) => b.id !== budget.id), budget]);
+      async setBudget(year, line, amount) {
+        const budget: Budget = { id: `${year}:${line}`, year, line, amount };
+        await repo.saveBudgets([budget]);
+        setBudgets((prev) => merge(prev, [budget]));
       },
-      exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets }), null, 2),
+      pillars: sortedPillars,
+      async savePillars(next) {
+        await repo.savePillars(next);
+        setPillars((prev) => merge(prev, next));
+      },
+      async deletePillar(id) {
+        await repo.deletePillar(id);
+        setPillars((prev) => prev.filter((p) => p.id !== id));
+      },
+      content,
+      async saveContent(draft) {
+        const now = new Date().toISOString();
+        const existing = draft.id ? content.find((c) => c.id === draft.id) : undefined;
+        const piece: ContentPiece = { ...draft, id: draft.id ?? newId(), createdAt: existing?.createdAt ?? now, updatedAt: now };
+        await repo.saveContent([piece]);
+        setContent((prev) => merge(prev, [piece]));
+        return piece;
+      },
+      async deleteContent(id) {
+        await repo.deleteContent(id);
+        setContent((prev) => prev.filter((c) => c.id !== id));
+        const now = new Date().toISOString();
+        await upsertItems(items.filter((i) => i.contentId === id).map(({ contentId: _c, ...i }) => ({ ...i, updatedAt: now })));
+      },
+      exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets, pillars, content }), null, 2),
       async importJson(json) {
         const data = parseDataset(json);
         await repo.replaceAll(data);
-        setItems(data.items);
-        setRawTodos(data.todos);
-        setBudgets(data.budgets);
+        apply(data);
       },
       async resetToSeed() {
         const data = buildSeed(newId);
         await repo.replaceAll(data);
-        setItems(data.items);
-        setRawTodos(data.todos);
-        setBudgets(data.budgets);
+        apply(data);
       },
     };
-  }, [ready, today, items, itemsById, todos, rawTodos, budgets, repo, upsertItems, upsertTodos]);
+  }, [ready, today, items, itemsById, todos, rawTodos, budgets, pillars, sortedPillars, content, repo, upsertItems, upsertTodos]);
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
+}
+
+/** `prev` with `next` replacing records of the same id and appended otherwise. */
+function merge<T extends { id: string }>(prev: T[], next: T[]): T[] {
+  const map = new Map(prev.map((r) => [r.id, r]));
+  next.forEach((r) => map.set(r.id, r));
+  return [...map.values()];
 }
 
 export function useStore(): Store {

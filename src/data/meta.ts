@@ -1,5 +1,5 @@
 import type { IconName } from '../icons.generated';
-import type { ItemStatus, ItemType, Participation } from './types';
+import type { BudgetLine, ContentFormat, ContentStatus, ItemStatus, ItemType, Participation } from './types';
 
 export const ITEM_TYPES: ItemType[] = ['social', 'email', 'call', 'event', 'campaign', 'pr'];
 
@@ -37,8 +37,28 @@ export const CHANNELS: Record<ItemType, string[]> = {
   email: ['Nieuwsbrief apothekers', 'Nieuwsbrief industrie', 'Productupdate', 'Uitnodiging'],
   call: ['Klantcall', 'Partnercall', 'Webinar', 'Interne sync'],
   event: ['Beurs', 'Conferentie', 'Congres', 'Netwerkevent'],
-  campaign: ['LinkedIn Ads', 'Google Ads', 'ChatGPT Ads'],
+  campaign: ['LinkedIn Ads', 'Google Ads', 'ChatGPT Ads', 'Gezamenlijke campagne'],
   pr: ['Advertentie', 'Advertorial', 'Persbericht', 'Interview', 'Vakartikel', 'Opiniestuk'],
 };
+
+/** In the order of the budget plan; labels live in the dictionaries. */
+export const BUDGET_LINES: BudgetLine[] = ['beurzen_exposant', 'beurzen_bezoeker', 'email', 'linkedin', 'google', 'vakmedia', 'lidmaatschappen', 'chatgpt', 'reserve'];
+
+export const CONTENT_FORMATS: ContentFormat[] = ['post', 'artikel', 'case', 'video', 'infographic', 'whitepaper', 'webinar', 'nieuwsbrief'];
+
+export const CONTENT_FORMAT_ICONS: Record<ContentFormat, IconName> = {
+  post: 'forum',
+  artikel: 'article',
+  case: 'verified',
+  video: 'play_circle',
+  infographic: 'image',
+  whitepaper: 'description',
+  webinar: 'desktop_windows',
+  nieuwsbrief: 'mail',
+};
+
+export const CONTENT_STATUSES: ContentStatus[] = ['idee', 'in_productie', 'klaar', 'gedeeld'];
+
+export const PILLAR_ACCENTS = ['1', '2', '3', '4', '5', '6', '7'];
 
 export const OWNERS = ['Nele', 'Maarten', 'Ioana', 'Kjell'];

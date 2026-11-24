@@ -37,6 +37,8 @@ export interface Item {
   participation?: Participation;
   /** PR & vakmedia: the publication or outlet. */
   medium?: string;
+  /** Overrides the budget line that follows from type, channel and participation; `geen` keeps the item out of every line. */
+  budgetLine?: BudgetLine | 'geen';
   /** Euro, excl. btw. */
   budgetPlanned?: number;
   /** Euro, excl. btw. */
@@ -50,6 +52,8 @@ export interface Item {
   countries: string[];
   /** The plain text fields are Dutch; this holds the English version. */
   translations?: { en?: ItemText };
+  /** The content piece this item publishes or shares. */
+  contentId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,13 +73,60 @@ export interface Todo {
   translations?: { en?: { title?: string } };
 }
 
-/** Annual budget for one item type. */
+export type BudgetLine =
+  | 'beurzen_exposant'
+  | 'beurzen_bezoeker'
+  | 'email'
+  | 'linkedin'
+  | 'google'
+  | 'vakmedia'
+  | 'lidmaatschappen'
+  | 'chatgpt'
+  | 'reserve';
+
+/** Annual budget for one budget line. */
 export interface Budget {
-  /** `${year}:${type}` */
+  /** `${year}:${line}` */
   id: string;
   year: number;
-  type: ItemType;
+  line: BudgetLine;
   amount: number;
+}
+
+/** A theme in the content mix, with the share of content it should get. */
+export interface ContentPillar {
+  id: string;
+  /** Dutch; `translations.en` holds the English. */
+  name: string;
+  description: string;
+  /** Target share of all content, in percent. */
+  target: number;
+  /** `--mp-accent-*` number. */
+  accent: string;
+  order: number;
+  translations?: { en?: { name?: string; description?: string } };
+}
+
+export type ContentFormat = 'post' | 'artikel' | 'case' | 'video' | 'infographic' | 'whitepaper' | 'webinar' | 'nieuwsbrief';
+
+export type ContentStatus = 'idee' | 'in_productie' | 'klaar' | 'gedeeld';
+
+/** Something worth sharing, independent of where and when it is published; calendar items point to it via `contentId`. */
+export interface ContentPiece {
+  id: string;
+  /** Dutch; `translations.en` holds the English. */
+  title: string;
+  description: string;
+  pillarId: string;
+  format: ContentFormat;
+  status: ContentStatus;
+  audiences: Audience[];
+  owner: string;
+  /** Planned month, `YYYY-MM`. */
+  month?: string;
+  translations?: { en?: { title?: string; description?: string } };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Dataset {
@@ -85,4 +136,7 @@ export interface Dataset {
   todos: Todo[];
   /** Absent in exports made before budgets existed. */
   budgets?: Budget[];
+  /** Absent in exports made before the content page existed. */
+  pillars?: ContentPillar[];
+  content?: ContentPiece[];
 }

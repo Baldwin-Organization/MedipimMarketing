@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import { PlanTable } from '../components/PlanTable';
-import { Button, Card, EmptyState, Stat, TypeBadge } from '../components/ui';
-import { byAudience, byMarket, byQuarter, byType, euro, yearOf, type Totals } from '../data/budget';
+import { Button, Card, EmptyState, Stat } from '../components/ui';
+import { byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
 import { AUDIENCES } from '../data/dimensions';
 import { useStore } from '../data/store';
-import type { ItemType } from '../data/types';
-import { audienceLabel, t, typePlural } from '../i18n';
+import type { BudgetLine } from '../data/types';
+import { audienceLabel, budgetLineLabel, t } from '../i18n';
 import { PageHeader } from './PageHeader';
 
 const TOP_ITEMS = 10;
 
 export function BudgetView() {
   const store = useStore();
-  const [year, setYear] = useState(() => Number(store.today.slice(0, 4)));
+  const [year, setYear] = useState(() => {
+    const current = Number(store.today.slice(0, 4));
+    const hasBudget = (y: number) => store.budgets.some((b) => b.year === y && b.amount > 0);
+    return !hasBudget(current) && hasBudget(current + 1) ? current + 1 : current;
+  });
 
-  const rows = byType(store.items, store.budgets, year);
-  const total = rows.reduce((sum, r) => ({ budget: sum.budget + r.budget, planned: sum.planned + r.planned, actual: sum.actual + r.actual }), { budget: 0, planned: 0, actual: 0 });
+  const { rows, unassigned } = byLine(store.items, store.budgets, year);
+  const total = rows.reduce(
+    (sum, r) => ({ budget: sum.budget + r.budget, planned: sum.planned + r.planned, actual: sum.actual + r.actual }),
+    { budget: 0, planned: unassigned.planned, actual: unassigned.actual },
+  );
   const withBudget = store.items
     .filter((i) => yearOf(i) === year && (i.budgetPlanned || i.budgetActual))
     .sort((a, b) => Math.max(b.budgetPlanned ?? 0, b.budgetActual ?? 0) - Math.max(a.budgetPlanned ?? 0, a.budgetActual ?? 0));
@@ -45,13 +52,14 @@ export function BudgetView() {
         <Stat label={t.budget.free} value={total.budget ? euro(free) : '–'} tone={total.budget && free < 0 ? 'error' : 'neutral'} icon="flag" hint={!total.budget ? t.budget.noAnnual : free < 0 ? t.budget.overBudget : t.budget.freeHint} />
       </div>
 
-      <Card title={t.budget.perType} icon="payments">
+      <Card title={t.budget.perLine} icon="payments">
         <div className="mc-table-wrap">
-          <table className="mc-table mc-budget-table" aria-label={t.budget.perType}>
+          <table className="mc-table mc-budget-table" aria-label={t.budget.perLine}>
             <thead>
               <tr>
-                <th>{t.budget.kind}</th>
+                <th>{t.budget.line}</th>
                 <th className="mc-num">{t.budget.annual}</th>
+                <th className="mc-num">{t.budget.share}</th>
                 <th className="mc-num">{t.budget.planned}</th>
                 <th className="mc-num">{t.budget.spent}</th>
                 <th className="mc-num">{t.budget.free}</th>
@@ -60,20 +68,39 @@ export function BudgetView() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.type}>
-                  <td><span className="mc-table-title"><TypeBadge type={r.type} />{typePlural(r.type)}</span></td>
-                  <td className="mc-num"><BudgetInput year={year} type={r.type} amount={r.budget} /></td>
+                <tr key={r.line}>
+                  <td>
+                    <span className="mc-budget-line">{budgetLineLabel(r.line)}</span>
+                    <span className="mc-budget-line-hint">{t.budgetLines[r.line].hint}</span>
+                  </td>
+                  <td className="mc-num"><BudgetInput year={year} line={r.line} amount={r.budget} /></td>
+                  <td className="mc-num mc-muted">{total.budget && r.budget ? pct(r.budget, total.budget) : '–'}</td>
                   <td className="mc-num">{euro(r.planned)}</td>
                   <td className="mc-num">{euro(r.actual)}</td>
                   <td className="mc-num" data-over={(r.budget > 0 && r.planned > r.budget) || undefined}>{r.budget ? euro(r.budget - r.planned) : <span className="mc-muted">{r.planned ? t.budget.noBudget : '–'}</span>}</td>
                   <td><BudgetBar {...r} /></td>
                 </tr>
               ))}
+              {(unassigned.planned > 0 || unassigned.actual > 0) && (
+                <tr data-unassigned>
+                  <td>
+                    <span className="mc-budget-line">{t.budget.unassigned}</span>
+                    <span className="mc-budget-line-hint">{t.budget.unassignedHint}</span>
+                  </td>
+                  <td className="mc-num mc-muted">–</td>
+                  <td className="mc-num mc-muted">–</td>
+                  <td className="mc-num">{euro(unassigned.planned)}</td>
+                  <td className="mc-num">{euro(unassigned.actual)}</td>
+                  <td className="mc-num mc-muted">–</td>
+                  <td><BudgetBar budget={0} {...unassigned} /></td>
+                </tr>
+              )}
             </tbody>
             <tfoot>
               <tr>
                 <th>{t.budget.total}</th>
                 <th className="mc-num">{euro(total.budget)}</th>
+                <th className="mc-num">{total.budget ? '100%' : '–'}</th>
                 <th className="mc-num">{euro(total.planned)}</th>
                 <th className="mc-num">{euro(total.actual)}</th>
                 <th className="mc-num" data-over={(total.budget > 0 && free < 0) || undefined}>{total.budget ? euro(free) : '–'}</th>
@@ -87,6 +114,7 @@ export function BudgetView() {
           <span className="mc-legend-swatch" data-kind="actual" /> {t.budget.legendSpent}
           {' '}{t.budget.legendBar}
         </p>
+        <p className="mc-muted">{t.budget.linesNote}</p>
       </Card>
 
       <div className="mc-budget-grid">
@@ -132,13 +160,13 @@ const ZERO: Totals = { planned: 0, actual: 0 };
 
 const pct = (part: number, whole: number) => `${Math.round((part / whole) * 100)}%`;
 
-function BudgetInput({ year, type, amount }: { year: number; type: ItemType; amount: number }) {
+function BudgetInput({ year, line, amount }: { year: number; line: BudgetLine; amount: number }) {
   const store = useStore();
   const [value, setValue] = useState(amount ? String(amount) : '');
   useEffect(() => setValue(amount ? String(amount) : ''), [amount, year]);
   const commit = () => {
     const next = Math.max(0, Number(value) || 0);
-    if (next !== amount) store.setBudget(year, type, next);
+    if (next !== amount) store.setBudget(year, line, next);
   };
   return (
     <input
@@ -147,7 +175,7 @@ function BudgetInput({ year, type, amount }: { year: number; type: ItemType; amo
       step={500}
       inputMode="decimal"
       className="mc-input mc-budget-input"
-      aria-label={t.budget.inputLabel(typePlural(type), year)}
+      aria-label={t.budget.inputLabel(budgetLineLabel(line), year)}
       placeholder="0"
       value={value}
       onChange={(e) => setValue(e.target.value)}

@@ -9,6 +9,7 @@ import { useUi } from './ui-context';
 import { BudgetView } from './views/BudgetView';
 import { CalendarView } from './views/CalendarView';
 import { CampaignsView } from './views/CampaignsView';
+import { ContentView } from './views/ContentView';
 import { Dashboard } from './views/Dashboard';
 import { EventsView } from './views/EventsView';
 import { ItemDrawer } from './views/ItemDrawer';
@@ -20,6 +21,7 @@ const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName }[] = [
   { to: '/beurzen', key: 'events', icon: 'storefront' },
   { to: '/campagnes', key: 'campaigns', icon: 'ads_click' },
   { to: '/pr', key: 'pr', icon: 'article' },
+  { to: '/content', key: 'content', icon: 'lightbulb' },
   { to: '/budget', key: 'budget', icon: 'payments' },
 ];
 
@@ -124,6 +126,7 @@ export function App() {
               <Route path="/beurzen" element={<EventsView />} />
               <Route path="/campagnes" element={<CampaignsView />} />
               <Route path="/pr" element={<PrView />} />
+              <Route path="/content" element={<ContentView />} />
               <Route path="/budget" element={<BudgetView />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

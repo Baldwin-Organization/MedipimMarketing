@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { isExistingMarket } from './dimensions';
-import { ITEM_TYPES } from './meta';
-import type { Audience, Budget, Item, ItemType } from './types';
+import { BUDGET_LINES } from './meta';
+import type { Audience, Budget, BudgetLine, Item } from './types';
 
 /** An item's costs count in the year (and quarter) of its start date. */
 export const yearOf = (item: Item) => Number(item.date.slice(0, 4));
@@ -14,15 +14,47 @@ const sum = (items: Item[]): Totals => ({
   actual: items.reduce((n, i) => n + (i.budgetActual ?? 0), 0),
 });
 
-export interface TypeRow extends Totals { type: ItemType; budget: number }
+const CAMPAIGN_LINES: Record<string, BudgetLine> = {
+  'LinkedIn Ads': 'linkedin',
+  'Google Ads': 'google',
+  'ChatGPT Ads': 'chatgpt',
+  'Gezamenlijke campagne': 'vakmedia',
+};
 
-export function byType(items: Item[], budgets: Budget[], year: number): TypeRow[] {
+/** The line an item's costs count against when nobody picked one: follows from type, channel and participation. */
+export function autoBudgetLine(item: Pick<Item, 'type' | 'channel' | 'participation'>): BudgetLine | undefined {
+  switch (item.type) {
+    case 'event':
+      return item.participation === 'exposant' ? 'beurzen_exposant' : item.participation === 'bezoeker' ? 'beurzen_bezoeker' : undefined;
+    case 'email':
+      return 'email';
+    case 'social':
+      return 'linkedin';
+    case 'campaign':
+      return CAMPAIGN_LINES[item.channel];
+    case 'pr':
+      return 'vakmedia';
+    default:
+      return undefined;
+  }
+}
+
+export const budgetLineOf = (item: Pick<Item, 'type' | 'channel' | 'participation' | 'budgetLine'>): BudgetLine | undefined =>
+  item.budgetLine === 'geen' ? undefined : item.budgetLine ?? autoBudgetLine(item);
+
+export interface LineRow extends Totals { line: BudgetLine; budget: number }
+
+/** Every budget line for the year, plus the costs of items that fall under none of them. */
+export function byLine(items: Item[], budgets: Budget[], year: number): { rows: LineRow[]; unassigned: Totals } {
   const inYear = items.filter((i) => yearOf(i) === year);
-  return ITEM_TYPES.map((type) => ({
-    type,
-    budget: budgets.find((b) => b.year === year && b.type === type)?.amount ?? 0,
-    ...sum(inYear.filter((i) => i.type === type)),
-  }));
+  return {
+    rows: BUDGET_LINES.map((line) => ({
+      line,
+      budget: budgets.find((b) => b.year === year && b.line === line)?.amount ?? 0,
+      ...sum(inYear.filter((i) => budgetLineOf(i) === line)),
+    })),
+    unassigned: sum(inYear.filter((i) => !budgetLineOf(i))),
+  };
 }
 
 export function byQuarter(items: Item[], year: number): (Totals & { quarter: number })[] {

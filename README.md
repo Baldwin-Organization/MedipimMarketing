@@ -42,10 +42,24 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   afgelopen, filterbaar per kanaal.
 - **PR & vakmedia**: advertenties, advertorials, persberichten, interviews, vakartikels en
   opiniestukken, met het medium (titel) en de publicatiedatum, per maand gegroepeerd.
-- **Budget**: per jaar een budget per soort actie, tegenover het geplande en werkelijk
-  bestede bedrag van de items (elk item heeft de velden "Gepland" en "Werkelijk besteed",
-  excl. btw). Met opsplitsing per kwartaal, doelgroep en markt (bestaand of nieuw) en de
-  grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum.
+- **Content**: wat we willen delen, los van kanaal en datum. De contentmix bestaat uit
+  pijlers met een streefaandeel (startvoorstel: product & platform 25%, data & expertise 25%,
+  klanten & cases 20%, sector & events 20%, team & cultuur 10%), naast het aandeel dat gepland
+  en gedeeld is, per jaar of over alles. Pijlers (naam, omschrijving, streefaandeel) pas je aan
+  via "Pijlers bewerken". Elk contentstuk heeft een pijler, formaat (post, artikel, klantcase,
+  video, infographic, whitepaper, webinar, nieuwsbrief), status (idee, in productie, klaar om te
+  delen, gedeeld), geplande maand, doelgroep en eigenaar, en staat op een bord per status.
+  "Inplannen in de kalender" maakt een post of mailing aan die naar het stuk verwijst; bij elk
+  kalenderitem kun je ook zelf een contentstuk kiezen. De startinhoud bevat 17 ideeën.
+- **Budget**: per jaar een budget per budgetpost (beurzen als exposant, beurzen als bezoeker,
+  e-mailmarketing, LinkedIn, Google Ads, vakmedia en gezamenlijke campagnes, lidmaatschappen,
+  ChatGPT Ads, reserve), tegenover het geplande en werkelijk bestede bedrag van de items (elk
+  item heeft de velden "Gepland" en "Werkelijk besteed", excl. btw). Een item valt automatisch
+  onder een post volgens soort, kanaal en deelname (`autoBudgetLine` in `src/data/budget.ts`);
+  in het formulier kun je een andere post kiezen. Bedragen die onder geen post vallen, staan
+  apart als "Niet toegewezen". Met opsplitsing per kwartaal, doelgroep en markt (bestaand of
+  nieuw) en de grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum. Het
+  budget 2027 (€ 189.294) zit in de startinhoud.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser
@@ -78,7 +92,13 @@ het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Ev
 Daarnaast bevat de startinhoud de communicatie rond de nieuwe UX van het Belgische platform
 (thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten van 23 november 2026,
 een LinkedIn-post vanuit de Medipim-pagina op 25 november en een nieuwsbrief aan de
-Belgische apothekers op 27 november om 9:00, met to do's.
+Belgische apothekers op 27 november om 9:00, met to do's. Die drie items verwijzen naar het
+contentstuk "Lancering nieuwe UX Belgisch platform".
+
+Het budget 2027, de vijf contentpijlers en de 17 contentideeën staan in
+`src/data/seed-content.ts`. Een browser met oudere startinhoud krijgt ze eenmalig bij het
+opstarten, enkel voor wat nog leeg is (het budget als er voor 2027 nog niets is ingevuld, de
+pijlers en ideeën als er nog geen pijlers zijn).
 
 Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
 (Medipim, Maarten (CEO), Medipim Australia, Medipim USA).
@@ -97,19 +117,21 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 ```
 src/
   data/
-    types.ts         Item, Todo, Budget, Dataset
+    types.ts         Item, Todo, Budget, ContentPillar, ContentPiece, Dataset
     dimensions.ts    doelgroepen, producttypes, landen en bestaande/nieuwe markten
     schedule.ts      doorschuiven, urgentie, item verplaatsen met to do's
     templates.ts     standaard-to do's per type
-    budget.ts        budgettotalen per type, kwartaal, doelgroep en markt
+    budget.ts        budgetpost per item, totalen per post, kwartaal, doelgroep en markt
+    content.ts       contentmix per pijler, periode, tellingen per formaat en doelgroep
     repository.ts    opslaginterface + IndexedDB-implementatie
     store.tsx        React-state bovenop de repository
-    seed.ts          startinhoud: eventkalender 2027
+    seed.ts          startinhoud: eventkalender 2027, eenmalige updates
+    seed-content.ts  budget 2027, contentpijlers en contentideeën
   i18n/
     nl.ts            Nederlandse interfacetekst (bron, bepaalt de vorm van het woordenboek)
     en.ts            Engelse vertaling
     index.ts         huidige taal, t, labels voor kanalen, statussen en to do's
-  views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Budget, itemformulier
+  views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Content, Budget, formulieren
   components/        knoppen, chips, pills, kalenderitems (Medipim-stijl)
   styles/
     medipim-tokens.css  kopie van public/tokens uit het design system
