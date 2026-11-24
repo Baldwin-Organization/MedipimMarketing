@@ -5,6 +5,10 @@ export type ItemType = 'social' | 'email' | 'call' | 'event';
 
 export type ItemStatus = 'idee' | 'gepland' | 'in_uitvoering' | 'klaar';
 
+export type Audience = 'groothandels' | 'producenten' | 'apothekers' | 'ziekenhuizen';
+
+export type ProductType = 'geneesmiddelen' | 'cannabis' | 'cosmetica' | 'voeding' | 'baby';
+
 export interface Item {
   id: string;
   type: ItemType;
@@ -21,6 +25,10 @@ export interface Item {
   status: ItemStatus;
   owner: string;
   campaign: string;
+  audiences: Audience[];
+  productTypes: ProductType[];
+  /** ISO 3166-1 alpha-2 codes; whether a country is an existing or new market follows from `EXISTING_MARKETS`. */
+  countries: string[];
   createdAt: string;
   updatedAt: string;
 }

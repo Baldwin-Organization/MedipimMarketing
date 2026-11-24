@@ -1,5 +1,6 @@
 import { addMonths, startOfMonth } from 'date-fns';
 import { useState } from 'react';
+import { DimensionTags } from '../components/dimensions';
 import { Button, Checkbox, EmptyState, Icon, LateBadge, Segmented, StatusPill } from '../components/ui';
 import { daysBetween, fmt, fmtDate, toIso } from '../data/dates';
 import { useStore } from '../data/store';
@@ -113,6 +114,7 @@ function EventCard({ event }: { event: Item }) {
             <Button variant="text" intent="secondary" size="small" icon="edit" label="Event bewerken" onClick={() => openItem(event.id)} />
           </div>
         </header>
+        <DimensionTags item={event} />
         {event.description && <p className="mc-event-desc">{event.description}</p>}
         {prep.length === 0 ? (
           <p className="mc-muted mc-checklist-empty">

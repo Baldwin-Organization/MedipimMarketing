@@ -38,7 +38,7 @@ export class IndexedDbRepository implements Repository {
   async load() {
     const db = await this.db;
     const [items, todos] = await Promise.all([db.getAll('items'), db.getAll('todos')]);
-    return { items, todos };
+    return { items: items.map(normalizeItem), todos };
   }
 
   async isEmpty() {
@@ -87,12 +87,17 @@ export function toDataset(items: Item[], todos: Todo[]): Dataset {
   return { version: 1, exportedAt: new Date().toISOString(), items, todos };
 }
 
+/** Fills the dimension fields for items stored or exported before they existed. */
+export function normalizeItem(item: Item): Item {
+  return { ...item, audiences: item.audiences ?? [], productTypes: item.productTypes ?? [], countries: item.countries ?? [] };
+}
+
 export function parseDataset(json: string): Dataset {
   const data = JSON.parse(json) as Partial<Dataset>;
   if (data.version !== 1 || !Array.isArray(data.items) || !Array.isArray(data.todos)) {
     throw new Error('Dit is geen geldig exportbestand van de marketingkalender.');
   }
-  return data as Dataset;
+  return { ...(data as Dataset), items: data.items.map(normalizeItem) };
 }
 
 export const newId = (): string => crypto.randomUUID();

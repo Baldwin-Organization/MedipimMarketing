@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DimensionFields } from '../components/dimensions';
 import { Button, Checkbox, Drawer, Field, Icon, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
 import { CHANNELS, ITEM_TYPES, OWNERS, STATUSES, STATUS_META, TYPE_META } from '../data/meta';
@@ -10,7 +11,7 @@ import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
   type: 'social', title: '', description: '', channel: 'LinkedIn', date, time: '', status: 'idee',
-  owner: '', campaign: '',
+  owner: '', campaign: '', audiences: [], productTypes: [], countries: [],
 });
 
 export function ItemDrawer() {
@@ -145,6 +146,11 @@ export function ItemDrawer() {
             </>
           )}</Field>
         </div>
+
+        <section className="mc-form-section" aria-label="Verrijking">
+          <h3>Verrijking</h3>
+          <DimensionFields value={draft} onChange={(patch) => setDraft((d) => ({ ...d, ...patch }))} />
+        </section>
 
         <section className="mc-form-section" aria-label="To do's">
           <h3>To do's</h3>

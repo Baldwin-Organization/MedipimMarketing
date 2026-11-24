@@ -11,7 +11,12 @@ De interface is in het Nederlands en volgt het
 ## Functies
 
 - **Kalender** per maand, week of als agenda, met kleuren per type en filters op type,
-  kanaal, eigenaar en campagne.
+  kanaal, eigenaar, campagne, doelgroep, type product en land of markt.
+- **Verrijking** van elk item met doelgroep (groothandels, producenten, apothekers,
+  ziekenhuizen), type product (geneesmiddelen, medicinale cannabis, cosmetica, voeding &
+  supplementen, baby) en landen. België, Frankrijk, Duitsland, VK, Luxemburg, Oostenrijk,
+  Spanje, VS en Australië zijn bestaande markten (`EXISTING_MARKETS` in
+  `src/data/dimensions.ts`); elk ander land is een nieuwe markt.
 - **Drag-and-drop**: versleep items en to do's naar een andere dag. Verplaats je een item,
   dan schuiven de gekoppelde open to do's mee met dezelfde offset.
 - **Naar voren schuiven**: open to do's die over datum zijn, staan op vandaag met een badge
@@ -36,9 +41,8 @@ npm run dev        # http://localhost:5173
 
 Bij de eerste start vult de app zichzelf met de eventkalender 2027: 56 internationale
 beurzen en congressen (november 2026 tot november 2027, plus CPHI Frankfurt), als idee,
-zonder eigenaar en zonder to do's. Elk event heeft een campagne per doelgroep
-(bv. Groothandels, Apotheken & software, Medicinale cannabis) en de relevantie voor Medipim
-in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
+zonder eigenaar en zonder to do's. Elk event is verrijkt met doelgroep, type product en
+het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
 "(datum te bevestigen)" in de titel.
 
 Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
@@ -56,6 +60,7 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 src/
   data/
     types.ts         Item, Todo, Dataset
+    dimensions.ts    doelgroepen, producttypes, landen en bestaande/nieuwe markten
     schedule.ts      doorschuiven, urgentie, item verplaatsen met to do's
     templates.ts     standaard-to do's per type
     repository.ts    opslaginterface + IndexedDB-implementatie

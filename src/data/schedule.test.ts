@@ -5,7 +5,7 @@ import type { Item, Todo } from './types';
 
 const item: Item = {
   id: 'i1', type: 'event', title: 'Beurs', description: '', channel: 'Beurs',
-  date: '2026-12-10', endDate: '2026-12-11', status: 'gepland', owner: 'Sofie', campaign: 'X',
+  date: '2026-12-10', endDate: '2026-12-11', status: 'gepland', owner: 'Nele', campaign: 'X', audiences: [], productTypes: [], countries: [],
   createdAt: '', updatedAt: '',
 };
 const todo = (over: Partial<Todo>): Todo => ({

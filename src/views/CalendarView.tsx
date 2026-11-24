@@ -4,10 +4,11 @@ import { TodayPanel } from '../components/TodayPanel';
 import { ItemChip, TodoEntry, useDayDrop } from '../components/entries';
 import { Button, EmptyState, Segmented, ToggleChipGroup } from '../components/ui';
 import { fmt, fmtDate, fromIso, relativeDay, shiftIso, toIso } from '../data/dates';
+import { AUDIENCES, EXISTING_MARKETS_SORTED, PRODUCT_TYPES, countryName, isExistingMarket, matchesCountry, type CountryFilter } from '../data/dimensions';
 import { ITEM_TYPES, OWNERS, TYPE_META } from '../data/meta';
 import { itemOnDay, type ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
-import type { IsoDate, Item, ItemType } from '../data/types';
+import type { Audience, IsoDate, Item, ItemType, ProductType } from '../data/types';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -20,8 +21,13 @@ interface Filters {
   channel: string;
   owner: string;
   campaign: string;
+  audience: Audience | '';
+  product: ProductType | '';
+  country: CountryFilter;
   showTodos: boolean;
 }
+
+const NO_FILTERS = { types: [], channel: '', owner: '', campaign: '', audience: '', product: '', country: '' } satisfies Omit<Filters, 'showTodos'>;
 
 function useCalendarState() {
   const [view, setView] = useState<View>(() => (sessionStorage.getItem('mc-view') as View) ?? 'maand');
@@ -37,16 +43,21 @@ export function CalendarView() {
   const store = useStore();
   const { openItem } = useUi();
   const { view, setView, anchor, setAnchor } = useCalendarState();
-  const [filters, setFilters] = useState<Filters>({ types: [], channel: '', owner: '', campaign: '', showTodos: true });
+  const [filters, setFilters] = useState<Filters>({ ...NO_FILTERS, showTodos: true });
 
   const channels = [...new Set(store.items.map((i) => i.channel))].sort();
   const campaigns = [...new Set(store.items.map((i) => i.campaign).filter(Boolean))].sort();
+  const newMarkets = [...new Set(store.items.flatMap((i) => i.countries))].filter((c) => !isExistingMarket(c))
+    .sort((a, b) => countryName(a).localeCompare(countryName(b), 'nl'));
 
   const matches = (i: Item) =>
     (!filters.types.length || filters.types.includes(i.type)) &&
     (!filters.channel || i.channel === filters.channel) &&
     (!filters.owner || i.owner === filters.owner) &&
-    (!filters.campaign || i.campaign === filters.campaign);
+    (!filters.campaign || i.campaign === filters.campaign) &&
+    (!filters.audience || i.audiences.includes(filters.audience)) &&
+    (!filters.product || i.productTypes.includes(filters.product)) &&
+    matchesCountry(i, filters.country);
 
   const items = useMemo(() => store.items.filter(matches), [store.items, filters]); // eslint-disable-line react-hooks/exhaustive-deps
   const visibleIds = useMemo(() => new Set(items.map((i) => i.id)), [items]);
@@ -76,7 +87,7 @@ export function CalendarView() {
   const itemsOn = (day: IsoDate) =>
     items.filter((i) => itemOnDay(i, day)).sort((a, b) => Number(b.type === 'event') - Number(a.type === 'event') || (a.time ?? '').localeCompare(b.time ?? ''));
   const todosOn = (day: IsoDate) => (filters.showTodos ? todos.filter((t) => t.displayDate === day && !t.done) : []);
-  const activeFilters = filters.types.length + Number(!!filters.channel) + Number(!!filters.owner) + Number(!!filters.campaign);
+  const activeFilters = filters.types.length + [filters.channel, filters.owner, filters.campaign, filters.audience, filters.product, filters.country].filter(Boolean).length;
 
   return (
     <div className="mc-page mc-page-calendar">
@@ -117,6 +128,27 @@ export function CalendarView() {
         <FilterSelect label="Kanaal" value={filters.channel} options={channels} onChange={(channel) => setFilters((f) => ({ ...f, channel }))} />
         <FilterSelect label="Eigenaar" value={filters.owner} options={OWNERS} onChange={(owner) => setFilters((f) => ({ ...f, owner }))} />
         <FilterSelect label="Campagne" value={filters.campaign} options={campaigns} onChange={(campaign) => setFilters((f) => ({ ...f, campaign }))} />
+        <FilterSelect label="Doelgroep" value={filters.audience} options={AUDIENCES} onChange={(audience) => setFilters((f) => ({ ...f, audience }))} />
+        <FilterSelect label="Product" value={filters.product} options={PRODUCT_TYPES} onChange={(product) => setFilters((f) => ({ ...f, product }))} />
+        <select
+          className="mc-input mc-filter-select"
+          aria-label="Land"
+          value={filters.country}
+          data-active={!!filters.country || undefined}
+          onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))}
+        >
+          <option value="">Land: alle</option>
+          <option value="markt:bestaand">Alle bestaande markten</option>
+          <option value="markt:nieuw">Alle nieuwe markten</option>
+          <optgroup label="Bestaande markten">
+            {EXISTING_MARKETS_SORTED.map((c) => <option key={c} value={c}>Land: {countryName(c)}</option>)}
+          </optgroup>
+          {newMarkets.length > 0 && (
+            <optgroup label="Nieuwe markten">
+              {newMarkets.map((c) => <option key={c} value={c}>Land: {countryName(c)}</option>)}
+            </optgroup>
+          )}
+        </select>
         <ToggleChipGroup
           label="To do's"
           value={filters.showTodos ? ['todos'] : []}
@@ -124,7 +156,7 @@ export function CalendarView() {
           options={[{ value: 'todos', label: "To do's tonen", icon: 'checklist' }]}
         />
         {activeFilters > 0 && (
-          <Button variant="text" size="small" onClick={() => setFilters((f) => ({ ...f, types: [], channel: '', owner: '', campaign: '' }))}>
+          <Button variant="text" size="small" onClick={() => setFilters((f) => ({ ...f, ...NO_FILTERS }))}>
             Filters wissen ({activeFilters})
           </Button>
         )}
@@ -152,11 +184,19 @@ export function CalendarView() {
   );
 }
 
-function FilterSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+function FilterSelect<T extends string>({ label, value, options, onChange }: {
+  label: string;
+  value: T | '';
+  options: (T | { value: T; label: string })[];
+  onChange: (v: T | '') => void;
+}) {
   return (
-    <select className="mc-input mc-filter-select" aria-label={label} value={value} data-active={!!value || undefined} onChange={(e) => onChange(e.target.value)}>
+    <select className="mc-input mc-filter-select" aria-label={label} value={value} data-active={!!value || undefined} onChange={(e) => onChange(e.target.value as T | '')}>
       <option value="">{label}: alle</option>
-      {options.map((o) => <option key={o} value={o}>{label}: {o}</option>)}
+      {options.map((o) => {
+        const { value: v, label: l } = typeof o === 'string' ? { value: o, label: o } : o;
+        return <option key={v} value={v}>{label}: {l}</option>;
+      })}
     </select>
   );
 }
