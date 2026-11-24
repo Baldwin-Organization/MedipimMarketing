@@ -73,7 +73,6 @@ function DataActions() {
     <div className="mc-sidebar-actions">
       <Button variant="text" intent="secondary" size="small" startIcon="download" onClick={download}>{t.app.export}</Button>
       <Button variant="text" intent="secondary" size="small" startIcon="upload" onClick={() => file.current?.click()}>{t.app.import}</Button>
-      <Button variant="text" intent="secondary" size="small" startIcon="restart_alt" onClick={async () => { await store.resetToSeed(); notify(t.app.resetDone); }}>{t.app.reset}</Button>
       <input ref={file} type="file" accept="application/json" hidden onChange={(e) => upload(e.target.files?.[0])} />
     </div>
   );

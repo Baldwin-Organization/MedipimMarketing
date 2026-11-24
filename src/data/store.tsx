@@ -35,7 +35,6 @@ interface Store {
   moveTodoTo(id: string, date: IsoDate): Promise<void>;
   exportJson(): string;
   importJson(json: string): Promise<void>;
-  resetToSeed(): Promise<void>;
   templateTodos(draft: ItemDraft): Todo[];
 }
 
@@ -210,11 +209,6 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
       exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets, pillars, content }), null, 2),
       async importJson(json) {
         const data = parseDataset(json);
-        await repo.replaceAll(data);
-        apply(data);
-      },
-      async resetToSeed() {
-        const data = buildSeed(newId);
         await repo.replaceAll(data);
         apply(data);
       },
