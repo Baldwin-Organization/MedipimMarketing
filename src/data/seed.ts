@@ -109,15 +109,38 @@ const EVENTS: SeedEvent[] = [
   { title: 'CPHI Frankfurt', date: '2027-11-09', endDate: '2027-11-11', location: 'Frankfurt, Duitsland', channel: 'Beurs', audiences: PRODUCENTEN, relevance: 'Middel voor fabrikantdata', description: 'Belangrijke beurs voor producenten en leveranciers. Valt net buiten de periode van de eventkalender (tot 4 november 2027).' },
 ];
 
-/** Events where Medipim has a stand. */
-const EXHIBITING = ['PharmagoraPlus', 'APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027', 'Expopharm', 'The Pharmacy Show'];
+/** Events where Medipim has a stand; together they make up the exhibitor budget line. */
+const EXHIBITING = ['PharmagoraPlus', 'Expopharm', 'The Pharmacy Show'];
+/** Planned per exhibitor event, stand, travel and stay included. */
+export const EXHIBITOR_BUDGET = 20000;
+/** Marked as exhibitor before the stands were narrowed down to `EXHIBITING`. */
+const NO_LONGER_EXHIBITING = ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027'];
 
-/** The five exhibitor events, for data seeded before that decision. Returns only the items that change. */
+/** The exhibitor events, for data seeded before that decision. Returns only the items that change. */
 export function markExhibitors(items: Item[]): Item[] {
   const now = new Date().toISOString();
   return items
     .filter((i) => i.type === 'event' && !i.participation && EXHIBITING.includes(i.title))
     .map((i) => ({ ...i, participation: 'exposant', status: i.status === 'idee' ? 'gepland' : i.status, updatedAt: now }));
+}
+
+/**
+ * The three stands with their planned budget, for data seeded with five exhibitor events.
+ * Only touches what still matches the seed: a chosen participation or an amount someone entered stays.
+ */
+export function exhibitorBudgets(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items.flatMap((i): Item[] => {
+    if (i.type !== 'event') return [];
+    if (EXHIBITING.includes(i.title) && (!i.participation || i.participation === 'exposant') && i.budgetPlanned == null) {
+      return [{ ...i, participation: 'exposant', status: i.status === 'idee' ? 'gepland' : i.status, budgetPlanned: EXHIBITOR_BUDGET, updatedAt: now }];
+    }
+    if (NO_LONGER_EXHIBITING.includes(i.title) && i.participation === 'exposant' && i.budgetPlanned == null && i.budgetActual == null) {
+      const { participation: _, ...rest } = i;
+      return [{ ...rest, status: i.status === 'gepland' ? 'idee' : i.status, updatedAt: now }];
+    }
+    return [];
+  });
 }
 
 /**
@@ -171,6 +194,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-2', apply: (data) => ({ items: addSeedTranslations(data.items) }) },
   { key: 'mc-seed-updates-3', apply: addBudgetAndContent },
   { key: 'mc-seed-updates-4', apply: (data) => ({ content: contentIdeasUpdate(data.content, data.pillars, new Date().toISOString()) }) },
+  { key: 'mc-seed-updates-5', apply: (data) => ({ items: exhibitorBudgets(data.items) }) },
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
@@ -187,7 +211,9 @@ export function buildSeed(makeId: () => string): Contents {
     date: e.date,
     endDate: e.endDate ?? e.date,
     location: e.location,
-    ...(EXHIBITING.includes(e.title) ? { participation: 'exposant' as const, status: 'gepland' as const } : { status: 'idee' as const }),
+    ...(EXHIBITING.includes(e.title)
+      ? { participation: 'exposant' as const, status: 'gepland' as const, budgetPlanned: EXHIBITOR_BUDGET }
+      : { status: 'idee' as const }),
     owner: '',
     campaign: '',
     audiences: e.audiences,

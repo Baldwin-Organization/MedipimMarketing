@@ -454,6 +454,7 @@ export const en: Dict = {
     unassignedHint: 'Actions with an amount that fall under no line. Pick a budget line on the action.',
     linesNote: 'An action falls under a line automatically, by kind, channel and participation. You can pick another line on the action.',
     usage: 'Usage',
+    actions: (n: number) => plural(n, 'action', 'actions'),
     total: 'Total',
     noBudget: 'no budget',
     legendPlanned: 'planned',

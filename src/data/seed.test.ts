@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addBudgetAndContent, addSeedTranslations, buildSeed, markExhibitors } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors } from './seed';
 import { contentIdeasUpdate } from './seed-content';
 
 const seed = () => {
@@ -8,18 +8,19 @@ const seed = () => {
 };
 
 describe('event participation', () => {
-  it('marks the five exhibitor events and leaves the rest undecided', () => {
+  it('marks the three exhibitor events with their budget and leaves the rest undecided', () => {
     const events = seed();
-    const exhibiting = events.filter((e) => e.participation === 'exposant').map((e) => e.title).sort();
-    expect(exhibiting).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'PharmagoraPlus', 'The Pharmacy Show']);
-    expect(events.filter((e) => e.participation === 'exposant').every((e) => e.status === 'gepland')).toBe(true);
-    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 5);
+    const exhibiting = events.filter((e) => e.participation === 'exposant');
+    expect(exhibiting.map((e) => e.title).sort()).toEqual(['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']);
+    expect(exhibiting.every((e) => e.status === 'gepland' && e.budgetPlanned === EXHIBITOR_BUDGET)).toBe(true);
+    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 3);
+    expect(events.filter((e) => e.budgetPlanned != null)).toHaveLength(3);
   });
 
   it('updates existing data that predates the decision, once', () => {
     const old = seed().map(({ participation: _, ...e }) => ({ ...e, status: 'idee' as const }));
     const updated = markExhibitors(old);
-    expect(updated).toHaveLength(5);
+    expect(updated).toHaveLength(3);
     expect(updated.every((e) => e.participation === 'exposant' && e.status === 'gepland')).toBe(true);
     expect(markExhibitors(seed())).toHaveLength(0);
   });
@@ -27,6 +28,36 @@ describe('event participation', () => {
   it('keeps a participation that was already chosen', () => {
     const events = seed().map((e) => (e.title === 'Expopharm' ? { ...e, participation: 'bezoeker' as const } : e));
     expect(markExhibitors(events).some((e) => e.title === 'Expopharm')).toBe(false);
+  });
+});
+
+describe('exhibitor budgets', () => {
+  /** Events as seeded when five events had a stand and none had an amount. */
+  const fiveStands = () => seed().map(({ budgetPlanned: _, ...e }) =>
+    ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027'].includes(e.title) ? { ...e, participation: 'exposant' as const, status: 'gepland' as const } : e);
+
+  it('gives the three stands their budget and takes the other two off the exhibitor line', () => {
+    const updated = new Map(exhibitorBudgets(fiveStands()).map((e) => [e.title, e]));
+    expect([...updated.keys()].sort()).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'PharmagoraPlus', 'The Pharmacy Show']);
+    for (const title of ['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']) {
+      expect(updated.get(title)).toMatchObject({ participation: 'exposant', budgetPlanned: EXHIBITOR_BUDGET });
+    }
+    for (const title of ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027']) {
+      expect(updated.get(title)!.participation).toBeUndefined();
+      expect(updated.get(title)!.status).toBe('idee');
+    }
+    expect(exhibitorBudgets(seed())).toHaveLength(0);
+  });
+
+  it('keeps amounts and participation someone entered', () => {
+    const events = fiveStands().map((e) => {
+      if (e.title === 'Expopharm') return { ...e, budgetPlanned: 35000 };
+      if (e.title === 'The Pharmacy Show') return { ...e, participation: 'bezoeker' as const };
+      if (e.title === 'GIRP PharmaConnect 2027') return { ...e, budgetPlanned: 8000 };
+      return e;
+    });
+    const titles = exhibitorBudgets(events).map((e) => e.title).sort();
+    expect(titles).toEqual(['APP Conference and Trade Exhibition', 'PharmagoraPlus']);
   });
 });
 

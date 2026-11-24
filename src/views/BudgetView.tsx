@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
-import { PlanTable } from '../components/PlanTable';
-import { Button, Card, EmptyState, Stat } from '../components/ui';
-import { byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
+import { Fragment, useEffect, useState } from 'react';
+import { PlanTable, periodText } from '../components/PlanTable';
+import { Button, Card, EmptyState, Icon, Stat } from '../components/ui';
+import { budgetLineOf, byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
 import { AUDIENCES } from '../data/dimensions';
+import { BUDGET_LINES } from '../data/meta';
 import { useStore } from '../data/store';
 import type { BudgetLine } from '../data/types';
-import { audienceLabel, budgetLineLabel, t } from '../i18n';
+import { audienceLabel, budgetLineLabel, itemText, itemTitle, t } from '../i18n';
+import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
 const TOP_ITEMS = 10;
 
 export function BudgetView() {
   const store = useStore();
+  const { openItem } = useUi();
   const [year, setYear] = useState(() => {
     const current = Number(store.today.slice(0, 4));
     const hasBudget = (y: number) => store.budgets.some((b) => b.year === y && b.amount > 0);
@@ -27,6 +30,16 @@ export function BudgetView() {
     .filter((i) => yearOf(i) === year && (i.budgetPlanned || i.budgetActual))
     .sort((a, b) => Math.max(b.budgetPlanned ?? 0, b.budgetActual ?? 0) - Math.max(a.budgetPlanned ?? 0, a.budgetActual ?? 0));
   const paidWithoutBudget = store.items.filter((i) => yearOf(i) === year && (i.type === 'campaign' || i.type === 'pr' || i.type === 'event') && i.budgetPlanned == null);
+
+  const itemsOf = (line: BudgetLine) => store.items
+    .filter((i) => yearOf(i) === year && budgetLineOf(i) === line)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  // Until someone folds a line open or shut, the lines with amounts are open.
+  const [toggled, setToggled] = useState<Set<BudgetLine> | null>(null);
+  const isOpen = (line: BudgetLine) => toggled
+    ? toggled.has(line)
+    : itemsOf(line).some((i) => i.budgetPlanned || i.budgetActual);
+  const toggle = (line: BudgetLine) => setToggled(new Set(BUDGET_LINES.filter((l) => (l === line ? !isOpen(l) : isOpen(l)))));
 
   const audiences = byAudience(store.items, year);
   const markets = byMarket(store.items, year);
@@ -67,20 +80,52 @@ export function BudgetView() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.line}>
-                  <td>
-                    <span className="mc-budget-line">{budgetLineLabel(r.line)}</span>
-                    <span className="mc-budget-line-hint">{t.budgetLines[r.line].hint}</span>
-                  </td>
-                  <td className="mc-num"><BudgetInput year={year} line={r.line} amount={r.budget} /></td>
-                  <td className="mc-num mc-muted">{total.budget && r.budget ? pct(r.budget, total.budget) : '–'}</td>
-                  <td className="mc-num">{euro(r.planned)}</td>
-                  <td className="mc-num">{euro(r.actual)}</td>
-                  <td className="mc-num" data-over={(r.budget > 0 && r.planned > r.budget) || undefined}>{r.budget ? euro(r.budget - r.planned) : <span className="mc-muted">{r.planned ? t.budget.noBudget : '–'}</span>}</td>
-                  <td><BudgetBar {...r} /></td>
-                </tr>
-              ))}
+              {rows.map((r) => {
+                const lineItems = itemsOf(r.line);
+                const expanded = isOpen(r.line);
+                return (
+                  <Fragment key={r.line}>
+                    <tr data-expanded={expanded || undefined}>
+                      <td>
+                        {lineItems.length ? (
+                          <button type="button" className="mc-budget-toggle" aria-expanded={expanded} onClick={() => toggle(r.line)}>
+                            <Icon name="chevron_right" size={18} />
+                            <span>
+                              <span className="mc-budget-line">{budgetLineLabel(r.line)}</span>
+                              <span className="mc-budget-line-hint">{t.budgetLines[r.line].hint} · {t.budget.actions(lineItems.length)}</span>
+                            </span>
+                          </button>
+                        ) : (
+                          <>
+                            <span className="mc-budget-line">{budgetLineLabel(r.line)}</span>
+                            <span className="mc-budget-line-hint">{t.budgetLines[r.line].hint}</span>
+                          </>
+                        )}
+                      </td>
+                      <td className="mc-num"><BudgetInput year={year} line={r.line} amount={r.budget} /></td>
+                      <td className="mc-num mc-muted">{total.budget && r.budget ? pct(r.budget, total.budget) : '–'}</td>
+                      <td className="mc-num">{euro(r.planned)}</td>
+                      <td className="mc-num">{euro(r.actual)}</td>
+                      <td className="mc-num" data-over={(r.budget > 0 && r.planned > r.budget) || undefined}>{r.budget ? euro(r.budget - r.planned) : <span className="mc-muted">{r.planned ? t.budget.noBudget : '–'}</span>}</td>
+                      <td><BudgetBar {...r} /></td>
+                    </tr>
+                    {expanded && lineItems.map((i) => (
+                      <tr key={i.id} data-detail tabIndex={0} onClick={() => openItem(i.id)} onKeyDown={(e) => e.key === 'Enter' && openItem(i.id)}>
+                        <td>
+                          <span className="mc-budget-item">{itemTitle(i)}</span>
+                          <span className="mc-budget-line-hint">{[periodText(i), itemText(i, 'location')].filter(Boolean).join(' · ')}</span>
+                        </td>
+                        <td className="mc-num mc-muted">–</td>
+                        <td className="mc-num mc-muted">{r.budget && i.budgetPlanned ? pct(i.budgetPlanned, r.budget) : '–'}</td>
+                        <td className="mc-num">{i.budgetPlanned != null ? euro(i.budgetPlanned) : <span className="mc-muted">–</span>}</td>
+                        <td className="mc-num">{i.budgetActual != null ? euro(i.budgetActual) : <span className="mc-muted">–</span>}</td>
+                        <td className="mc-num mc-muted">–</td>
+                        <td><BudgetBar budget={i.budgetPlanned ?? 0} planned={i.budgetPlanned ?? 0} actual={i.budgetActual ?? 0} /></td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
               {(unassigned.planned > 0 || unassigned.actual > 0) && (
                 <tr data-unassigned>
                   <td>

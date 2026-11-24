@@ -404,6 +404,7 @@ export const nl = {
     unassignedHint: 'Acties met een bedrag die onder geen enkele post vallen. Kies een budgetpost bij de actie.',
     linesNote: 'Een actie valt automatisch onder een post volgens soort, kanaal en deelname. Bij een actie kun je een andere post kiezen.',
     usage: 'Verbruik',
+    actions: (n: number) => plural(n, 'actie', 'acties'),
     total: 'Totaal',
     noBudget: 'geen budget',
     legendPlanned: 'gepland',

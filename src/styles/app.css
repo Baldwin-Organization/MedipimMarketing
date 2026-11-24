@@ -483,6 +483,14 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 .mc-budget-line { display: block; font-weight: var(--mp-font-weight-medium); }
 .mc-budget-line-hint { display: block; color: var(--mp-content-tertiary); font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); }
 .mc-budget-table tr[data-unassigned] .mc-budget-line { color: var(--mp-warning-content); }
+.mc-budget-toggle { display: flex; align-items: flex-start; gap: var(--mp-space-1); margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.mc-budget-toggle > .mc-icon { flex: none; margin-top: 1px; color: var(--mp-content-secondary); transition: transform 120ms ease; }
+.mc-budget-toggle[aria-expanded="true"] > .mc-icon { transform: rotate(90deg); }
+.mc-budget-toggle:focus-visible { outline: var(--mp-border-width-strong) solid var(--mp-brand-border); outline-offset: 2px; }
+.mc-budget-table tr[data-detail] td { background: var(--mp-bg-sunken); }
+.mc-budget-table tr[data-detail] td:first-child { padding-left: calc(var(--mp-space-3) + 18px + var(--mp-space-1)); }
+.mc-budget-table tr[data-detail]:hover td, .mc-budget-table tr[data-detail]:focus-visible td { background: var(--mp-bg-sunken-deep); }
+.mc-budget-item { display: block; }
 .mc-budget-input { width: 9rem; text-align: right; font-variant-numeric: tabular-nums; }
 .mc-budget-bar { position: relative; display: block; min-width: 8rem; height: var(--mp-space-2); border-radius: var(--mp-shape-track); background: var(--mp-bg-sunken-deep); }
 .mc-budget-bar > [data-kind] { position: absolute; inset: 0 auto 0 0; border-radius: var(--mp-shape-track); max-width: 100%; }
