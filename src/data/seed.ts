@@ -1,6 +1,6 @@
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
-import type { Contents } from './repository';
+import { newId, type Contents } from './repository';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate } from './seed-content';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
@@ -206,6 +206,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-4', apply: (data) => ({ content: contentIdeasUpdate(data.content, data.pillars, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-5', apply: (data) => ({ items: exhibitorBudgets(data.items) }) },
   { key: 'mc-seed-updates-6', apply: (data) => ({ items: markVisitors(data.items) }) },
+  { key: 'mc-seed-updates-7', apply: addRetargeting },
 ];
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
@@ -269,7 +270,63 @@ export function buildSeed(makeId: () => string): Contents {
       todos.push({ id: makeId(), itemId: id, title: t.title, dueDate: t.dueDate, done: false, offsetDays: daysBetween(a.date, t.dueDate) });
     }
   }
-  return { items, todos, budgets: SEED_BUDGETS, pillars: SEED_PILLARS, content: buildSeedContent(now) };
+  const retargeting = buildRetargeting(makeId, now);
+  return { items: [...items, retargeting.item], todos: [...todos, ...retargeting.todos], budgets: SEED_BUDGETS, pillars: SEED_PILLARS, content: buildSeedContent(now) };
+}
+
+const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
+const RETARGETING_START = '2026-12-01';
+const RETARGETING_TODOS: { title: string; en: string; dueDate: IsoDate }[] = [
+  { title: 'Google-tag en Consent Mode v2 nakijken op medipim.com', en: 'Check the Google tag and Consent Mode v2 on medipim.com', dueDate: '2026-11-26' },
+  { title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)', en: 'Create a remarketing audience per country (BE, FR, AU, DE)', dueDate: '2026-11-27' },
+  { title: 'Advertenties maken per taal (NL, FR, DE, EN)', en: 'Create ads per language (NL, FR, DE, EN)', dueDate: '2026-11-28' },
+  { title: 'Frequentielimiet instellen en campagne starten', en: 'Set a frequency cap and start the campaign', dueDate: RETARGETING_START },
+];
+
+/** The always-on Google retargeting campaign; the end date is the last budget year and moves along each year. */
+function buildRetargeting(makeId: () => string, now: string): { item: Item; todos: Todo[] } {
+  const id = makeId();
+  return {
+    item: {
+      id,
+      type: 'campaign',
+      title: RETARGETING_TITLE,
+      description: 'Doorlopende Google Ads-campagne die iedereen die de Medipim-website bezocht opnieuw bereikt in België, Frankrijk, Australië en Duitsland. Per land een eigen remarketingdoelgroep en advertenties in de taal van dat land. De campagne loopt permanent: de einddatum is het einde van budgetjaar 2027 en schuift elk jaar mee op.',
+      channel: 'Google Ads',
+      date: RETARGETING_START,
+      endDate: '2027-12-31',
+      status: 'gepland',
+      owner: '',
+      campaign: '',
+      audiences: ALL_AUDIENCES,
+      productTypes: ALL_PRODUCTS,
+      countries: ['BE', 'FR', 'AU', 'DE'],
+      translations: {
+        en: {
+          title: 'Google retargeting of website visitors (BE, FR, AU, DE)',
+          description: 'Always-on Google Ads campaign that reaches everyone who visited the Medipim website again in Belgium, France, Australia and Germany. A remarketing audience per country and ads in the language of that country. The campaign runs permanently: the end date is the end of budget year 2027 and moves along every year.',
+        },
+      },
+      createdAt: now,
+      updatedAt: now,
+    },
+    todos: RETARGETING_TODOS.map((t) => ({
+      id: makeId(),
+      itemId: id,
+      title: t.title,
+      dueDate: t.dueDate,
+      done: false,
+      offsetDays: daysBetween(RETARGETING_START, t.dueDate),
+      translations: { en: { title: t.en } },
+    })),
+  };
+}
+
+/** The retargeting campaign, for data seeded before it existed; skipped when a campaign with that title is already there. */
+export function addRetargeting(data: Contents): Partial<Contents> {
+  if (data.items.some((i) => i.type === 'campaign' && i.title === RETARGETING_TITLE)) return {};
+  const { item, todos } = buildRetargeting(newId, new Date().toISOString());
+  return { items: [item], todos };
 }
 
 const UX_LAUNCH = 'Nieuwe UX Belgisch platform';

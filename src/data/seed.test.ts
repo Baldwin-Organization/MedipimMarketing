@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
 import { contentIdeasUpdate } from './seed-content';
 
 const seed = () => {
@@ -146,5 +146,28 @@ describe('content ideas from the team', () => {
     expect(changes.map((p) => p.id).sort()).toEqual(['content-customer-quotes', 'content-did-you-know', 'content-photography']);
     expect(changes.find((p) => p.id === 'content-customer-quotes')).toMatchObject({ title: 'Een klant aan het woord', recurring: true });
     expect(contentIdeasUpdate(content, pillars, '')).toHaveLength(0);
+  });
+});
+
+describe('Google retargeting campaign', () => {
+  const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
+
+  it('runs on Google Ads in the four markets, with its set-up to-dos', () => {
+    const data = build();
+    const campaign = data.items.find((i) => i.type === 'campaign' && i.channel === 'Google Ads')!;
+    expect(campaign).toMatchObject({ countries: ['BE', 'FR', 'AU', 'DE'], date: '2026-12-01', endDate: '2027-12-31', status: 'gepland' });
+    expect(campaign.translations?.en?.title).toBeTruthy();
+    const todos = data.todos.filter((t) => t.itemId === campaign.id);
+    expect(todos).toHaveLength(4);
+    expect(todos.every((t) => t.translations?.en?.title && t.dueDate <= campaign.date)).toBe(true);
+  });
+
+  it('is added once to data that predates it', () => {
+    const data = build();
+    expect(addRetargeting(data)).toEqual({});
+    const old = { ...data, items: data.items.filter((i) => i.type !== 'campaign'), todos: [] };
+    const added = addRetargeting(old);
+    expect(added.items).toHaveLength(1);
+    expect(added.todos!.every((t) => t.itemId === added.items![0].id)).toBe(true);
   });
 });

@@ -62,10 +62,11 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         if (typeof localStorage === 'undefined' || localStorage.getItem(update.key)) continue;
         const changes = update.apply(data);
         if (changes.items?.length) await repo.saveItems(changes.items);
+        if (changes.todos?.length) await repo.saveTodos(changes.todos);
         if (changes.budgets?.length) await repo.saveBudgets(changes.budgets);
         if (changes.pillars?.length) await repo.savePillars(changes.pillars);
         if (changes.content?.length) await repo.saveContent(changes.content);
-        for (const key of ['items', 'budgets', 'pillars', 'content'] as const) {
+        for (const key of ['items', 'todos', 'budgets', 'pillars', 'content'] as const) {
           data[key] = merge(data[key] as { id: string }[], (changes[key] ?? []) as { id: string }[]) as never;
         }
         localStorage.setItem(update.key, '1');
