@@ -273,9 +273,45 @@
 .mc-ground[data-tone="navy"] .mc-ground-frame::after { --brand-grid-line: color-mix(in srgb, var(--mp-content-stay-light) 7%, transparent); }
 .mc-ground[data-tone="navy"] .mc-eyebrow { color: var(--mp-brand-original); }
 .mc-ground[data-tone="navy"] .mc-brand-promise { color: var(--brand-on-navy); }
-.mc-ground[data-tone="navy"] .mc-brand-story { color: var(--brand-on-navy-weak); }
+.mc-ground[data-tone="navy"] .mc-brand-note { color: var(--brand-on-navy-weak); }
 .mc-ground[data-tone="navy"] .mc-composition-foot span { color: var(--brand-on-navy); }
 .mc-brand-step[data-tone="navy"] { background: var(--brand-navy); color: var(--brand-on-navy); box-shadow: inset 0 0 0 var(--mp-border-width) var(--mp-brand-original); }
+
+/* The hero: the tally of the medipim.com homepage, the figures in hairline cells
+   with their accent icon box, the platform in a glass window cut off by the right edge. */
+.mc-tally-hero { --tally-line: color-mix(in srgb, var(--mp-content-stay-light) 14%, transparent); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(var(--mp-space-6), 4vw, var(--mp-space-12)); align-items: center; padding: clamp(var(--mp-space-6), 4vw, var(--mp-space-12)) 0 clamp(var(--mp-space-6), 4vw, var(--mp-space-12)) clamp(var(--mp-space-6), 4vw, var(--mp-space-12)); }
+.mc-tally-hero .mc-brand-promise { font-size: var(--mp-fluid-3xl); }
+.mc-tally-title { margin-top: var(--mp-space-8); font-family: var(--mp-font-display); font-weight: var(--mp-font-weight-regular); font-size: var(--mp-text-lg); color: var(--brand-on-navy-weak); }
+.mc-tally-cells { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: var(--mp-space-4) 0 var(--mp-space-4); background: var(--tally-line); border-block: var(--mp-border-width) solid var(--tally-line); }
+.mc-tally-cell { container-type: inline-size; display: grid; align-content: start; gap: var(--mp-space-2); padding: var(--mp-space-5) var(--mp-space-5); background: var(--brand-navy); }
+.mc-tally-cell:nth-child(odd) { padding-left: 0; }
+.mc-tally-icon { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin-bottom: var(--mp-space-2); border-radius: var(--mp-shape-control); }
+.mc-tally-icon[data-accent="1"] { background: var(--mp-accent-1-bg); color: var(--mp-accent-1-content); }
+.mc-tally-icon[data-accent="2"] { background: var(--mp-accent-2-bg); color: var(--mp-accent-2-content); }
+.mc-tally-icon[data-accent="3"] { background: var(--mp-accent-3-bg); color: var(--mp-accent-3-content); }
+.mc-tally-icon[data-accent="4"] { background: var(--mp-accent-4-bg); color: var(--mp-accent-4-content); }
+.mc-tally-icon[data-accent="5"] { background: var(--mp-accent-5-bg); color: var(--mp-accent-5-content); }
+.mc-tally-icon[data-accent="6"] { background: var(--mp-accent-6-bg); color: var(--mp-accent-6-content); }
+/* Every figure sized by the longest, so the digits never jump while they count. */
+.mc-tally-cell dt { font-size: min(2.75rem, 160cqi / var(--chars, 8)); font-weight: var(--mp-font-weight-regular); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--brand-on-navy); }
+.mc-tally-cell dd { font-size: var(--mp-text-sm); color: var(--brand-on-navy-weak); }
+.mc-tally-visual { position: relative; isolation: isolate; align-self: stretch; min-height: 30rem; overflow: hidden; border-radius: var(--mp-radius-lg) 0 0 var(--mp-radius-lg); }
+.mc-tally-blur {
+  position: absolute; inset: -20%; z-index: -1; filter: blur(56px) saturate(1.1);
+  background:
+    radial-gradient(36% 40% at 16% 18%, var(--mp-brand-original) 0%, transparent 70%),
+    radial-gradient(42% 46% at 82% 14%, var(--mp-brand-bg) 0%, transparent 70%),
+    radial-gradient(44% 46% at 22% 86%, var(--mp-brand-bg) 0%, transparent 70%),
+    radial-gradient(34% 36% at 92% 92%, var(--mp-brand-original) 0%, transparent 70%),
+    color-mix(in srgb, var(--mp-brand-bg) 45%, var(--brand-navy));
+}
+.mc-tally-window {
+  position: absolute; top: clamp(1.5rem, 3.5vw, 3rem); left: clamp(1.5rem, 3.5vw, 3rem); width: max(56rem, 160%); padding: var(--mp-space-2);
+  border: var(--mp-border-width) solid color-mix(in srgb, var(--mp-content-stay-light) 40%, transparent); border-radius: calc(var(--mp-radius-lg) + 0.5rem);
+  background: color-mix(in srgb, var(--mp-bg-stay-light) 25%, transparent); backdrop-filter: blur(12px);
+  box-shadow: 0 2rem 4rem -1.5rem color-mix(in srgb, var(--brand-navy) 70%, transparent);
+}
+.mc-tally-window img { display: block; width: 100%; height: auto; border-radius: var(--mp-radius-lg); }
 
 /* A person at work, with the data card where that data point turns up. */
 .mc-scene { position: relative; overflow: hidden; container-type: inline-size; aspect-ratio: 4 / 3; border-radius: var(--mp-shape-surface); }
@@ -285,6 +321,9 @@
   padding: 2cqi 3cqi 2cqi 2cqi; background: var(--mp-bg-stay-light); border-radius: var(--mp-shape-control); box-shadow: var(--mp-shadow-popup);
   border-left: 3px solid var(--mp-brand-original);
 }
+/* The card stays clear of the hands and the pack in each photo. */
+.mc-scene:is([data-person="pharmacy"], [data-person="manufacturer"]) .mc-data-chip { right: auto; left: 4cqi; }
+.mc-scene[data-person="manufacturer"] .mc-data-chip { max-width: 52%; }
 .mc-data-chip img { flex: none; width: max(1.5rem, 9cqi); aspect-ratio: 1; object-fit: contain; }
 .mc-data-chip > div { display: grid; gap: 0.6cqi; min-width: 0; }
 .mc-data-chip-label { font-size: max(0.5rem, 2.6cqi); font-weight: var(--mp-font-weight-medium); letter-spacing: var(--mp-text-eyebrow-tracking); text-transform: uppercase; color: var(--mp-brand-bg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -304,7 +343,7 @@
 .mc-audience-body .mc-scene { aspect-ratio: auto; min-height: 0; }
 .mc-audience-body[data-format="wide"] { grid-template-rows: none; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 5cqi; padding: 5cqi 6cqi 0; }
 .mc-audience-body[data-format="wide"] .mc-scene { height: 100%; }
-.mc-audience-body[data-format="wide"] .mc-data-chip { right: 3cqi; bottom: 3cqi; gap: 1.4cqi; padding: 1.2cqi 1.8cqi 1.2cqi 1.2cqi; }
+.mc-audience-body[data-format="wide"] .mc-data-chip { gap: 1.4cqi; padding: 1.2cqi 1.8cqi 1.2cqi 1.2cqi; }
 .mc-audience-body[data-format="wide"] .mc-data-chip img { width: max(1.25rem, 5cqi); }
 .mc-audience-body[data-format="wide"] .mc-data-chip-label { font-size: max(0.4375rem, 1.5cqi); }
 .mc-audience-body[data-format="wide"] .mc-data-chip-value { font-size: max(0.5rem, 1.8cqi); }
@@ -315,8 +354,7 @@
 .mc-audience-body[data-format="wide"] .mc-audience-who { font-size: max(0.4375rem, 1.5cqi); }
 .mc-audience-body[data-format="wide"] .mc-audience-quote { font-size: max(0.75rem, 2.6cqi); }
 .mc-audience-body[data-format="tall"] { grid-template-rows: minmax(64cqi, 1fr) auto; gap: 5cqi; padding: 7cqi 7cqi 0; }
-.mc-audience-body[data-format="tall"] .mc-scene > img { object-position: 22% 40%; }
-.mc-audience-body[data-format="tall"] .mc-data-chip { right: 3cqi; bottom: 3cqi; max-width: 62%; }
+.mc-audience-body[data-format="tall"] .mc-data-chip { max-width: 62%; }
 .mc-audience-body[data-format="tall"] .mc-audience-quote { font-size: max(0.625rem, 4.6cqi); }
 .mc-audience-body[data-format="tall"] .mc-audience-who { font-size: max(0.5rem, 3.4cqi); }
 .mc-audience-body[data-format="tall"] + .mc-composition-foot { flex-direction: column; align-items: flex-start; gap: 4cqi; padding: 6cqi 7cqi 7cqi; }
@@ -344,6 +382,8 @@
 .mc-brand-compare > div[data-tone="navy"] dd { color: var(--brand-on-navy-weak); }
 
 @media (max-width: 1100px) {
+  .mc-tally-hero { grid-template-columns: 1fr; padding-right: clamp(var(--mp-space-6), 4vw, var(--mp-space-12)); }
+  .mc-tally-visual { min-height: 18rem; margin-right: calc(-1 * clamp(var(--mp-space-6), 4vw, var(--mp-space-12))); }
   .mc-brand-hero, .mc-brand-uses, .mc-brand-campaigns, .mc-brand-taglines, .mc-brand-extras, .mc-brand-compare { grid-template-columns: 1fr; }
   .mc-brand-moments, .mc-brand-weekly, .mc-brand-people { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mc-brand-principles, .mc-brand-places { grid-template-columns: 1fr; }

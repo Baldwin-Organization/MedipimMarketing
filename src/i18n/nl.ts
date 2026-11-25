@@ -527,6 +527,16 @@ export const nl = {
       audience: 'Alternatief: de doelgroep staat in beeld op het donkerblauwe merkvlak, het product zit klein in hun wereld.',
     },
     audience: {
+      tallyTitle: 'De Medipim-databank in cijfers',
+      tally: [
+        { value: '2.009.706', label: 'actieve producten' },
+        { value: '3.476.101', label: 'beschrijvingen' },
+        { value: '2.104.364', label: 'productfoto’s' },
+        { value: '10.778', label: 'pilfoto’s' },
+        { value: '188.674', label: 'bijsluiters' },
+        { value: '9', label: 'landen' },
+      ],
+      tallyNote: 'De globale cijfers van de homepagina van medipim.com, geteld in oktober 2026 over alle actieve producten.',
       peopleTitle: 'Wie zien we in beeld?',
       peopleIntro: 'Per doelgroep de persoon op het moment dat Medipim relevant wordt, met het ene gegeven dat ze op dat moment nodig hebben.',
       chips: [
@@ -564,7 +574,7 @@ export const nl = {
       ],
       strengthsLabel: 'Sterk in',
       watchLabel: 'Let op',
-      photoNote: 'De foto’s hier zijn AI-voorbeelden om de richting te tonen. Voor echte campagnes fotograferen we klanten op hun eigen werkplek.',
+      photoNote: 'De foto’s zijn die van medipim.com, met dezelfde uitsnede als op de site. Zo herkent wie de site kent de campagne meteen.',
     },
   },
 };

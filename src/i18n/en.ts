@@ -577,6 +577,16 @@ export const en: Dict = {
       audience: 'Alternative: the audience is in the picture on the dark blue brand ground, with the product set small in their world.',
     },
     audience: {
+      tallyTitle: 'The Medipim database in figures',
+      tally: [
+        { value: '2,009,706', label: 'active products' },
+        { value: '3,476,101', label: 'descriptions' },
+        { value: '2,104,364', label: 'product photos' },
+        { value: '10,778', label: 'pill photos' },
+        { value: '188,674', label: 'package leaflets' },
+        { value: '9', label: 'countries' },
+      ],
+      tallyNote: 'The global figures from the medipim.com homepage, counted in October 2026 across all active products.',
       peopleTitle: 'Who do we show?',
       peopleIntro: 'For each audience, the person at the moment Medipim becomes relevant, with the one data point they need at that moment.',
       chips: [
@@ -614,7 +624,7 @@ export const en: Dict = {
       ],
       strengthsLabel: 'Strong for',
       watchLabel: 'Watch out',
-      photoNote: 'The photos here are AI examples to show the direction. For real campaigns we photograph customers at their own workplace.',
+      photoNote: 'The photos are those of medipim.com, cropped as on the site, so anyone who knows the site recognises the campaign at once.',
     },
   },
 };

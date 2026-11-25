@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MedipimLogo, MedipimMark } from '../components/logo';
 import { Icon, Segmented } from '../components/ui';
@@ -32,10 +32,25 @@ const WEEKLY_ICONS: IconName[] = ['description', 'code', 'photo_camera', 'groups
 const EXTRA_ICONS: IconName[] = ['smart_toy', 'storefront'];
 const SLIDE_ICONS: IconName[] = ['local_shipping', 'help', 'category'];
 
-/** The audiences in the order of `t.brand.moments`, with their photo. */
+/** The audiences in the order of `t.brand.moments`, with their photo from medipim.com and its focus there. */
 const PEOPLE = ['manufacturer', 'wholesaler', 'software', 'pharmacy'] as const;
 type Person = (typeof PEOPLE)[number];
-const photo = (p: Person) => `/brand/audience-${p}.webp`;
+const PHOTOS: Record<Person, { src: string; focus: string }> = {
+  manufacturer: { src: '/brand/medipim-farma-industrie.webp', focus: '50% 45%' },
+  wholesaler: { src: '/brand/medipim-groothandel-scant-doosje.webp', focus: '40% 35%' },
+  software: { src: '/brand/medipim-developer-api.webp', focus: '30% 40%' },
+  pharmacy: { src: '/brand/medipim-apotheker-scant-doosje.webp', focus: '60% 45%' },
+};
+
+/** The global figures of medipim.com in the icons and accents of its tally. */
+const TALLY: { icon: IconName; accent: number }[] = [
+  { icon: 'inventory_2', accent: 2 },
+  { icon: 'description', accent: 6 },
+  { icon: 'image', accent: 1 },
+  { icon: 'medication', accent: 3 },
+  { icon: 'article', accent: 4 },
+  { icon: 'language', accent: 5 },
+];
 
 type Direction = 'product' | 'audience';
 const DIRECTION_PARAM = 'richting';
@@ -67,10 +82,10 @@ export function BrandView() {
   );
 }
 
-function Hero({ tone }: { tone?: 'navy' }) {
+function Hero() {
   const b = t.brand;
   return (
-    <Ground className="mc-brand-hero" tone={tone}>
+    <Ground className="mc-brand-hero">
       <div className="mc-brand-hero-copy">
         <p className="mc-eyebrow">{b.kicker}</p>
         <p className="mc-brand-promise">{b.promise}</p>
@@ -89,6 +104,72 @@ function Hero({ tone }: { tone?: 'navy' }) {
       </div>
     </Ground>
   );
+}
+
+/** The hero of the audience direction: the homepage tally of medipim.com on dark blue, the platform running off the right. */
+function TallyHero() {
+  const b = t.brand;
+  const a = b.audience;
+  const [ref, counting] = useCountUp<HTMLDListElement>();
+  return (
+    <Ground className="mc-tally-hero" tone="navy">
+      <div className="mc-tally-main">
+        <p className="mc-eyebrow">{b.kicker}</p>
+        <p className="mc-brand-promise">{b.promise}</p>
+        <h2 className="mc-tally-title">{a.tallyTitle}</h2>
+        <dl ref={ref} className="mc-tally-cells" style={{ '--chars': Math.max(...a.tally.map((f) => f.value.length)) } as CSSProperties}>
+          {a.tally.map((f, i) => (
+            <div key={f.label} className="mc-tally-cell">
+              <span className="mc-tally-icon" data-accent={TALLY[i].accent} aria-hidden="true"><Icon name={TALLY[i].icon} size={22} /></span>
+              <dt><Counted value={f.value} counting={counting} /></dt>
+              <dd>{f.label}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mc-brand-note">{a.tallyNote}</p>
+      </div>
+      <div className="mc-tally-visual" aria-hidden="true">
+        <div className="mc-tally-blur" />
+        <div className="mc-tally-window"><img src="/brand/platform-products.webp" alt="" /></div>
+      </div>
+    </Ground>
+  );
+}
+
+const COUNT_MS = 2200;
+
+/** True from the moment the element is 40% in view, once; the figures then count up from zero. */
+function useCountUp<T extends Element>() {
+  const [el, setEl] = useState<T | null>(null);
+  const [start, setStart] = useState<number | null>(() => (reducedMotion() || !('IntersectionObserver' in window) ? 0 : null));
+  useEffect(() => {
+    if (!el || start !== null) return;
+    const seen = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setStart(performance.now()); seen.disconnect(); }
+    }, { threshold: 0.4 });
+    seen.observe(el);
+    return () => seen.disconnect();
+  }, [el, start]);
+  return [setEl, start] as const;
+}
+
+/** A figure as written ('2.009.706'), counted up with an ease-out from `counting`; it ends on the written figure. */
+function Counted({ value, counting }: { value: string; counting: number | null }) {
+  const number = value.match(/^(\D*)([\d.,]+)(\D*)$/);
+  const [now, setNow] = useState(() => performance.now());
+  const done = counting === null ? false : counting === 0 || now - counting >= COUNT_MS;
+  useEffect(() => {
+    if (!number || counting === null || done) return;
+    const frame = requestAnimationFrame(setNow);
+    return () => cancelAnimationFrame(frame);
+  });
+  if (!number || done) return <>{value}</>;
+  const [, prefix, digits, suffix] = number;
+  const sep = digits.match(/\d(\D)\d{3}(?!\d)/)?.[1] ?? '';
+  const target = Number(digits.replace(/[.,]/g, ''));
+  const progress = counting === null ? 0 : Math.min(1, Math.max(0, (now - counting) / COUNT_MS));
+  const shown = String(Math.round(target * (1 - Math.pow(1 - progress, 3)))).replace(/\B(?=(\d{3})+$)/g, sep);
+  return <>{prefix}{shown}{suffix}</>;
 }
 
 function ProductDirection() {
@@ -232,7 +313,7 @@ function AudienceDirection() {
   const a = b.audience;
   return (
     <>
-      <Hero tone="navy" />
+      <TallyHero />
 
       <Section title={a.peopleTitle} intro={a.peopleIntro}>
         <div className="mc-brand-people">
@@ -324,7 +405,7 @@ function Scene({ person }: { person: Person }) {
   const chip = t.brand.audience.chips[PEOPLE.indexOf(person)];
   return (
     <div className="mc-scene" data-person={person}>
-      <img src={photo(person)} alt="" />
+      <img src={PHOTOS[person].src} alt="" style={{ objectPosition: PHOTOS[person].focus }} />
       <DataChip label={chip.label} value={chip.value} code={person === 'software'} />
     </div>
   );
