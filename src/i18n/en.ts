@@ -569,5 +569,52 @@ export const en: Dict = {
     exampleProduct: 'Example product from the styleguide',
     categories: ['Sun protection', 'Sun sprays & mists'],
     storage: 'Room temperature',
+
+    directionLabel: 'Visual direction',
+    directions: { product: 'Product first', audience: 'Audience first' },
+    directionNotes: {
+      product: 'The product sheet is at the centre of every visual, on the light blue brand ground.',
+      audience: 'Alternative: the audience is in the picture on the dark blue brand ground, with the product set small in their world.',
+    },
+    audience: {
+      peopleTitle: 'Who do we show?',
+      peopleIntro: 'For each audience, the person at the moment Medipim becomes relevant, with the one data point they need at that moment.',
+      chips: [
+        { label: 'New pack', value: 'Available to connected customers' },
+        { label: 'Goods receipt', value: 'EAN recognised · photo and description present' },
+        { label: 'GET /v4/products/query', value: '200 OK · NL and FR' },
+        { label: 'Storage', value: 'Room temperature' },
+      ],
+      dbaTitle: 'What should become recognisable as Medipim?',
+      dbaIntro: 'The same brand promise, but recognition comes from the people who work with the product information. We test this proposal consistently too, next to or instead of the product direction.',
+      dba: [
+        { title: 'Show the person at their moment', text: 'A real workplace: the pharmacy counter, goods receipt, a developer’s desk, the meeting table at a manufacturer. The person is busy with the task, does not look into the camera and does not pose.' },
+        { title: 'Set the product small in their world', text: 'One data card from the product sheet on the photo, where that data point turns up in their work. That keeps what Medipim does visible, even with a person in the picture.' },
+        { title: 'Dark blue as the fixed carrier', text: 'Medipim dark blue carries every visual. We use light blue only for the highlighted data point. The closing line and the logo label always sit at the bottom in the same place.' },
+      ],
+      compositionTitle: 'The fixed composition in three formats',
+      compositionNote: 'The photo with the data card, below or beside it the dark blue panel with the audience’s question and the closing line. Only the person and the moment change.',
+      campaignTexts: [
+        'Show the brand manager holding the old and the new pack, with the card saying the new version is available to connected customers.',
+        'Show a goods-receipt employee scanning a pack, with the card saying whether the sheet already has a photo and description. Invite prospects to go through part of their range together.',
+      ],
+      compareTitle: 'Product first or audience first?',
+      compareIntro: 'Both directions use the same promise, closing line and logo label. They differ in what the viewer recognises first.',
+      compare: [
+        {
+          title: 'Product first',
+          strengths: 'Shows straight away what Medipim does. Strong for weekly posts and technical content. Cheap to produce: only the product changes.',
+          watch: 'Can feel distant. The viewer has to place themselves in the story.',
+        },
+        {
+          title: 'Audience first',
+          strengths: 'The viewer recognises their own work and moment. Strong for campaigns per audience, trade fair walls and ads.',
+          watch: 'Needs real photography at customers. Without the data card it becomes a generic healthcare image any player could use.',
+        },
+      ],
+      strengthsLabel: 'Strong for',
+      watchLabel: 'Watch out',
+      photoNote: 'The photos here are AI examples to show the direction. For real campaigns we photograph customers at their own workplace.',
+    },
   },
 };

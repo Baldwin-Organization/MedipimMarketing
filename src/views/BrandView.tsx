@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MedipimLogo, MedipimMark } from '../components/logo';
-import { Icon } from '../components/ui';
+import { Icon, Segmented } from '../components/ui';
 import type { IconName } from '../icons.generated';
 import { lang, t } from '../i18n';
 import { PageHeader } from './PageHeader';
@@ -31,30 +32,70 @@ const WEEKLY_ICONS: IconName[] = ['description', 'code', 'photo_camera', 'groups
 const EXTRA_ICONS: IconName[] = ['smart_toy', 'storefront'];
 const SLIDE_ICONS: IconName[] = ['local_shipping', 'help', 'category'];
 
+/** The audiences in the order of `t.brand.moments`, with their photo. */
+const PEOPLE = ['manufacturer', 'wholesaler', 'software', 'pharmacy'] as const;
+type Person = (typeof PEOPLE)[number];
+const photo = (p: Person) => `/brand/audience-${p}.webp`;
+
+type Direction = 'product' | 'audience';
+const DIRECTION_PARAM = 'richting';
+
 export function BrandView() {
   const b = t.brand;
+  const [params, setParams] = useSearchParams();
+  const direction: Direction = params.get(DIRECTION_PARAM) === 'doelgroep' ? 'audience' : 'product';
+  const choose = (d: Direction) => setParams(d === 'audience' ? { [DIRECTION_PARAM]: 'doelgroep' } : {}, { replace: true });
   return (
-    <div className="mc-page mc-brand">
+    <div className="mc-page mc-brand" data-direction={direction}>
       <PageHeader title={b.title} subtitle={b.subtitle} />
 
-      <Ground className="mc-brand-hero">
-        <div className="mc-brand-hero-copy">
-          <p className="mc-eyebrow">{b.kicker}</p>
-          <p className="mc-brand-promise">{b.promise}</p>
-          <p className="mc-brand-story">{b.story}</p>
-        </div>
-        <div className="mc-brand-hero-proof">
-          <dl className="mc-brand-figures">
-            {b.proof.map((p) => (
-              <div key={p.label}>
-                <dt>{p.label}</dt>
-                <dd>{p.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mc-brand-note">{b.proofNote}</p>
-        </div>
-      </Ground>
+      <div className="mc-brand-direction">
+        <Segmented
+          label={b.directionLabel}
+          value={direction}
+          onChange={choose}
+          options={[
+            { value: 'product', label: b.directions.product, icon: 'inventory_2' },
+            { value: 'audience', label: b.directions.audience, icon: 'groups' },
+          ]}
+        />
+        <p>{b.directionNotes[direction]}</p>
+      </div>
+
+      {direction === 'product' ? <ProductDirection /> : <AudienceDirection />}
+    </div>
+  );
+}
+
+function Hero({ tone }: { tone?: 'navy' }) {
+  const b = t.brand;
+  return (
+    <Ground className="mc-brand-hero" tone={tone}>
+      <div className="mc-brand-hero-copy">
+        <p className="mc-eyebrow">{b.kicker}</p>
+        <p className="mc-brand-promise">{b.promise}</p>
+        <p className="mc-brand-story">{b.story}</p>
+      </div>
+      <div className="mc-brand-hero-proof">
+        <dl className="mc-brand-figures">
+          {b.proof.map((p) => (
+            <div key={p.label}>
+              <dt>{p.label}</dt>
+              <dd>{p.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mc-brand-note">{b.proofNote}</p>
+      </div>
+    </Ground>
+  );
+}
+
+function ProductDirection() {
+  const b = t.brand;
+  return (
+    <>
+      <Hero />
 
       <Section title={b.momentsTitle} intro={b.momentsIntro}>
         <div className="mc-brand-moments">
@@ -180,7 +221,145 @@ export function BrandView() {
       </Section>
 
       <p className="mc-muted mc-brand-footnote">{b.exampleProduct}: {PRODUCT.name}.</p>
+    </>
+  );
+}
+
+const COMPOSITION_PEOPLE: Record<'square' | 'wide' | 'tall', Person> = { square: 'pharmacy', wide: 'wholesaler', tall: 'manufacturer' };
+
+function AudienceDirection() {
+  const b = t.brand;
+  const a = b.audience;
+  return (
+    <>
+      <Hero tone="navy" />
+
+      <Section title={a.peopleTitle} intro={a.peopleIntro}>
+        <div className="mc-brand-people">
+          {PEOPLE.map((p, i) => (
+            <figure key={p} className="mc-brand-person">
+              <Scene person={p} />
+              <figcaption>
+                <span className="mc-brand-person-audience"><Icon name={MOMENT_ICONS[i]} size={16} />{b.moments[i].audience}</span>
+                <blockquote>‘{b.moments[i].quote}’</blockquote>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={a.dbaTitle} intro={a.dbaIntro}>
+        <ol className="mc-brand-principles">
+          {a.dba.map((d, i) => (
+            <li key={d.title}>
+              <span className="mc-brand-step" data-tone="navy">{i + 1}</span>
+              <div>
+                <h3>{d.title}</h3>
+                <p>{d.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <SubTitle title={a.compositionTitle} note={a.compositionNote} />
+        <div className="mc-brand-formats">
+          {(['square', 'wide', 'tall'] as const).map((f) => (
+            <figure key={f} className="mc-brand-format" data-format={f}>
+              <AudienceComposition format={f} person={COMPOSITION_PEOPLE[f]} />
+              <figcaption>{b.formats[f]}</figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <div className="mc-brand-taglines">
+          <div data-tone="navy">
+            <span className="mc-eyebrow">{b.taglineLocal}</span>
+            <p className="mc-brand-tagline">{b.tagline}</p>
+          </div>
+          <div data-tone="navy">
+            <span className="mc-eyebrow">{b.taglineTest}</span>
+            <p className="mc-brand-tagline" lang="en">{b.taglineIntl}</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={b.campaignsTitle}>
+        <div className="mc-brand-campaigns">
+          {(['manufacturer', 'wholesaler'] as const).map((p, i) => (
+            <article key={p} className="mc-brand-campaign">
+              <Ground className="mc-brand-campaign-scene" tone="navy" logo>
+                <Scene person={p} />
+              </Ground>
+              <div className="mc-brand-use-copy">
+                <span className="mc-eyebrow">{b.campaigns[i].audience}</span>
+                <p className="mc-brand-headline">‘{b.campaigns[i].headline}’</p>
+                <p>{a.campaignTexts[i]}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Section>
+
+      <Section title={a.compareTitle} intro={a.compareIntro}>
+        <div className="mc-brand-compare">
+          {a.compare.map((c, i) => (
+            <div key={c.title} data-tone={i === 1 ? 'navy' : undefined}>
+              <h3>{c.title}</h3>
+              <dl>
+                <div><dt>{a.strengthsLabel}</dt><dd>{c.strengths}</dd></div>
+                <div><dt>{a.watchLabel}</dt><dd>{c.watch}</dd></div>
+              </dl>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <p className="mc-muted mc-brand-footnote">{a.photoNote}</p>
+    </>
+  );
+}
+
+/** A person at work, with the one data card from the product sheet they need at that moment. */
+function Scene({ person }: { person: Person }) {
+  const chip = t.brand.audience.chips[PEOPLE.indexOf(person)];
+  return (
+    <div className="mc-scene" data-person={person}>
+      <img src={photo(person)} alt="" />
+      <DataChip label={chip.label} value={chip.value} code={person === 'software'} />
     </div>
+  );
+}
+
+function DataChip({ label, value, code }: { label: string; value: string; code?: boolean }) {
+  return (
+    <div className="mc-data-chip" aria-hidden="true">
+      <img src={PRODUCT.image} alt="" />
+      <div>
+        <span className="mc-data-chip-label" data-code={code || undefined}>{label}</span>
+        <span className="mc-data-chip-value">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+/** The audience composition: the scene, then the dark blue panel with their question and the closing line. */
+function AudienceComposition({ format, person }: { format: 'square' | 'wide' | 'tall'; person: Person }) {
+  const b = t.brand;
+  const i = PEOPLE.indexOf(person);
+  return (
+    <Ground className="mc-composition mc-audience-composition" tone="navy">
+      <div className="mc-audience-body" data-format={format}>
+        <Scene person={person} />
+        <div className="mc-audience-panel">
+          <span className="mc-audience-who">{b.moments[i].audience}</span>
+          <p className="mc-audience-quote">‘{b.moments[i].quote}’</p>
+        </div>
+      </div>
+      <footer className="mc-composition-foot">
+        <span>{lang === 'en' ? b.taglineIntl : b.tagline}</span>
+        <div className="mc-logo-label"><MedipimLogo height={format === 'wide' ? 'max(14px, 3.2cqi)' : 'max(14px, 4.8cqi)'} /></div>
+      </footer>
+    </Ground>
   );
 }
 
@@ -205,10 +384,10 @@ function SubTitle({ title, note }: { title: string; note?: string }) {
   );
 }
 
-/** The brand ground of medipim.com: brand blur on a faint grid. */
-function Ground({ className, logo, children }: { className?: string; logo?: boolean; children: ReactNode }) {
+/** The brand ground of medipim.com: brand blur on a faint grid; `navy` carries it on Medipim dark blue. */
+function Ground({ className, logo, tone, children }: { className?: string; logo?: boolean; tone?: 'navy'; children: ReactNode }) {
   return (
-    <div className={`mc-ground ${className ?? ''}`} data-logo={logo || undefined}>
+    <div className={`mc-ground ${className ?? ''}`} data-logo={logo || undefined} data-tone={tone}>
       <div className="mc-ground-frame" aria-hidden="true" />
       {children}
       {logo && <div className="mc-logo-label mc-ground-logo"><MedipimLogo height={13} /></div>}

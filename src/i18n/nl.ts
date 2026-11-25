@@ -519,6 +519,53 @@ export const nl = {
     exampleProduct: 'Voorbeeldproduct uit de stijlgids',
     categories: ['Zonnebescherming', 'Zonnesprays & mists'],
     storage: 'Omgevingstemperatuur',
+
+    directionLabel: 'Visuele richting',
+    directions: { product: 'Product centraal', audience: 'Doelgroep centraal' },
+    directionNotes: {
+      product: 'De productfiche staat in elk beeld centraal, op het lichtblauwe merkvlak.',
+      audience: 'Alternatief: de doelgroep staat in beeld op het donkerblauwe merkvlak, het product zit klein in hun wereld.',
+    },
+    audience: {
+      peopleTitle: 'Wie zien we in beeld?',
+      peopleIntro: 'Per doelgroep de persoon op het moment dat Medipim relevant wordt, met het ene gegeven dat ze op dat moment nodig hebben.',
+      chips: [
+        { label: 'Nieuwe verpakking', value: 'Beschikbaar voor aangesloten klanten' },
+        { label: 'Goederenontvangst', value: 'EAN herkend · foto en beschrijving aanwezig' },
+        { label: 'GET /v4/products/query', value: '200 OK · NL en FR' },
+        { label: 'Bewaring', value: 'Omgevingstemperatuur' },
+      ],
+      dbaTitle: 'Wat moet herkenbaar worden als Medipim?',
+      dbaIntro: 'Dezelfde merkbelofte, maar de herkenning komt van de mensen die met de productinformatie werken. Ook dit voorstel testen we consequent, naast of in plaats van de productrichting.',
+      dba: [
+        { title: 'Toon de mens op zijn moment', text: 'Een echte werkplek: de apotheekbalie, de goederenontvangst, het bureau van een ontwikkelaar, de vergadertafel bij een fabrikant. De persoon is bezig met de taak, kijkt niet in de camera en poseert niet.' },
+        { title: 'Zet het product klein in hun wereld', text: 'Eén datakaartje uit de productfiche op de foto, op de plek waar dat gegeven in hun werk opduikt. Zo blijft zichtbaar wat Medipim doet, ook al staat er een persoon in beeld.' },
+        { title: 'Donkerblauw als vaste drager', text: 'Het Medipim-donkerblauw draagt elk beeld. Lichtblauw gebruiken we alleen voor het uitgelichte gegeven. De slotregel en het logolabel staan altijd onderaan op dezelfde plek.' },
+      ],
+      compositionTitle: 'De vaste compositie in drie formaten',
+      compositionNote: 'De foto met het datakaartje, daaronder of ernaast het donkerblauwe vlak met de vraag van de doelgroep en de slotregel. Alleen de persoon en het moment wisselen.',
+      campaignTexts: [
+        'Toon de merkverantwoordelijke met de oude en de nieuwe verpakking in de hand, en op het kaartje dat de nieuwe versie beschikbaar is voor aangesloten klanten.',
+        'Toon een medewerker aan de goederenontvangst die een verpakking scant, en op het kaartje of de fiche al een foto en beschrijving heeft. Nodig prospecten uit om een deel van hun assortiment samen te bekijken.',
+      ],
+      compareTitle: 'Product of doelgroep centraal?',
+      compareIntro: 'Beide richtingen gebruiken dezelfde belofte, slotregel en logolabel. Ze verschillen in wat de kijker als eerste herkent.',
+      compare: [
+        {
+          title: 'Product centraal',
+          strengths: 'Laat meteen zien wat Medipim doet. Sterk voor wekelijkse posts en technische content. Goedkoop te maken: alleen het product wisselt.',
+          watch: 'Kan afstandelijk aanvoelen. De kijker moet zichzelf in het verhaal plaatsen.',
+        },
+        {
+          title: 'Doelgroep centraal',
+          strengths: 'De kijker herkent zijn eigen werk en moment. Sterk voor campagnes per doelgroep, beurswanden en advertenties.',
+          watch: 'Vraagt echte fotografie bij klanten. Zonder het datakaartje wordt het een algemeen zorgbeeld dat elke speler kan gebruiken.',
+        },
+      ],
+      strengthsLabel: 'Sterk in',
+      watchLabel: 'Let op',
+      photoNote: 'De foto’s hier zijn AI-voorbeelden om de richting te tonen. Voor echte campagnes fotograferen we klanten op hun eigen werkplek.',
+    },
   },
 };
 
