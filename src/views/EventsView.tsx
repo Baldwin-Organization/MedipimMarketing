@@ -2,7 +2,7 @@ import { addMonths, differenceInCalendarMonths, getDate, getDaysInMonth, startOf
 import { useEffect, useRef, useState } from 'react';
 import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
-import { ParticipationLegend, ParticipationPill, participationOptions } from '../components/participation';
+import { ParticipationLegend, ParticipationPicker } from '../components/participation';
 import { Button, Checkbox, EmptyState, Icon, LateBadge, Segmented, StatusPill } from '../components/ui';
 import { daysBetween, fmt, fmtDate, fromIso, toIso } from '../data/dates';
 import { audienceOptions, matchesCountry, productOptions, type CountryFilter } from '../data/dimensions';
@@ -21,7 +21,7 @@ const LABEL_PX = 210;
 const ATTENDING: Participation[] = ['exposant', 'bezoeker'];
 
 interface EventFilters {
-  participation: ParticipationKey | '';
+  participation: ParticipationKey[];
   channel: string;
   status: ItemStatus | '';
   owner: string;
@@ -29,7 +29,7 @@ interface EventFilters {
   product: ProductType | '';
   country: CountryFilter;
 }
-const NO_FILTERS: EventFilters = { participation: '', channel: '', status: '', owner: '', audience: '', product: '', country: '' };
+const NO_FILTERS: EventFilters = { participation: [], channel: '', status: '', owner: '', audience: '', product: '', country: '' };
 
 export function EventsView() {
   const store = useStore();
@@ -40,7 +40,9 @@ export function EventsView() {
   const set = <K extends keyof EventFilters>(key: K) => (value: EventFilters[K]) => setFilters((f) => ({ ...f, [key]: value }));
   const allEvents = store.items.filter((i) => i.type === 'event');
   const channels = [...new Set([...CHANNELS.event, ...allEvents.map((e) => e.channel)])];
-  const active = Object.values(filters).filter(Boolean).length;
+  const active = Object.values(filters).filter((v) => (Array.isArray(v) ? v.length : v)).length;
+  const toggleParticipation = (k: ParticipationKey) =>
+    setFilters((f) => ({ ...f, participation: f.participation.includes(k) ? f.participation.filter((p) => p !== k) : [...f.participation, k] }));
   const matchesOthers = (i: Item) =>
     (!filters.channel || i.channel === filters.channel) &&
     (!filters.status || i.status === filters.status) &&
@@ -48,7 +50,7 @@ export function EventsView() {
     (!filters.audience || i.audiences.includes(filters.audience)) &&
     (!filters.product || i.productTypes.includes(filters.product)) &&
     matchesCountry(i, filters.country);
-  const matches = (i: Item) => matchesOthers(i) && (!filters.participation || participationKey(i.participation) === filters.participation);
+  const matches = (i: Item) => matchesOthers(i) && (!filters.participation.length || filters.participation.includes(participationKey(i.participation)));
   const filtered = allEvents.filter(matches).sort((a, b) => a.date.localeCompare(b.date));
   const participationCounts = new Map<ParticipationKey, number>();
   allEvents
@@ -65,7 +67,6 @@ export function EventsView() {
         actions={<Button startIcon="add" onClick={() => openItem(undefined, { type: 'event', channel: 'Beurs', date: today, endDate: today })}>{t.events.newEvent}</Button>}
       />
       <div className="mc-filters" aria-label={t.common.filters}>
-        <FilterSelect label={t.participationTitle} value={filters.participation} options={participationOptions()} onChange={set('participation')} />
         <CountrySelect value={filters.country} items={allEvents} onChange={set('country')} />
         <FilterSelect label={t.dims.productShort} value={filters.product} options={productOptions()} onChange={set('product')} />
         <FilterSelect label={t.dims.audience} value={filters.audience} options={audienceOptions()} onChange={set('audience')} />
@@ -79,7 +80,7 @@ export function EventsView() {
         )}
         <span className="mc-muted">{t.events.upcomingCount(upcoming.length)}</span>
       </div>
-      <ParticipationLegend counts={participationCounts} active={filters.participation} onSelect={(k) => set('participation')(k as EventFilters['participation'])} />
+      <ParticipationLegend counts={participationCounts} active={filters.participation} onToggle={toggleParticipation} />
       <Timeline events={upcoming} />
       <div className="mc-section-bar">
         <h2>{t.events.prep}</h2>
@@ -199,12 +200,20 @@ function EventCard({ event }: { event: Item }) {
             </p>
           </div>
           <div className="mc-event-side">
-            <ParticipationPill value={event.participation} />
             <StatusPill status={event.status} />
             <span className="mc-countdown">{past ? t.common.countdown.ended : n <= 0 ? t.common.countdown.running : t.common.countdown.days(n)}</span>
             <Button variant="text" intent="secondary" size="small" icon="edit" label={t.events.edit} onClick={() => openItem(event.id)} />
           </div>
         </header>
+        <div className="mc-event-participation">
+          <span className="mc-field-label">{t.participationTitle}</span>
+          <ParticipationPicker
+            compact
+            label={`${t.participationTitle}: ${itemTitle(event)}`}
+            value={event.participation}
+            onChange={(participation) => store.saveItem({ ...event, participation }, prep)}
+          />
+        </div>
         <DimensionTags item={event} />
         {itemText(event, 'description') && <p className="mc-event-desc">{itemText(event, 'description')}</p>}
         {prep.length === 0 ? (

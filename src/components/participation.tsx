@@ -4,8 +4,6 @@ import { participationLabel, participationShort, t } from '../i18n';
 
 const KEYS: ParticipationKey[] = [...PARTICIPATIONS, UNDECIDED];
 
-export const participationOptions = () => KEYS.map((k) => ({ value: k, label: t.participation[k].short }));
-
 export function ParticipationDot({ value }: { value?: Participation }) {
   return <span className="mc-participation-dot" data-participation={participationKey(value)} aria-hidden="true" />;
 }
@@ -19,10 +17,16 @@ export function ParticipationPill({ value }: { value?: Participation }) {
   );
 }
 
-export function ParticipationPicker({ value, onChange }: { value?: Participation; onChange: (value?: Participation) => void }) {
+export function ParticipationPicker({ value, onChange, compact, label = t.participationTitle }: {
+  value?: Participation;
+  onChange: (value?: Participation) => void;
+  /** Short labels and small chips, for choosing straight from a list. */
+  compact?: boolean;
+  label?: string;
+}) {
   const current = participationKey(value);
   return (
-    <div className="mc-chip-group" role="radiogroup" aria-label={t.participationTitle}>
+    <div className="mc-chip-group" data-compact={compact || undefined} role="radiogroup" aria-label={label}>
       {KEYS.map((k) => (
         <button
           key={k}
@@ -32,18 +36,19 @@ export function ParticipationPicker({ value, onChange }: { value?: Participation
           aria-pressed={current === k}
           className="mc-toggle-chip"
           data-participation={k}
+          title={compact ? t.participation[k].label : undefined}
           onClick={() => onChange(k === UNDECIDED ? undefined : k)}
         >
           <span className="mc-participation-dot" aria-hidden="true" />
-          {t.participation[k].label}
+          {compact ? t.participation[k].short : t.participation[k].label}
         </button>
       ))}
     </div>
   );
 }
 
-/** Colour key with counts; clicking an entry filters on it, clicking it again clears the filter. */
-export function ParticipationLegend({ counts, active, onSelect }: { counts: Map<ParticipationKey, number>; active: string; onSelect: (key: string) => void }) {
+/** Colour key with counts; every entry toggles on its own, so several can filter at once. */
+export function ParticipationLegend({ counts, active, onToggle }: { counts: Map<ParticipationKey, number>; active: ParticipationKey[]; onToggle: (key: ParticipationKey) => void }) {
   return (
     <div className="mc-participation-legend" role="group" aria-label={t.participationTitle}>
       {KEYS.map((k) => (
@@ -52,8 +57,8 @@ export function ParticipationLegend({ counts, active, onSelect }: { counts: Map<
           type="button"
           className="mc-participation-legend-item"
           data-participation={k}
-          aria-pressed={active === k}
-          onClick={() => onSelect(active === k ? '' : k)}
+          aria-pressed={active.includes(k)}
+          onClick={() => onToggle(k)}
         >
           <span className="mc-participation-dot" aria-hidden="true" />
           {t.participation[k].short}
