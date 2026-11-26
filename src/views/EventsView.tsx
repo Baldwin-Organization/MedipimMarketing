@@ -1,5 +1,5 @@
 import { addMonths, differenceInCalendarMonths, getDate, getDaysInMonth, startOfMonth } from 'date-fns';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
 import { ParticipationLegend, ParticipationPicker } from '../components/participation';
@@ -19,6 +19,7 @@ const MIN_MONTHS = 6;
 /** Room a label needs before the next event can share its lane. */
 const LABEL_PX = 210;
 const ATTENDING: Participation[] = ['exposant', 'bezoeker'];
+const EventsMap = lazy(() => import('./EventsMap'));
 
 interface EventFilters {
   participation: ParticipationKey[];
@@ -36,6 +37,7 @@ export function EventsView() {
   const { openItem } = useUi();
   const { today } = store;
   const [scope, setScope] = useState<'komend' | 'alle'>('komend');
+  const [view, setView] = useState<'tijdlijn' | 'kaart'>('tijdlijn');
   const [filters, setFilters] = useState<EventFilters>(NO_FILTERS);
   const set = <K extends keyof EventFilters>(key: K) => (value: EventFilters[K]) => setFilters((f) => ({ ...f, [key]: value }));
   const allEvents = store.items.filter((i) => i.type === 'event');
@@ -58,6 +60,7 @@ export function EventsView() {
     .forEach((e) => participationCounts.set(participationKey(e.participation), (participationCounts.get(participationKey(e.participation)) ?? 0) + 1));
   const upcoming = filtered.filter((e) => (e.endDate ?? e.date) >= today);
   const events = scope === 'alle' ? filtered : upcoming;
+  const scopeToggle = <Segmented label={t.common.show} value={scope} onChange={setScope} options={[{ value: 'komend', label: t.common.upcoming }, { value: 'alle', label: t.common.all }]} />;
 
   return (
     <div className="mc-page">
@@ -81,19 +84,36 @@ export function EventsView() {
         <span className="mc-muted">{t.events.upcomingCount(upcoming.length)}</span>
       </div>
       <ParticipationLegend counts={participationCounts} active={filters.participation} onToggle={toggleParticipation} />
-      <Timeline events={upcoming} />
-      <div className="mc-section-bar">
-        <h2>{t.events.prep}</h2>
-        <Segmented label={t.common.show} value={scope} onChange={setScope} options={[{ value: 'komend', label: t.common.upcoming }, { value: 'alle', label: t.common.all }]} />
+      <div className="mc-view-bar">
+        <Segmented
+          label={t.events.views.label}
+          value={view}
+          onChange={setView}
+          options={[{ value: 'tijdlijn', label: t.events.views.timeline, icon: 'calendar_month' }, { value: 'kaart', label: t.events.views.map, icon: 'language' }]}
+        />
+        {view === 'kaart' && scopeToggle}
       </div>
-      {events.length === 0 ? (
-        <EmptyState icon="storefront" title={allEvents.length ? t.events.noneFound : t.events.nonePlanned}>
-          {allEvents.length ? t.events.noneFoundHint : t.events.nonePlannedHint}
-        </EmptyState>
+      {view === 'kaart' ? (
+        <Suspense fallback={<p className="mc-muted">{t.events.map.loading}</p>}>
+          <EventsMap events={events} />
+        </Suspense>
       ) : (
-        <ol className="mc-event-timeline">
-          {events.map((e) => <EventCard key={e.id} event={e} />)}
-        </ol>
+        <>
+          <Timeline events={upcoming} />
+          <div className="mc-section-bar">
+            <h2>{t.events.prep}</h2>
+            {scopeToggle}
+          </div>
+          {events.length === 0 ? (
+            <EmptyState icon="storefront" title={allEvents.length ? t.events.noneFound : t.events.nonePlanned}>
+              {allEvents.length ? t.events.noneFoundHint : t.events.nonePlannedHint}
+            </EmptyState>
+          ) : (
+            <ol className="mc-event-timeline">
+              {events.map((e) => <EventCard key={e.id} event={e} />)}
+            </ol>
+          )}
+        </>
       )}
     </div>
   );

@@ -314,6 +314,17 @@ export const en: Dict = {
     daysBefore: (n) => `${n} d before`,
     onTheDay: 'on the day',
     daysAfter: (n) => `${n} d after`,
+    views: { label: 'View', timeline: 'Timeline', map: 'World map' },
+    map: {
+      title: 'World map of the events',
+      region: 'Region',
+      regions: { wereld: 'World', europa: 'Europe', amerika: 'North America', azie: 'Middle East, Asia and Oceania' },
+      hint: 'Click a point to see the events in that place.',
+      eventsHere: (n) => plural(n, 'event', 'events'),
+      countryOnly: 'Only the country is known; the point sits in the middle of the country.',
+      unplaced: (n) => `${plural(n, 'event', 'events')} without a recognisable place ${n === 1 ? 'is' : 'are'} not on the map:`,
+      loading: 'Loading the map…',
+    },
   },
 
   plan: {

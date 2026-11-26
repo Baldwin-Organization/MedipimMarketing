@@ -264,6 +264,17 @@ export const nl = {
     daysBefore: (n: number) => `${n} d vooraf`,
     onTheDay: 'op de dag',
     daysAfter: (n: number) => `${n} d na`,
+    views: { label: 'Weergave', timeline: 'Tijdlijn', map: 'Wereldkaart' },
+    map: {
+      title: 'Wereldkaart van de events',
+      region: 'Regio',
+      regions: { wereld: 'Wereld', europa: 'Europa', amerika: 'Noord-Amerika', azie: 'Midden-Oosten, Azië en Oceanië' },
+      hint: 'Klik op een punt om de events op die plaats te zien.',
+      eventsHere: (n: number) => plural(n, 'event', 'events'),
+      countryOnly: 'Alleen het land is gekend, het punt staat in het midden van het land.',
+      unplaced: (n: number) => `${plural(n, 'event', 'events')} zonder herkenbare plaats ${n === 1 ? 'staat' : 'staan'} niet op de kaart:`,
+      loading: 'Kaart laden…',
+    },
   },
 
   plan: {

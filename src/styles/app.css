@@ -43,7 +43,7 @@ button { font: inherit; color: inherit; }
 .mc-logo-accent { fill: var(--mp-brand-original); }
 .mc-logo-fg { fill: var(--mp-content-primary); }
 /* Sized so the ink of "Marketing System" (IBM Plex Sans 500: 8.046em wide, 0.086em left bearing) spans the 26px logo's 156.4px. */
-.mc-brand-sub { display: block; margin-left: -0.086em; font-size: 19.43px; line-height: 1.2; font-weight: var(--mp-font-weight-medium); color: var(--mp-content-tertiary); letter-spacing: 0; white-space: nowrap; }
+.mc-brand-sub { display: block; margin-left: -0.0602em; font-size: 23.1px; line-height: 1.2; font-weight: var(--mp-font-weight-medium); font-variant-caps: all-small-caps; color: var(--mp-content-tertiary); letter-spacing: 0.0079em; white-space: nowrap; }
 .mc-nav { display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-nav-link {
   display: flex; align-items: center; gap: var(--mp-space-3); min-height: var(--mp-height-md);
@@ -366,6 +366,28 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 /* ── Events ──────────────────────────────────────────── */
 .mc-section-bar { display: flex; align-items: center; justify-content: space-between; }
 .mc-section-bar h2 { font-size: var(--mp-text-lg); line-height: var(--mp-text-lg-line); font-weight: var(--mp-font-weight-medium); }
+.mc-view-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--mp-space-3); flex-wrap: wrap; }
+.mc-map { display: flex; flex-direction: column; gap: var(--mp-space-3); padding: var(--mp-space-4); background: var(--mp-surface-card-bg); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-surface); }
+.mc-map-bar { display: flex; flex-wrap: wrap; gap: var(--mp-space-2); }
+.mc-map-canvas { display: block; width: 100%; height: auto; overflow: hidden; border-radius: var(--mp-shape-nav); background: var(--mp-bg-sunken); }
+.mc-map-sphere { fill: var(--mp-bg-sunken); }
+.mc-map-country { fill: var(--mp-bg-elevated); stroke: var(--mp-border-default); stroke-width: 0.5; vector-effect: non-scaling-stroke; }
+.mc-map-country[data-events] { fill: var(--mp-brand-bg-weakest); }
+.mc-map-marker { cursor: pointer; outline: none; }
+.mc-map-marker circle { fill: var(--acc); stroke: var(--mp-bg-elevated); stroke-width: 1.5; transition: transform var(--mp-transition-fast); }
+.mc-map-marker[data-participation="open"] circle { fill: var(--mp-bg-elevated); stroke: var(--mp-content-tertiary); stroke-width: 2; }
+.mc-map-marker:hover circle, .mc-map-marker:focus-visible circle { transform: scale(1.2); }
+.mc-map-marker:focus-visible circle, .mc-map-marker[data-selected] circle { stroke: var(--mp-content-primary); stroke-width: 2.5; }
+.mc-map-marker text { fill: var(--mp-bg-elevated); font-size: 10px; font-weight: var(--mp-font-weight-medium); text-anchor: middle; pointer-events: none; }
+.mc-map-marker[data-participation="open"] text, .mc-map-marker[data-participation="geen"] text { fill: var(--mp-content-primary); }
+.mc-map-place h3 { font-size: var(--mp-text-md, var(--mp-text-sm)); font-weight: var(--mp-font-weight-medium); margin-bottom: var(--mp-space-2); }
+.mc-map-place ul { display: flex; flex-direction: column; gap: var(--mp-space-1); }
+.mc-map-place button { display: flex; align-items: center; gap: var(--mp-space-3); width: 100%; padding: var(--mp-space-2); border: 0; border-radius: var(--mp-shape-nav); background: none; color: var(--mp-content-primary); text-align: left; cursor: pointer; }
+.mc-map-place button:hover { background: var(--mp-bg-sunken); }
+.mc-map-date { flex: none; width: 7.5em; color: var(--mp-content-secondary); font-size: var(--mp-text-xs); font-variant-numeric: tabular-nums; }
+.mc-map-title { flex: 1; min-width: 0; font-weight: var(--mp-font-weight-medium); }
+.mc-map-hint { font-size: var(--mp-text-xs); }
+.mc-link-button { padding: 0; border: 0; background: none; color: var(--mp-brand-content); font: inherit; text-decoration: underline; cursor: pointer; }
 .mc-timeline { position: relative; padding: var(--mp-space-3) 0 var(--mp-space-2); background: var(--mp-surface-card-bg); border: var(--mp-border-width) solid var(--mp-border-weak); border-radius: var(--mp-shape-surface); }
 .mc-timeline-nav { position: absolute; top: var(--mp-space-2); right: var(--mp-space-2); z-index: 2; display: flex; gap: var(--mp-space-1); background: var(--mp-surface-card-bg); border-radius: var(--mp-shape-control); }
 .mc-timeline-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding: 0 var(--mp-space-4) var(--mp-space-2); scrollbar-width: thin; }

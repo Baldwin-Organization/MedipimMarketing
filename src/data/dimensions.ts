@@ -37,10 +37,10 @@ export const newMarkets = () => ISO_CODES.filter((c) => !isExistingMarket(c)).so
 
 export const existingMarketsSorted = () => [...EXISTING_MARKETS].sort(byCountryName);
 
-/** Dutch country name (as `Intl.DisplayNames` writes it) to ISO code; used to read seed locations. */
-export function countryCode(name: string): string | undefined {
-  const n = name.trim().toLocaleLowerCase('nl');
-  return ISO_CODES.find((c) => (namesFor('nl').of(c) ?? '').toLocaleLowerCase('nl') === n);
+/** Country name (as `Intl.DisplayNames` writes it in `locale`, Dutch by default) to ISO code; used to read seed locations and map data. */
+export function countryCode(name: string, locale = 'nl'): string | undefined {
+  const n = name.trim().toLocaleLowerCase(locale);
+  return ISO_CODES.find((c) => (namesFor(locale).of(c) ?? '').toLocaleLowerCase(locale) === n);
 }
 
 /** Filter values for the country filter: a single ISO code or one of the two market groups. */
