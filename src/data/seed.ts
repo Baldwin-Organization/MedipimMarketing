@@ -38,6 +38,7 @@ const EVENTS: SeedEvent[] = [
   { title: 'Vital Executive Conference', date: '2027-01-11', location: 'Montréal, Canada', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Hoog voor Canadese groothandelscontacten', description: 'Exclusieve bijeenkomst voor strategische uitwisseling en relatieopbouw binnen de Canadese farmaceutische keten. Goede ingang naar distributiebedrijven en hun handelspartners.' },
   { title: 'pharmacon Schladming', date: '2027-01-17', endDate: '2027-01-21', location: 'Schladming, Oostenrijk', channel: 'Congres', audiences: APOTHEKERS, relevance: 'Middel', description: 'Farmaceutische nascholing en netwerk in de Duitstalige markt; vooral een congres, minder een grote commerciële beurs.' },
   { title: 'Pharmapack Europe', date: '2027-01-27', endDate: '2027-01-28', location: 'Parijs, Frankrijk', channel: 'Beurs', audiences: PRODUCENTEN, relevance: 'Aanvullend', description: 'Verpakking en drug delivery staan centraal. Interessant voor fabrikantcontacten, maar minder direct gericht op apotheken.' },
+  { title: 'World Health Expo Dubai', date: '2027-01-25', endDate: '2027-01-28', location: 'Dubai, Verenigde Arabische Emiraten', channel: 'Beurs', audiences: ['producenten', 'groothandels', 'ziekenhuizen'], relevance: 'Middel; vooral om de regio te verkennen', description: 'De vroegere Arab Health: een grote zorgbeurs over twee locaties met een Pharma Zone voor productie, verpakking, supply chain en regelgeving. Tegelijk loopt WHX Tech (26–28 januari) over digitale zorg en AI.' },
 
   // Februari 2027
   { title: 'Health Expo Athens', date: '2027-02-20', endDate: '2027-02-21', location: 'Athene, Griekenland', channel: 'Beurs', audiences: APOTHEKERS, relevance: 'Middel', description: 'Brengt onder meer distributeurs, fabrikanten en apotheekhouders samen. Mogelijkheid om de Griekse markt en lokale datapartners te verkennen.' },
@@ -57,6 +58,7 @@ const EVENTS: SeedEvent[] = [
   { title: 'EAHP Congress', date: '2027-03-17', endDate: '2027-03-19', location: 'Wenen, Oostenrijk', channel: 'Congres', audiences: ZIEKENHUIZEN, relevance: 'Middel', description: 'Europees congres voor ziekenhuisapothekers. Relevant als Medipim ziekenhuisfarmacie wil verkennen.' },
   { title: 'APP Conference and Trade Exhibition', date: '2027-03-18', endDate: '2027-03-20', location: 'Gold Coast, Australië', channel: 'Beurs', audiences: APOTHEKERS, relevance: 'Hoog', description: 'Grote Australische apotheekbijeenkomst met een uitgebreide vakbeurs. Directe toegang tot apothekers, apotheekteams en leveranciers.' },
   { title: 'APhA Annual Meeting and Exposition', date: '2027-03-19', endDate: '2027-03-22', location: 'Charlotte, Verenigde Staten', channel: 'Congres', audiences: APOTHEKERS, relevance: 'Middel tot hoog', description: 'Grote Amerikaanse bijeenkomst van apothekers. Geschikt om de markt te leren kennen en contacten met apotheekprofessionals te leggen.' },
+  { title: 'DUPHAT 2027', date: '2027-03-30', endDate: '2027-04-01', location: 'Dubai, Verenigde Arabische Emiraten', channel: 'Beurs', audiences: ['producenten', 'groothandels', 'apothekers'], products: ['geneesmiddelen', 'cosmetica', 'voeding', 'baby'], relevance: 'Hoog voor het Midden-Oosten en Afrika', description: 'De grootste farmabeurs en -conferentie van het Midden-Oosten en Afrika in het Dubai World Trade Centre: zo’n 1.100 exposanten en 25.000 bezoekers. Fabrikanten, groothandels, apotheekketens en regelgevers, met een startupzone voor farmadata en analytics en een zone voor parafarmacie.' },
 
   // April 2027
   { title: 'Global Cannabis Regulatory Summit', date: '2027-04-05', endDate: '2027-04-07', location: 'Zürich, Zwitserland', channel: 'Conferentie', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Middel, strategisch', description: 'Internationaal forum voor regelgevers, zorgprofessionals, onderzoekers, patiëntenorganisaties en industrie. Deelname is op uitnodiging; geen gewone vakbeurs.' },
@@ -69,6 +71,7 @@ const EVENTS: SeedEvent[] = [
   { title: 'Asian Conference on Clinical Pharmacy', date: '2027-04-22', endDate: '2027-04-25', location: 'Penang, Maleisië', channel: 'Congres', audiences: APOTHEKERS, relevance: 'Aanvullend', description: 'Congres rond klinische farmacie en innovatie in de apotheekpraktijk. Meer professioneel en wetenschappelijk dan commercieel.' },
   { title: 'Pharmacy Expo Poland', date: '2027-04-27', endDate: '2027-04-29', location: 'Polen', channel: 'Beurs', audiences: APOTHEKERS, relevance: 'Middel tot hoog', description: 'Bevat apotheeksoftware, e-pharmacy, automatisering en technologie. Kans om Poolse leveranciers en apotheekpartners te ontmoeten.' },
   { title: 'Pharmacy U Toronto', date: '2027-04-01', tentative: true, location: 'Toronto, Canada', channel: 'Congres', audiences: APOTHEKERS, relevance: 'Middel, datum onzeker', description: 'Lijkt gericht op apothekers en apotheekteams. Voor 2027 is een datum in april genoemd, maar nog niet officieel bevestigd.' },
+  { title: 'CPHI Middle East', date: '2027-04-26', endDate: '2027-04-28', location: 'Riyad, Saoedi-Arabië', channel: 'Beurs', audiences: PRODUCENTEN, relevance: 'Middel; vooral fabrikanten in de Golfregio', description: 'Grote farmabeurs voor de hele productieketen, met steun van het Saoedische ministerie van Volksgezondheid. Verplaatst van december 2026 naar april 2027.' },
 
   // Mei 2027
   { title: 'Vital Annual Conference', date: '2027-05-02', location: 'Québec City, Canada', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Hoog voor Canadese distributiecontacten', description: 'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.' },
@@ -213,6 +216,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-8', apply: (data) => planEvents(data, newId) },
   { key: 'mc-seed-updates-9', apply: (data) => ({ content: weeklyFillUpdate(data.content, data.pillars, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-10', apply: fillAndScheduleWeekly },
+  { key: 'mc-seed-updates-11', apply: (data) => ({ items: addEvents(data.items, newId) }) },
 ];
 
 /** The December pieces, then one post a week in the calendar. */
@@ -228,13 +232,21 @@ function mergeById<T extends { id: string }>(base: T[], changes: T[]): T[] {
   return [...base.map((r) => byId.get(r.id) ?? r), ...changes.filter((r) => !base.some((b) => b.id === r.id))];
 }
 
-/** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
-export function buildSeed(makeId: () => string): Contents {
+/** Events added to the calendar after it was first seeded, still undecided. */
+const ADDED_EVENTS = ['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'];
+
+/** The added events, for data seeded before them; an event already in the calendar under that title is left alone. */
+export function addEvents(items: Item[], makeId: () => string): Item[] {
   const now = new Date().toISOString();
-  const items = EVENTS.map((e): Item => {
-    const en = EVENTS_EN[e.title];
-    return {
-    id: makeId(),
+  return EVENTS
+    .filter((e) => ADDED_EVENTS.includes(e.title) && !items.some((i) => i.type === 'event' && i.title === e.title))
+    .map((e) => eventItem(e, makeId(), now));
+}
+
+function eventItem(e: SeedEvent, id: string, now: string): Item {
+  const en = EVENTS_EN[e.title];
+  return {
+    id,
     type: 'event',
     title: e.tentative ? `${e.title} (datum te bevestigen)` : e.title,
     description: `${e.description}\n\nRelevantie voor Medipim: ${e.relevance}.`,
@@ -261,8 +273,13 @@ export function buildSeed(makeId: () => string): Contents {
     },
     createdAt: now,
     updatedAt: now,
-    };
-  });
+  };
+}
+
+/** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */
+export function buildSeed(makeId: () => string): Contents {
+  const now = new Date().toISOString();
+  const items = EVENTS.map((e) => eventItem(e, makeId(), now));
   const todos: Todo[] = [];
   for (const a of ACTIONS) {
     const id = makeId();

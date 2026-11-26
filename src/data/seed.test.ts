@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -147,6 +147,24 @@ describe('content ideas from the team', () => {
     expect(changes.map((p) => p.id).sort()).toEqual(['content-customer-quotes', 'content-did-you-know', 'content-photography']);
     expect(changes.find((p) => p.id === 'content-customer-quotes')).toMatchObject({ title: 'Een klant aan het woord', recurring: true });
     expect(contentIdeasUpdate(content, pillars, '')).toHaveLength(0);
+  });
+});
+
+describe('events in the Gulf region', () => {
+  it('seeds DUPHAT, WHX and CPHI Middle East undecided, and adds them once to older data', () => {
+    let n = 0;
+    const { items } = buildSeed(() => `id${n++}`);
+    const gulf = items.filter((i) => ['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'].includes(i.title));
+    expect(gulf.map((i) => [i.title, i.countries, i.participation, i.status])).toEqual([
+      ['World Health Expo Dubai', ['AE'], undefined, 'idee'],
+      ['DUPHAT 2027', ['AE'], undefined, 'idee'],
+      ['CPHI Middle East', ['SA'], undefined, 'idee'],
+    ]);
+    expect(gulf.every((i) => i.translations?.en?.description)).toBe(true);
+
+    const old = items.filter((i) => !gulf.includes(i));
+    expect(addEvents(old, () => 'new')).toHaveLength(3);
+    expect(addEvents(items, () => 'new')).toHaveLength(0);
   });
 });
 
