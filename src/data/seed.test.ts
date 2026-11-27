@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
 import type { Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
@@ -324,6 +324,17 @@ describe('event budgets from the decisions', () => {
       return i;
     });
     expect(estimateEventBudgets(older).map((i) => [i.title, i.budgetPlanned])).toEqual([['DMEA', 2500], ['GIRP PharmaConnect 2027', 4000]]);
+  });
+});
+
+describe('visits re-estimated', () => {
+  it('moves a visit still at the earlier estimate to the new one and leaves entered amounts', () => {
+    let n = 0;
+    const { items } = buildSeed(() => `id${n++}`);
+    const visit = (title: string, budgetPlanned: number) => ({ ...items.find((i) => i.title === title)!, participation: 'bezoeker' as const, budgetPlanned });
+    const older = [visit('Cann-Reg 2027', 3500), visit('DMEA', 2500), { ...visit('Cann-Reg 2027', 3000), id: 'edited' }];
+    expect(reestimateVisits(older).map((i) => [i.id, i.budgetPlanned])).toEqual([[older[0].id, 2500]]);
+    expect(reestimateVisits(reestimateVisits(older))).toEqual([]);
   });
 });
 

@@ -52,19 +52,27 @@ export function autoBudgetLine(item: Pick<Item, 'type' | 'channel' | 'participat
 }
 
 /** Within reach by train or car from Belgium. */
-const NEARBY = ['BE', 'NL', 'LU', 'FR', 'DE'];
+/** Where Medipim is based: visiting an event there needs no hotel or allowance. */
+const HOME = 'BE';
+const NEARBY = ['NL', 'LU', 'FR', 'DE'];
 const EUROPE = ['AT', 'CH', 'GB', 'IE', 'ES', 'PT', 'IT', 'MT', 'GR', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'RO', 'BG', 'DK', 'SE', 'NO', 'FI', 'EE', 'LV', 'LT'];
-type Region = 'nearby' | 'europe' | 'far';
+type Region = 'home' | 'nearby' | 'europe' | 'far';
 const regionOf = (countries: string[]): Region =>
-  countries.some((c) => !NEARBY.includes(c) && !EUROPE.includes(c)) ? 'far' : countries.some((c) => EUROPE.includes(c)) ? 'europe' : 'nearby';
+  countries.some((c) => c !== HOME && !NEARBY.includes(c) && !EUROPE.includes(c)) ? 'far'
+    : countries.some((c) => EUROPE.includes(c)) ? 'europe'
+      : countries.includes(HOME) && !countries.some((c) => NEARBY.includes(c)) ? 'home'
+        : 'nearby';
 
 /** Assumptions behind the estimates, euro excl. btw. */
 export const ESTIMATE = {
   /** Stand, build, materials, travel and stay for the team. */
-  exhibitor: { nearby: 20000, europe: 20000, far: 30000 },
+  exhibitor: { home: 20000, nearby: 20000, europe: 20000, far: 30000 },
   visitors: 2,
   ticket: { Beurs: 150, Conferentie: 900, Congres: 900, Netwerkevent: 600 } as Record<string, number>,
-  travel: { nearby: 250, europe: 450, far: 1500 },
+  /** Published ticket prices per event title, overriding the price per kind of event. */
+  ticketFor: { 'Cann-Reg 2027': 1100 } as Record<string, number>,
+  /** Per person, there and back; at home a train ticket or parking. */
+  travel: { home: 50, nearby: 250, europe: 450, far: 1500 },
   hotelPerNight: 220,
   allowancePerDay: 60,
   /** LinkedIn ads around an event we do not attend. */
@@ -74,20 +82,20 @@ export const ESTIMATE = {
 const roundUp = (n: number) => Math.ceil(n / 500) * 500;
 
 /**
- * Estimated cost of an event following from the decision: a stand as exhibitor, ticket, travel and stay for two as visitor,
- * ads as campaign. Undecided and not going cost nothing.
+ * Estimated cost of an event following from the decision: a stand as exhibitor, ticket, travel and stay for two as visitor
+ * (no stay at home), ads as campaign. Undecided and not going cost nothing.
  */
-export function eventEstimate(item: Pick<Item, 'type' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate'>): number | undefined {
+export function eventEstimate(item: Pick<Item, 'type' | 'title' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate'>): number | undefined {
   if (item.type !== 'event') return undefined;
   const region = regionOf(item.countries);
   switch (item.participation) {
     case 'exposant':
       return ESTIMATE.exhibitor[region];
     case 'bezoeker': {
-      const days = daysBetween(item.date, item.endDate ?? item.date) + 1;
+      const days = region === 'home' ? 0 : daysBetween(item.date, item.endDate ?? item.date) + 1;
       const nights = days + (region === 'far' ? 1 : 0);
-      const perPerson = (ESTIMATE.ticket[item.channel] ?? ESTIMATE.ticket.Conferentie) + ESTIMATE.travel[region]
-        + nights * ESTIMATE.hotelPerNight + days * ESTIMATE.allowancePerDay;
+      const ticket = ESTIMATE.ticketFor[item.title] ?? ESTIMATE.ticket[item.channel] ?? ESTIMATE.ticket.Conferentie;
+      const perPerson = ticket + ESTIMATE.travel[region] + nights * ESTIMATE.hotelPerNight + days * ESTIMATE.allowancePerDay;
       return roundUp(ESTIMATE.visitors * perPerson);
     }
     case 'campagne':
@@ -98,7 +106,7 @@ export function eventEstimate(item: Pick<Item, 'type' | 'participation' | 'count
 }
 
 /** The event with a new decision; a planned amount nobody changed by hand follows the estimate for that decision. */
-export function withParticipation<T extends Pick<Item, 'type' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate' | 'budgetPlanned'>>(item: T, participation: Item['participation']): T {
+export function withParticipation<T extends Pick<Item, 'type' | 'title' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate' | 'budgetPlanned'>>(item: T, participation: Item['participation']): T {
   const untouched = item.budgetPlanned == null || item.budgetPlanned === eventEstimate(item);
   const next = { ...item, participation };
   return untouched ? { ...next, budgetPlanned: eventEstimate(next) } : next;

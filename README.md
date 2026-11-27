@@ -89,7 +89,9 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   profiles (overige, 2025); Tsjechië nog uit de analyse van 2023.
   De beslissing bij een beurs bepaalt een ingeschat bedrag (`eventEstimate` in
   `src/data/budget.ts`): als exposant € 20.000 in Europa en € 30.000 daarbuiten; als bezoeker
-  ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur;
+  ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur
+  (in België alleen ticket en € 50 trein of parking per persoon; bekende ticketprijzen per event,
+  zoals Cann-Reg 2027 aan € 1.100, gaan voor);
   "campagne" € 2.500 LinkedIn-advertenties. Wie de beslissing wijzigt, krijgt het nieuwe bedrag,
   tenzij iemand het bedrag zelf aanpaste. Op World Health Expo Dubai en Pharmacy Connect gaat
   iemand van Medipim mee met Meditech: bezoeker, budgetneutraal (€ 0), met de posts en
