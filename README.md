@@ -188,10 +188,11 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 ```
 server/
   index.mjs          serveert dist/ achter basic auth en /api/impact/*
-  google.mjs         Search Console en GA4 (nog niet gekoppeld)
+  google.mjs         Search Console en GA4 via een OAuth-client met leesrechten
   teamleader.mjs     deals uit Teamleader, met het roterende refresh token
 tools/
   teamleader-auth.mjs  Teamleader eenmalig autoriseren, token rechtstreeks naar Railway
+  google-auth.mjs      Google eenmalig autoriseren (leesrechten), token rechtstreeks naar Railway
 src/
   data/
     types.ts         Item, Todo, Budget, ContentPillar, ContentPiece, Dataset
@@ -243,15 +244,17 @@ De impactpagina gebruikt deze Railway-variabelen:
 |---|---|
 | `TEAMLEADER_CLIENT_ID`, `TEAMLEADER_CLIENT_SECRET` | De Teamleader-integratie van de website |
 | `TEAMLEADER_REFRESH_TOKEN` | Een eigen autorisatie, gezet door `node tools/teamleader-auth.mjs` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Desktop-client van het Google Cloud-project `medipim-marketing-machine` en een login met leesrechten op Search Console en Analytics, gezet door `node tools/google-auth.mjs <client JSON>` |
+| `GA4_PROPERTY_ID` | De GA4-property van www.medipim.com |
 
 Een Teamleader-refresh token werkt één keer; de server bewaart het volgende op het volume
 `/data` (`TOKEN_DIR`). Gebruik daarom nooit het token van de website of van een andere
-omgeving: na `teamleader-auth.mjs` hoort het alleen op Railway. Search Console en Google
-Analytics zijn nog niet gekoppeld: daarvoor is nog geen Google-login voor de server gekozen.
+omgeving: na `teamleader-auth.mjs` hoort het alleen op Railway. De Google-login hangt aan het
+account dat toestemming gaf en leest wat dat account in Search Console en Analytics mag zien.
 
 Lokaal: `npm run server` start de server op poort 8787 met de waarden uit `.env.local`
-(niet in git), en `npm run dev` stuurt `/api` daarheen. Voor Teamleader lokaal zet
-`teamleader-auth.mjs` een access token van een uur in `.env.local`.
+(niet in git), en `npm run dev` stuurt `/api` daarheen. Voor lokaal testen zetten
+`teamleader-auth.mjs` en `google-auth.mjs` een access token van een uur in `.env.local`.
 
 Gegevens blijven ook online lokaal per browser; collega's zien elkaars wijzigingen
 pas met een gedeelde database (zie hieronder).

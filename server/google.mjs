@@ -1,6 +1,6 @@
 /**
- * Search Console and Google Analytics (GA4). There is no Google login for the server yet, so both answer
- * "not connected" until `accessToken` gets one.
+ * Search Console and Google Analytics (GA4), read-only, through the OAuth client of the Google Cloud project
+ * medipim-marketing-machine and a refresh token from `tools/google-auth.mjs`.
  */
 const SITE = 'https://www.medipim.com/';
 
@@ -8,8 +8,22 @@ function notConfigured(what) {
   return Object.assign(new Error(`${what} is not connected`), { code: 'not_configured' });
 }
 
+let token = null;
+
 async function accessToken() {
-  throw notConfigured('Google');
+  if (process.env.GOOGLE_ACCESS_TOKEN) return process.env.GOOGLE_ACCESS_TOKEN;
+  if (token && token.expires > Date.now() + 60_000) return token.value;
+  const { GOOGLE_CLIENT_ID: id, GOOGLE_CLIENT_SECRET: secret, GOOGLE_REFRESH_TOKEN: refresh } = process.env;
+  if (!id || !secret || !refresh) throw notConfigured('Google');
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: refresh, grant_type: 'refresh_token' }),
+  });
+  const answer = await res.json().catch(() => ({}));
+  if (!res.ok || !answer.access_token) throw new Error(`Google token refresh answered ${res.status}: ${answer.error ?? ''}`);
+  token = { value: answer.access_token, expires: Date.now() + answer.expires_in * 1000 };
+  return token.value;
 }
 
 async function post(url, body) {
@@ -60,18 +74,8 @@ export async function searchConsole(from, to) {
   };
 }
 
-let property = null;
-
-/** The GA4 property: the first one the login can read. */
-async function ga4Property() {
-  if (property) return property;
-  const res = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', { headers: { Authorization: `Bearer ${await accessToken()}` } });
-  const answer = await res.json();
-  const found = (answer.accountSummaries ?? []).flatMap((a) => a.propertySummaries ?? [])[0];
-  if (!found) throw Object.assign(new Error('The Google login has no GA4 property'), { code: 'no_access' });
-  property = found.property.replace('properties/', '');
-  return property;
-}
+/** The GA4 property "Medipim - LIVE - GA4", the stream of www.medipim.com since 2021. */
+const ga4Property = () => process.env.GA4_PROPERTY_ID ?? '38716622';
 
 async function report(id, from, to, dimensions, metrics, limit) {
   const answer = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${id}:runReport`, {
@@ -89,7 +93,7 @@ async function report(id, from, to, dimensions, metrics, limit) {
 const METRICS = ['sessions', 'totalUsers', 'keyEvents'];
 
 export async function analytics(from, to) {
-  const id = await ga4Property();
+  const id = ga4Property();
   const before = previousPeriod(from, to);
   const [days, total, totalBefore, channels, pages, countries] = await Promise.all([
     report(id, from, to, ['date'], METRICS),
