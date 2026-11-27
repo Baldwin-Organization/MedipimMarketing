@@ -82,3 +82,6 @@ export const UX_LAUNCH_EN = 'New UX Belgian platform';
 
 export const TENTATIVE_EN = '(date to be confirmed)';
 export const RELEVANCE_EN = 'Relevance for Medipim';
+/** The note an earlier seed update wrote, when these events were still marked as not attended. */
+export const VIA_MEDITECH_EN_BEFORE = 'Decision: budget-neutral for Medipim, Meditech attends.';
+export const VIA_MEDITECH_EN = 'Decision: someone from Medipim attends together with Meditech, budget-neutral for Medipim.';

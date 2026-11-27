@@ -75,7 +75,25 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   in het formulier kun je een andere post kiezen. Bedragen die onder geen post vallen, staan
   apart als "Niet toegewezen". Met opsplitsing per kwartaal, doelgroep en markt (bestaand of
   nieuw) en de grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum. Het
-  budget 2027 (€ 189.294) zit in de startinhoud.
+  budget 2027 (€ 189.294) zit in de startinhoud. Bij elk item in de budgettabel staan de
+  doelgroepen en landen; een item zonder land valt op, want zijn kosten tellen voor geen enkel
+  land. De kaart "Per land" zet per land het geplande en bestede bedrag naast de omzet van vorig
+  jaar en de omzettarget van het gekozen jaar, met de groei en marketing als aandeel van de
+  target. Omzet en target vul je daar per land in (`MarketRevenue`, één record per jaar en land).
+  De omzet 2024–2026 en de targets 2027–2029 van het budgetoverzicht van november 2026 zitten in
+  de startinhoud. Naast elk land staat zijn potentieel en welk % daarvan de omzet en de target
+  halen (`src/data/potential.ts`): aantal apotheken × potentieel per apotheek, afgeleid van
+  België (omzet ÷ apotheken ÷ 90%) en geïndexeerd zoals de targets. Apotheekcijfers: SIRIUS
+  Insight (BE, jan 2026), Ordre des pharmaciens (FR, jan 2026), ABDA (DE, sep 2026), Christie &
+  Co (GB, mrt 2026), Pharmacy Guild (AU, jun 2025), NCPA/IQVIA (US, jul 2026), PGEU country
+  profiles (overige, 2025); Tsjechië nog uit de analyse van 2023.
+  De beslissing bij een beurs bepaalt een ingeschat bedrag (`eventEstimate` in
+  `src/data/budget.ts`): als exposant € 20.000 in Europa en € 30.000 daarbuiten; als bezoeker
+  ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur;
+  "campagne" € 2.500 LinkedIn-advertenties. Wie de beslissing wijzigt, krijgt het nieuwe bedrag,
+  tenzij iemand het bedrag zelf aanpaste. Op World Health Expo Dubai en Pharmacy Connect gaat
+  iemand van Medipim mee met Meditech: bezoeker, budgetneutraal (€ 0), met de posts en
+  voorbereiding van een bezoek.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
@@ -14,9 +14,9 @@ describe('event participation', () => {
     const exhibiting = events.filter((e) => e.participation === 'exposant');
     expect(exhibiting.map((e) => e.title).sort()).toEqual(['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']);
     expect(exhibiting.every((e) => e.status === 'gepland' && e.budgetPlanned === EXHIBITOR_BUDGET)).toBe(true);
-    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['GIRP PharmaConnect 2027', 'gepland']]);
-    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 4);
-    expect(events.filter((e) => e.budgetPlanned != null)).toHaveLength(3);
+    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['World Health Expo Dubai', 'gepland'], ['GIRP PharmaConnect 2027', 'gepland'], ['Pharmacy Connect', 'gepland']]);
+    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 6);
+    expect(events.filter((e) => e.budgetPlanned)).toHaveLength(4);
   });
 
   it('updates existing data that predates the decision, once', () => {
@@ -124,7 +124,7 @@ describe('budget plan and content mix', () => {
 
   it('adds them to existing data only where that part is still empty', () => {
     const { items, todos } = full();
-    const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [] };
+    const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [], revenues: [] };
     const changes = addBudgetAndContent(old);
     expect(changes.budgets).toHaveLength(9);
     expect(changes.pillars).toHaveLength(5);
@@ -152,12 +152,12 @@ describe('content ideas from the team', () => {
 });
 
 describe('events in the Gulf region', () => {
-  it('seeds DUPHAT, WHX and CPHI Middle East undecided, and adds them once to older data', () => {
+  it('seeds DUPHAT and CPHI Middle East undecided, WHX via Meditech, and adds them once to older data', () => {
     let n = 0;
     const { items } = buildSeed(() => `id${n++}`);
     const gulf = items.filter((i) => ['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'].includes(i.title));
     expect(gulf.map((i) => [i.title, i.countries, i.participation, i.status])).toEqual([
-      ['World Health Expo Dubai', ['AE'], undefined, 'idee'],
+      ['World Health Expo Dubai', ['AE'], 'bezoeker', 'gepland'],
       ['DUPHAT 2027', ['AE'], undefined, 'idee'],
       ['CPHI Middle East', ['SA'], undefined, 'idee'],
     ]);
@@ -174,7 +174,7 @@ describe('events in the Gulf region', () => {
       let n = 0;
       return () => `copy${n++}`;
     })());
-    expect(duplicateEvents([...events, ...copies], [])).toHaveLength(3);
+    expect(duplicateEvents([...events, ...copies], [])).toEqual(copies.filter((c) => !c.participation).map((c) => c.id));
     expect(duplicateEvents(events, [])).toHaveLength(0);
 
     const duphat = events.find((e) => e.title === 'DUPHAT 2027')!;
@@ -186,11 +186,11 @@ describe('events in the Gulf region', () => {
 });
 
 describe('Pharmacy Connect', () => {
-  it('seeds it undecided in Sydney, and adds only it once to older data', () => {
+  it('seeds it in Sydney, Meditech going, and adds only it once to older data', () => {
     let n = 0;
     const { items } = buildSeed(() => `id${n++}`);
     const pc = items.find((i) => i.title === 'Pharmacy Connect')!;
-    expect([pc.date, pc.endDate, pc.countries, pc.participation, pc.status]).toEqual(['2027-09-07', '2027-09-09', ['AU'], undefined, 'idee']);
+    expect([pc.date, pc.endDate, pc.countries, pc.participation, pc.status]).toEqual(['2027-09-07', '2027-09-09', ['AU'], 'bezoeker', 'gepland']);
     expect(pc.translations?.en?.location).toBe('Sydney, Australia');
 
     const old = items.filter((i) => i !== pc);
@@ -296,5 +296,71 @@ describe('start in the week of 14 December 2026', () => {
     expect(changes.todos).toHaveLength(6);
     expect(changes.deleteItems).toEqual(['follow-up']);
     expect(changes.content!.map((p) => [p.id, p.month, p.status])).toEqual([['content-ux-launch', '2026-12', 'klaar'], ['content-ux-tour', undefined, 'idee']]);
+  });
+});
+
+describe('event budgets from the decisions', () => {
+  it('gives every attended event an amount, and fills older data without touching entered amounts', () => {
+    let n = 0;
+    const { items } = buildSeed(() => `id${n++}`);
+    const attended = items.filter((i) => i.type === 'event' && (i.participation === 'exposant' || i.participation === 'bezoeker'));
+    expect(attended.map((i) => [i.title, i.budgetPlanned])).toEqual([
+      ['World Health Expo Dubai', 0],
+      ['PharmagoraPlus', 20000],
+      ['GIRP PharmaConnect 2027', 4000],
+      ['Pharmacy Connect', 0],
+      ['Expopharm', 20000],
+      ['The Pharmacy Show', 20000],
+    ]);
+    expect(estimateEventBudgets(items)).toEqual([]);
+
+    const older = items.map((i) => {
+      if (i.title === 'GIRP PharmaConnect 2027') return { ...i, budgetPlanned: undefined };
+      if (i.title === 'DMEA') return { ...i, participation: 'bezoeker' as const };
+      if (i.title === 'CPHI China') return { ...i, participation: 'campagne' as const, budgetActual: 800 };
+      if (i.title === 'Infarma') return { ...i, participation: 'geen' as const };
+      return i;
+    });
+    expect(estimateEventBudgets(older).map((i) => [i.title, i.budgetPlanned])).toEqual([['DMEA', 2500], ['GIRP PharmaConnect 2027', 4000]]);
+  });
+});
+
+describe('events Meditech attends', () => {
+  it('are visits at no cost to Medipim, with the visitor plan, also in older data unless someone decided already', () => {
+    let n = 0;
+    const { items, todos } = buildSeed(() => `id${n++}`);
+    const via = items.filter((i) => ['World Health Expo Dubai', 'Pharmacy Connect'].includes(i.title));
+    expect(via.map((i) => [i.participation, i.budgetPlanned, i.status])).toEqual([['bezoeker', 0, 'gepland'], ['bezoeker', 0, 'gepland']]);
+    expect(via.every((i) => i.description.endsWith('budgetneutraal voor Medipim.') && i.translations?.en?.description?.endsWith('budget-neutral for Medipim.'))).toBe(true);
+    expect(via.every((i) => todos.some((t) => t.itemId === i.id))).toBe(true);
+    expect(estimateEventBudgets(via)).toEqual([]);
+
+    const older = via.map(({ participation: _, budgetPlanned: _b, ...i }, k) => ({ ...i, status: 'idee' as const, ...(k === 1 && { participation: 'exposant' as const }) }));
+    expect(markViaMeditech(older).map((i) => i.title)).toEqual(['World Health Expo Dubai']);
+  });
+
+  it('turns the earlier "not going" into a visit with its posts and preparation, once', () => {
+    let n = 0;
+    const data = buildSeed(() => `id${n++}`);
+    const ids = new Set(data.items.filter((i) => ['World Health Expo Dubai', 'Pharmacy Connect'].includes(i.title)).map((i) => i.id));
+    const before = {
+      items: data.items
+        .filter((i) => !(ids.has(i.id) ? false : ['World Health Expo Dubai', 'Pharmacy Connect'].includes(i.campaign)))
+        .map((i) => (ids.has(i.id) ? {
+          ...i,
+          participation: 'geen' as const,
+          description: i.description.replace(/Beslissing: .*$/, 'Beslissing: budgetneutraal voor Medipim, Meditech gaat.'),
+          translations: { en: { ...i.translations?.en, description: i.translations?.en?.description?.replace(/Decision: .*$/, 'Decision: budget-neutral for Medipim, Meditech attends.') } },
+        } : i)),
+      todos: data.todos.filter((t) => !ids.has(t.itemId) && !data.items.some((i) => i.id === t.itemId && ['World Health Expo Dubai', 'Pharmacy Connect'].includes(i.campaign))),
+    };
+    let m = 0;
+    const changes = meditechAttends(before, () => `m${m++}`);
+    const events = changes.items.filter((i) => ids.has(i.id));
+    expect(events.map((i) => [i.participation, i.budgetPlanned])).toEqual([['bezoeker', 0], ['bezoeker', 0]]);
+    expect(events.every((i) => i.description.endsWith('budgetneutraal voor Medipim.') && i.translations?.en?.description?.endsWith('budget-neutral for Medipim.'))).toBe(true);
+    expect(changes.items.filter((i) => i.type === 'social').map((i) => i.campaign).sort()).toEqual(['Pharmacy Connect', 'Pharmacy Connect', 'World Health Expo Dubai', 'World Health Expo Dubai']);
+    expect(changes.todos.every((t) => t.dueDate >= '2026-12-14')).toBe(true);
+    expect(meditechAttends({ items: [...before.items.filter((i) => !ids.has(i.id)), ...changes.items], todos: [...before.todos, ...changes.todos] }, () => 'x')).toEqual({ items: [], todos: [] });
   });
 });

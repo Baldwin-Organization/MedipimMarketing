@@ -1,6 +1,7 @@
 import { daysBetween, fromIso, shiftIso } from './dates';
 import type { Contents } from './repository';
 import { todosFromTemplate } from './schedule';
+import { WEEKLY_FROM } from './seed-weekly';
 import type { Item, ItemType, Todo } from './types';
 
 interface Text { nl: string; en: string }
@@ -129,7 +130,8 @@ function planEvent(event: Item, makeId: () => string, now: string): { items: Ite
   });
   const todos: Todo[] = [
     ...(exhibiting ? EXHIBITOR_TODOS : VISITOR_TODOS).map((t) => {
-      const dueDate = dayOf(event, t.offset, t.from);
+      const day = dayOf(event, t.offset, t.from);
+      const dueDate = day < WEEKLY_FROM ? WEEKLY_FROM : day;
       return { id: makeId(), itemId: event.id, title: t.nl, dueDate, done: false, offsetDays: daysBetween(event.date, dueDate), translations: { en: { title: t.en } } };
     }),
     ...items.flatMap((i) => todosFromTemplate(i, makeId)),

@@ -1,8 +1,8 @@
 import { t } from '../i18n';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Budget, ContentPiece, ContentPillar, Dataset, Item, Todo } from './types';
+import type { Budget, ContentPiece, ContentPillar, Dataset, Item, MarketRevenue, Todo } from './types';
 
-export interface Contents { items: Item[]; todos: Todo[]; budgets: Budget[]; pillars: ContentPillar[]; content: ContentPiece[] }
+export interface Contents { items: Item[]; todos: Todo[]; budgets: Budget[]; pillars: ContentPillar[]; content: ContentPiece[]; revenues: MarketRevenue[] }
 
 /**
  * The only seam between the app and storage. Swap `IndexedDbRepository` for an API-backed
@@ -19,6 +19,7 @@ export interface Repository {
   deletePillar(id: string): Promise<void>;
   saveContent(pieces: ContentPiece[]): Promise<void>;
   deleteContent(id: string): Promise<void>;
+  saveRevenues(revenues: MarketRevenue[]): Promise<void>;
   replaceAll(data: Contents): Promise<void>;
   isEmpty(): Promise<boolean>;
 }
@@ -29,6 +30,7 @@ interface CalendarDb extends DBSchema {
   budgets: { key: string; value: Budget };
   pillars: { key: string; value: ContentPillar };
   content: { key: string; value: ContentPiece };
+  revenues: { key: string; value: MarketRevenue };
 }
 
 const DB_NAME = 'medipim-marketing-calendar-v2';
@@ -38,7 +40,7 @@ export class IndexedDbRepository implements Repository {
 
   /** `onBlocked` runs while a tab with an older version keeps the database open and the upgrade waits. */
   constructor(name = DB_NAME, onBlocked?: () => void) {
-    this.db = openDB<CalendarDb>(name, 3, {
+    this.db = openDB<CalendarDb>(name, 4, {
       blocked: () => onBlocked?.(),
       // Tabs that never get the upgrade signal hang every newer version, so make way and load it.
       blocking: () => location.reload(),
@@ -53,16 +55,17 @@ export class IndexedDbRepository implements Repository {
           db.createObjectStore('pillars', { keyPath: 'id' });
           db.createObjectStore('content', { keyPath: 'id' });
         }
+        if (oldVersion < 4) db.createObjectStore('revenues', { keyPath: 'id' });
       },
     });
   }
 
   async load() {
     const db = await this.db;
-    const [items, todos, budgets, pillars, content] = await Promise.all([
-      db.getAll('items'), db.getAll('todos'), db.getAll('budgets'), db.getAll('pillars'), db.getAll('content'),
+    const [items, todos, budgets, pillars, content, revenues] = await Promise.all([
+      db.getAll('items'), db.getAll('todos'), db.getAll('budgets'), db.getAll('pillars'), db.getAll('content'), db.getAll('revenues'),
     ]);
-    return { items: items.map(normalizeItem), todos, budgets: budgets.filter(isLineBudget), pillars, content };
+    return { items: items.map(normalizeItem), todos, budgets: budgets.filter(isLineBudget), pillars, content, revenues };
   }
 
   async isEmpty() {
@@ -99,7 +102,11 @@ export class IndexedDbRepository implements Repository {
     await (await this.db).delete('content', id);
   }
 
-  private async putAll<S extends 'budgets' | 'pillars' | 'content'>(store: S, values: CalendarDb[S]['value'][]) {
+  async saveRevenues(revenues: MarketRevenue[]) {
+    await this.putAll('revenues', revenues);
+  }
+
+  private async putAll<S extends 'budgets' | 'pillars' | 'content' | 'revenues'>(store: S, values: CalendarDb[S]['value'][]) {
     const tx = (await this.db).transaction(store, 'readwrite');
     await Promise.all([...values.map((v) => tx.store.put(v)), tx.done]);
   }
@@ -119,16 +126,18 @@ export class IndexedDbRepository implements Repository {
     ]);
   }
 
-  async replaceAll({ items, todos, budgets, pillars, content }: Contents) {
+  async replaceAll({ items, todos, budgets, pillars, content, revenues }: Contents) {
     const db = await this.db;
-    const tx = db.transaction(['items', 'todos', 'budgets', 'pillars', 'content'], 'readwrite');
-    await Promise.all(['items', 'todos', 'budgets', 'pillars', 'content'].map((s) => tx.objectStore(s as 'items').clear()));
+    const stores = ['items', 'todos', 'budgets', 'pillars', 'content', 'revenues'] as const;
+    const tx = db.transaction(stores, 'readwrite');
+    await Promise.all(stores.map((s) => tx.objectStore(s).clear()));
     await Promise.all([
       ...items.map((i) => tx.objectStore('items').put(i)),
       ...todos.map((t) => tx.objectStore('todos').put(t)),
       ...budgets.map((b) => tx.objectStore('budgets').put(b)),
       ...pillars.map((p) => tx.objectStore('pillars').put(p)),
       ...content.map((c) => tx.objectStore('content').put(c)),
+      ...revenues.map((r) => tx.objectStore('revenues').put(r)),
       tx.done,
     ]);
   }
@@ -137,8 +146,8 @@ export class IndexedDbRepository implements Repository {
 /** Budgets were set per item type before budget lines existed; those records no longer apply. */
 const isLineBudget = (b: Budget) => typeof b.line === 'string';
 
-export function toDataset({ items, todos, budgets, pillars, content }: Contents): Dataset {
-  return { version: 1, exportedAt: new Date().toISOString(), items, todos, budgets, pillars, content };
+export function toDataset({ items, todos, budgets, pillars, content, revenues }: Contents): Dataset {
+  return { version: 1, exportedAt: new Date().toISOString(), items, todos, budgets, pillars, content, revenues };
 }
 
 /** Fills the dimension fields for items stored or exported before they existed. */
@@ -157,6 +166,7 @@ export function parseDataset(json: string): Dataset & Contents {
     budgets: (data.budgets ?? []).filter(isLineBudget),
     pillars: data.pillars ?? [],
     content: data.content ?? [],
+    revenues: data.revenues ?? [],
   };
 }
 
