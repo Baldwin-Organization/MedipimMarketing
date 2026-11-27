@@ -103,7 +103,9 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   Pipeline (zo zie je ook de geplande demo's), per bron en per week, met een waarschuwing
   voor deals zonder bron. Uit Google Search Console klikken, vertoningen, doorklikratio en
   gemiddelde positie, met de zoekopdrachten en hoe hun positie veranderde. Uit Google
-  Analytics sessies, gebruikers en conversies, per kanaal, land en landingspagina. Alles
+  Analytics sessies, gebruikers en conversies, per kanaal, land en landingspagina. Uit Google
+  Ads, via de koppeling met GA4, kosten, klikken, vertoningen en kosten per klik, met per
+  campagne de sessies en conversies die ze opleverde. Alles
   tegenover de periode ervoor. Onder de grafieken per dag staan de mails, campagnes,
   beurzen, PR en calls uit de planner op hun startdag. De cijfers komen van de server
   (`server/`), zodat geen sleutel in de browser komt.
@@ -188,7 +190,7 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 ```
 server/
   index.mjs          serveert dist/ achter basic auth en /api/impact/*
-  google.mjs         Search Console en GA4 via een OAuth-client met leesrechten
+  google.mjs         Search Console, GA4 en Google Ads (via GA4) met een OAuth-client met leesrechten
   teamleader.mjs     deals uit Teamleader, met het roterende refresh token
 tools/
   teamleader-auth.mjs  Teamleader eenmalig autoriseren, token rechtstreeks naar Railway
