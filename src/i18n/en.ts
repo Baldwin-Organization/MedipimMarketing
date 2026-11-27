@@ -385,6 +385,11 @@ export const en: Dict = {
     website: 'Website',
     plan: 'Plan a publication',
     plannedFor: (n) => (n === 1 ? '1 item planned' : `${n} items planned`),
+    reach: 'Reach',
+    readers: 'Readers',
+    rates: 'Rates',
+    sources: 'Sources',
+    checked: (month) => `Figures as the publisher reports them, looked up in ${month}.`,
   },
 
   content: {

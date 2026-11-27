@@ -335,6 +335,11 @@ export const nl = {
     website: 'Website',
     plan: 'Publicatie plannen',
     plannedFor: (n: number) => (n === 1 ? '1 item gepland' : `${n} items gepland`),
+    reach: 'Bereik',
+    readers: 'Lezers',
+    rates: 'Tarieven',
+    sources: 'Bronnen',
+    checked: (month: string) => `Cijfers volgens de uitgever, opgezocht in ${month}.`,
   },
 
   content: {

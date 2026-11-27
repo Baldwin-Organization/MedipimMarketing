@@ -3,7 +3,7 @@ import { PlanTable } from '../components/PlanTable';
 import { Button, EmptyState, Icon, Pill, Segmented, Stat } from '../components/ui';
 import { euro, yearOf } from '../data/budget';
 import { fmt } from '../data/dates';
-import { TRADE_MEDIA, type MediaPriority } from '../data/media';
+import { TRADE_MEDIA, isInMedium, type MediaPriority } from '../data/media';
 import { CHANNELS } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
@@ -91,7 +91,7 @@ function MediaShortlist({ items }: { items: Item[] }) {
       </div>
       <ul className="mc-media-grid">
         {TRADE_MEDIA.map((m) => {
-          const planned = items.filter((i) => i.medium === m.medium).length;
+          const planned = items.filter((i) => isInMedium(m, i.medium)).length;
           return (
             <li key={m.medium} className="mc-card mc-media-card">
               <header className="mc-media-head">
@@ -102,7 +102,32 @@ function MediaShortlist({ items }: { items: Item[] }) {
                 <Pill tone={PRIORITY_TONE[m.priority]}>{t.pr.priority[m.priority]}</Pill>
               </header>
               <p className="mc-media-text">{m.assessment[lang]}</p>
+              <section className="mc-media-section" aria-label={`${t.pr.reach}: ${m.medium}`}>
+                <h4>{t.pr.reach}</h4>
+                <dl className="mc-media-facts">
+                  {m.reach.map((f) => (
+                    <div key={f.label.nl}>
+                      <dt>{f.label[lang]}</dt>
+                      <dd>{f.value[lang]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+              <section className="mc-media-section">
+                <h4>{t.pr.readers}</h4>
+                <p className="mc-media-text">{m.readers[lang]}</p>
+              </section>
+              {m.rates && <p className="mc-media-text"><strong>{t.pr.rates}:</strong> {m.rates[lang]}</p>}
               {m.ask && <p className="mc-media-text"><strong>{t.pr.ask}:</strong> {m.ask[lang]}</p>}
+              <p className="mc-muted">
+                {t.pr.checked(fmt(`${m.checked}-01`, 'MMMM yyyy'))} {t.pr.sources}:{' '}
+                {m.sources.map((s, i) => (
+                  <span key={s.url}>
+                    {i > 0 && ', '}
+                    <a className="mc-card-link" href={s.url} target="_blank" rel="noreferrer">{s.label[lang]}</a>
+                  </span>
+                ))}
+              </p>
               <footer className="mc-media-foot">
                 <a className="mc-card-link mc-media-link" href={m.url} target="_blank" rel="noreferrer" title={m.url} aria-label={`${t.pr.website}: ${m.medium}`}>{t.pr.website}<Icon name="open_in_new" size={14} /></a>
                 {planned > 0 && <span className="mc-muted">{t.pr.plannedFor(planned)}</span>}
