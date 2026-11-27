@@ -34,11 +34,11 @@ export const SEED_PILLARS: ContentPillar[] = [
   {
     id: 'pillar-data',
     name: 'Data & expertise',
-    description: 'Kwaliteit van productdata, standaarden zoals GS1 en SNOMED, regelgeving en marktinzichten uit Medimapper.',
+    description: 'Kwaliteit van productdata, standaarden zoals GS1 en SNOMED, regelgeving en marktinzichten.',
     target: 25,
     accent: '6',
     order: 1,
-    translations: { en: { name: 'Data & expertise', description: 'Product data quality, standards such as GS1 and SNOMED, regulation and market insights from Medimapper.' } },
+    translations: { en: { name: 'Data & expertise', description: 'Product data quality, standards such as GS1 and SNOMED, regulation and market insights.' } },
   },
   {
     id: 'pillar-customers',
@@ -99,7 +99,7 @@ const PIECES: SeedPiece[] = [
 
   // Data & expertise
   { id: 'content-why-data', pillar: 'pillar-data', format: 'video', month: '2027-01', audiences: PHARMACISTS, title: 'Medipim Academy: tijdelijk onbeschikbaar of einde commercialisatie?', description: 'Video over beschikbaarheid: waar je ziet of een product tijdelijk onbeschikbaar is of uit de handel gaat, en waarom. De info komt van Farmastatus (FAGG), die ze van de firma\'s krijgt; kijk dus altijd ook je eigen stock of je groothandel na.', en: { title: 'Medipim Academy: temporarily unavailable or discontinued?', description: 'Video on availability: where you see whether a product is temporarily unavailable or being discontinued, and why. The information comes from Farmastatus (FAMHP), which gets it from the companies, so always check your own stock or your wholesaler too.' } },
-  { id: 'content-medimapper-numbers', pillar: 'pillar-data', format: 'infographic', month: '2027-02', audiences: INDUSTRY, title: 'Medimapper: de Europese markt in cijfers', description: 'Visual met kerncijfers uit Medimapper: aantal producten, landen en verschillen tussen markten.', en: { title: 'Medimapper: the European market in numbers', description: 'Visual with key figures from Medimapper: number of products, countries and differences between markets.' } },
+  { id: 'content-medimapper-numbers', pillar: 'pillar-data', format: 'infographic', month: '2027-02', audiences: INDUSTRY, title: 'Medipim in Europa: verschillen tussen markten in cijfers', description: 'Visual met kerncijfers uit Medipim: aantal producten per land en verschillen tussen markten.', en: { title: 'Medipim in Europe: differences between markets in numbers', description: 'Visual with key figures from Medipim: number of products per country and differences between markets.' } },
   { id: 'content-webinar-manufacturers', pillar: 'pillar-data', format: 'webinar', month: '2027-04', audiences: ['producenten'], title: 'Webinar: productdata aanleveren als fabrikant', description: 'Praktisch webinar voor fabrikanten: hoe lever je volledige en correcte productdata aan, en wat levert het op.', en: { title: 'Webinar: supplying product data as a manufacturer', description: 'Practical webinar for manufacturers: how to supply complete and correct product data, and what it brings.' } },
   { id: 'content-gs1-whitepaper', pillar: 'pillar-data', format: 'whitepaper', month: '2027-05', audiences: INDUSTRY, title: 'Whitepaper: GS1-standaarden en productdata in de farmaketen', description: 'Hoe standaarden de uitwisseling van productdata tussen fabrikant, groothandel en apotheek vereenvoudigen. Klaar voor GS1 Connect.', en: { title: 'Whitepaper: GS1 standards and product data in the pharma supply chain', description: 'How standards simplify the exchange of product data between manufacturer, wholesaler and pharmacy. Ready for GS1 Connect.' } },
 

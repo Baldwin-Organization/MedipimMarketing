@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, removeMedimapper } from './seed';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -233,5 +233,30 @@ describe('Google retargeting campaign', () => {
     const added = addRetargeting(old);
     expect(added.items).toHaveLength(1);
     expect(added.todos!.every((t) => t.itemId === added.items![0].id)).toBe(true);
+  });
+});
+
+describe('Medipim only', () => {
+  it('seeds no Medimapper anywhere, and rewrites it to Medipim in older data', () => {
+    let n = 0;
+    const data = buildSeed(() => `id${n++}`);
+    expect(JSON.stringify(data)).not.toMatch(/Medimapper/);
+
+    const piece = data.content.find((p) => p.id === 'content-medimapper-numbers')!;
+    const pillar = data.pillars.find((p) => p.id === 'pillar-data')!;
+    const todo = data.todos[0];
+    const old = {
+      items: [{ ...data.items[0], description: 'Uitnodiging om af te spreken over Medimapper en grensoverschrijdende productdata.' }],
+      todos: [{ ...todo, title: 'Medimapper-demo en one-pager klaarzetten', translations: { en: { title: 'Prepare the Medimapper demo and one-pager' } } }],
+      content: [{ ...piece, title: 'Medimapper: de Europese markt in cijfers', translations: { en: { title: 'Medimapper: the European market in numbers' } } }],
+      pillars: [{ ...pillar, description: 'Kwaliteit van productdata, standaarden zoals GS1 en SNOMED, regelgeving en marktinzichten uit Medimapper.' }],
+    };
+    const changes = removeMedimapper(old);
+    expect(JSON.stringify(changes)).not.toMatch(/Medimapper/);
+    expect(changes.items?.[0].description).toBe('Uitnodiging om af te spreken over Medipim en grensoverschrijdende productdata.');
+    expect([changes.todos?.[0].title, changes.todos?.[0].translations?.en?.title]).toEqual(['Medipim-demo en one-pager klaarzetten', 'Prepare the Medipim demo and one-pager']);
+    expect([changes.content?.[0].title, changes.content?.[0].translations?.en?.title]).toEqual([piece.title, piece.translations?.en?.title]);
+    expect(changes.pillars?.[0].description).toBe(pillar.description);
+    expect(removeMedimapper(data)).toEqual({ items: [], todos: [], content: [], pillars: [] });
   });
 });

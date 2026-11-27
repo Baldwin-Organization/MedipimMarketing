@@ -76,7 +76,7 @@ const EVENTS: SeedEvent[] = [
   // Mei 2027
   { title: 'Vital Annual Conference', date: '2027-05-02', location: 'Québec City, Canada', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Hoog voor Canadese distributiecontacten', description: 'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.' },
   { title: 'CSHP Professional Practice Conference', date: '2027-05-07', endDate: '2027-05-09', location: 'Toronto, Canada', channel: 'Congres', audiences: ZIEKENHUIZEN, relevance: 'Middel', description: 'Canadees congres voor ziekenhuisapothekers. Relevant als Medipim ziekenhuisfarmacie of institutionele medicatiegegevens wil verkennen.' },
-  { title: 'GIRP PharmaConnect 2027', date: '2027-05-19', endDate: '2027-05-20', location: 'Sofia, Bulgarije', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Zeer hoog voor Europese groothandels', description: 'GIRP brengt groothandels, fabrikanten en andere Europese supplychainpartijen samen. Inhoudelijk een bijzonder sterke gelegenheid om Medimapper te positioneren rond grensoverschrijdende productdata en marktvergelijking.' },
+  { title: 'GIRP PharmaConnect 2027', date: '2027-05-19', endDate: '2027-05-20', location: 'Sofia, Bulgarije', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Zeer hoog voor Europese groothandels', description: 'GIRP brengt groothandels, fabrikanten en andere Europese supplychainpartijen samen. Inhoudelijk een bijzonder sterke gelegenheid om Medipim te positioneren rond grensoverschrijdende productdata en marktvergelijking.' },
   { title: 'Congresso Brasileiro da Cannabis Medicinal en Cannabis Fair', date: '2027-05-20', endDate: '2027-05-22', location: 'São Paulo, Brazilië', channel: 'Congres', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Combineert medische onderwerpen met een beurs voor de cannabiswaardeketen, waaronder farmaceutische industrie, technologie en distributie.' },
   { title: 'Florida Medical Cannabis Conference and Exhibition', date: '2027-05-21', endDate: '2027-05-23', location: 'Orlando, Verenigde Staten', channel: 'Conferentie', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Middel tot hoog voor cannabisdata', description: 'Gericht op bewijs, klinische toepassingen en medische professionals, met deelname van bedrijven uit de sector.' },
   { title: 'GS1 Connect', date: '2027-05-24', endDate: '2027-05-26', location: 'Denver, Verenigde Staten', channel: 'Conferentie', audiences: DATAPARTNERS, relevance: 'Hoog voor datastandaarden', description: 'Sterke inhoudelijke match rond productdatakwaliteit, masterdatabeheer, interoperabiliteit en traceerbaarheid, inclusief onderwerpen uit de geneesmiddelenketen.' },
@@ -108,7 +108,7 @@ const EVENTS: SeedEvent[] = [
   { title: 'Pharmanology', date: '2027-10-12', tentative: true, location: 'Antwerpen, België', channel: 'Beurs', audiences: APOTHEKERS, relevance: 'Hoog', description: 'Apothekers en hun partners ontmoeten elkaar rond innovatie en praktijkwerking. Goede Belgische gelegenheid voor software- en leverancierscontacten.' },
   { title: 'SNOMED CT Expo', date: '2027-10-20', endDate: '2027-10-22', location: 'St Julian’s, Malta', channel: 'Congres', audiences: DATAPARTNERS, relevance: 'Middel, technisch', description: 'Trekt experts in terminologie, interoperabiliteit en gezondheids-IT. Relevant voor datamapping en semantische koppelingen; technisch van aard.' },
   { title: 'Mediterranean Cannabis Summit', date: '2027-10-22', endDate: '2027-10-23', location: 'Ta’ Qali, Malta', channel: 'Conferentie', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Aanvullend', description: 'Brede cannabisbijeenkomst met medische en wetenschappelijke onderdelen, naast industrie, beleid en investeringen.' },
-  { title: 'GS1 Global Healthcare Conference', date: '2027-10-25', endDate: '2027-10-27', location: 'Sydney, Australië', channel: 'Conferentie', audiences: DATAPARTNERS, relevance: 'Hoog voor data- en standaardisatiepartners', description: 'Internationale bijeenkomst over interoperabiliteit, GS1-standaarden, traceerbaarheid en datadeling. Geen groothandelsbeurs, maar inhoudelijk relevant voor Medimappers datamodel en partnerschappen rond productdata.' },
+  { title: 'GS1 Global Healthcare Conference', date: '2027-10-25', endDate: '2027-10-27', location: 'Sydney, Australië', channel: 'Conferentie', audiences: DATAPARTNERS, relevance: 'Hoog voor data- en standaardisatiepartners', description: 'Internationale bijeenkomst over interoperabiliteit, GS1-standaarden, traceerbaarheid en datadeling. Geen groothandelsbeurs, maar inhoudelijk relevant voor het datamodel van Medipim en partnerschappen rond productdata.' },
 
   // November 2027
   { title: 'HDA Research Foundation CEO Roundtable', date: '2027-11-04', location: 'Washington, Verenigde Staten', channel: 'Netwerkevent', audiences: GROOTHANDELS, relevance: 'Aanvullend, vooral voor senior netwerkcontacten', description: 'Jaarlijkse bijeenkomst ten bate van de HDA Research Foundation, met senior contacten uit de Amerikaanse distributiesector.' },
@@ -245,7 +245,37 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-14', apply: (data) => ({ items: addEvents(data.items, newId, ['Pharmacy Connect']) }) },
   { key: 'mc-seed-updates-15', apply: (data) => academyUpdate(data, new Date().toISOString()) },
   { key: 'mc-seed-updates-16', apply: (data) => ({ items: academyLanguages(data.items, new Date().toISOString()) }) },
+  { key: 'mc-seed-updates-17', apply: removeMedimapper },
 ];
+
+/** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
+const MEDIMAPPER_TEXT: [string, string][] = [
+  ['Medimapper: de Europese markt in cijfers', 'Medipim in Europa: verschillen tussen markten in cijfers'],
+  ['Medimapper: the European market in numbers', 'Medipim in Europe: differences between markets in numbers'],
+  ['kerncijfers uit Medimapper: aantal producten, landen en', 'kerncijfers uit Medipim: aantal producten per land en'],
+  ['key figures from Medimapper: number of products, countries and', 'key figures from Medipim: number of products per country and'],
+  [' en marktinzichten uit Medimapper', ' en marktinzichten'],
+  [' and market insights from Medimapper', ' and market insights'],
+  ['Medimappers datamodel', 'het datamodel van Medipim'],
+  ['Medimapper’s data model', 'Medipim’s data model'],
+  ['Medimapper', 'Medipim'],
+];
+
+/** The record with every Medimapper phrase in its text replaced; the phrases hold no characters JSON escapes. */
+const withoutMedimapper = <T>(record: T): T =>
+  JSON.parse(MEDIMAPPER_TEXT.reduce((json, [from, to]) => json.replaceAll(from, to), JSON.stringify(record)));
+
+/** Items, to-dos, content pieces and pillars that still mention Medimapper, rewritten to Medipim. */
+export function removeMedimapper(data: Pick<Contents, 'items' | 'todos' | 'content' | 'pillars'>): Partial<Contents> {
+  const now = new Date().toISOString();
+  const mentions = (r: object) => JSON.stringify(r).includes('Medimapper');
+  return {
+    items: data.items.filter(mentions).map((i) => ({ ...withoutMedimapper(i), updatedAt: now })),
+    todos: data.todos.filter(mentions).map(withoutMedimapper),
+    content: data.content.filter(mentions).map((p) => ({ ...withoutMedimapper(p), updatedAt: now })),
+    pillars: data.pillars.filter(mentions).map(withoutMedimapper),
+  };
+}
 
 /** The December pieces, then one post a week in the calendar. */
 export function fillAndScheduleWeekly(data: Contents): Partial<Contents> {

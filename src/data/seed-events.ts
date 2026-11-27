@@ -71,8 +71,8 @@ const VISITOR_POSTS: PlannedPost[] = [
     type: 'social', channel: 'LinkedIn · Maarten (CEO)', offset: -7,
     title: (e) => ({ nl: `Medipim op ${e}`, en: `Medipim at ${e}` }),
     description: (e, p) => ({
-      nl: `Aankondiging dat Maarten naar ${e} in ${p.nl} gaat, met een uitnodiging aan groothandels om af te spreken over Medimapper en grensoverschrijdende productdata.`,
-      en: `Announcement that Maarten is attending ${e} in ${p.en}, inviting wholesalers to meet about Medimapper and cross-border product data.`,
+      nl: `Aankondiging dat Maarten naar ${e} in ${p.nl} gaat, met een uitnodiging aan groothandels om af te spreken over Medipim en grensoverschrijdende productdata.`,
+      en: `Announcement that Maarten is attending ${e} in ${p.en}, inviting wholesalers to meet about Medipim and cross-border product data.`,
     }),
   },
   {
@@ -89,7 +89,7 @@ const VISITOR_TODOS: PlannedTodo[] = [
   { nl: 'Registreren en ticket kopen', en: 'Register and buy a ticket', offset: -70 },
   { nl: 'Reis en hotel boeken', en: 'Book travel and hotel', offset: -60 },
   { nl: 'Deelnemerslijst doornemen en afspraken aanvragen', en: 'Go through the attendee list and request meetings', offset: -28 },
-  { nl: 'Medimapper-demo en one-pager klaarzetten', en: 'Prepare the Medimapper demo and one-pager', offset: -5 },
+  { nl: 'Medipim-demo en one-pager klaarzetten', en: 'Prepare the Medipim demo and one-pager', offset: -5 },
   { nl: 'Contacten opvolgen', en: 'Follow up on contacts', offset: 3, from: 'end' },
 ];
 
