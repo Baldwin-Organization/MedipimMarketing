@@ -42,7 +42,7 @@ export const CHANNELS: Record<ItemType, string[]> = {
 };
 
 /** In the order of the budget plan; labels live in the dictionaries. */
-export const BUDGET_LINES: BudgetLine[] = ['beurzen_exposant', 'beurzen_bezoeker', 'email', 'linkedin', 'google', 'vakmedia', 'lidmaatschappen', 'chatgpt', 'reserve'];
+export const BUDGET_LINES: BudgetLine[] = ['beurzen_exposant', 'beurzen_bezoeker', 'email', 'linkedin', 'google', 'vakmedia', 'lidmaatschappen', 'chatgpt', 'agency', 'reserve'];
 
 export const CONTENT_FORMATS: ContentFormat[] = ['post', 'artikel', 'case', 'video', 'infographic', 'whitepaper', 'webinar', 'nieuwsbrief'];
 

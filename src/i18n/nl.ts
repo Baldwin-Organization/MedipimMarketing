@@ -79,6 +79,7 @@ export const nl = {
     vakmedia: { label: 'Vakmedia en gezamenlijke campagnes', hint: 'PR & vakmedia en gezamenlijke campagnes' },
     lidmaatschappen: { label: 'Lidmaatschappen en sectorpartnerschappen', hint: 'Zoals GIRP · kies deze post bij een actie' },
     chatgpt: { label: 'Test met ChatGPT Ads', hint: 'Campagnes op ChatGPT Ads' },
+    agency: { label: 'Servicekost marketingbureau', hint: '10% van de andere posten' },
     reserve: { label: 'Reserve', hint: 'Om tijdens het jaar bij te sturen' },
   } satisfies Record<BudgetLine, { label: string; hint: string }>,
 

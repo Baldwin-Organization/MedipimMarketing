@@ -78,6 +78,7 @@ export const en: Dict = {
     vakmedia: { label: 'Trade media and joint campaigns', hint: 'PR & trade media and joint campaigns' },
     lidmaatschappen: { label: 'Memberships and industry partnerships', hint: 'Such as GIRP · pick this line on an action' },
     chatgpt: { label: 'ChatGPT Ads test', hint: 'Campaigns on ChatGPT Ads' },
+    agency: { label: 'Marketing agency service fee', hint: '10% of the other lines' },
     reserve: { label: 'Reserve', hint: 'To adjust during the year' },
   },
 

@@ -4,11 +4,11 @@ import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { seedRevenues } from './potential';
 import { planEvents } from './seed-events';
-import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
+import { AGENCY_SHARE, SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
 import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_DISTRIBUTOR_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
-import type { Audience, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
+import type { Audience, Budget, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
   title: string;
@@ -327,7 +327,19 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-24', apply: (data) => ({ items: reestimateVisits(data.items) }) },
   { key: 'mc-seed-updates-25', apply: (data) => distributorPays(data, newId) },
   { key: 'mc-seed-updates-26', apply: (data) => ({ deleteItems: droppedEvents(data.items) }) },
+  { key: 'mc-seed-updates-27', apply: (data) => ({ budgets: agencyBudgets(data.budgets) }) },
 ];
+
+/** The agency's service fee for every year with a budget and no agency line yet, at its share of the other lines. */
+export function agencyBudgets(budgets: Budget[]): Budget[] {
+  const years = [...new Set(budgets.map((b) => b.year))].filter((y) => !budgets.some((b) => b.year === y && b.line === 'agency'));
+  return years.map((year) => ({
+    id: `${year}:agency`,
+    year,
+    line: 'agency' as const,
+    amount: Math.round(AGENCY_SHARE * budgets.filter((b) => b.year === year).reduce((n, b) => n + b.amount, 0)),
+  })).filter((b) => b.amount > 0);
+}
 
 /** Events taken off the calendar, too expensive for what they bring. */
 const DROPPED_EVENTS = ['GS1 Global Healthcare Conference'];
