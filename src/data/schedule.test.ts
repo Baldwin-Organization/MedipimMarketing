@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { moveItem, moveTodo, rollForward, todosFromTemplate, urgencyOf, itemOnDay } from './schedule';
+import { applyJiraStatus, moveItem, moveTodo, rollForward, scopeTodos, todosFromTemplate, urgencyOf, itemOnDay } from './schedule';
 import { buildSeed } from './seed';
 import type { Item, Todo } from './types';
 
 const item: Item = {
   id: 'i1', type: 'event', title: 'Beurs', description: '', channel: 'Beurs',
-  date: '2026-12-10', endDate: '2026-12-11', status: 'gepland', owner: 'Nele', campaign: 'X', audiences: [], productTypes: [], countries: [],
+  date: '2026-12-10', endDate: '2026-12-11', status: 'gepland', owner: 'Nele', campaign: 'X', audiences: [], productTypes: [], countries: [], languages: [],
   createdAt: '', updatedAt: '',
 };
 const todo = (over: Partial<Todo>): Todo => ({
@@ -63,7 +63,7 @@ describe('templates and seed', () => {
     let n = 0;
     const { items, todos } = buildSeed(() => `id${n++}`);
     const events = items.filter((i) => i.type === 'event');
-    expect(events.length).toBe(59);
+    expect(events.length).toBe(60);
     expect(todos.every((t) => !events.some((e) => e.id === t.itemId && !e.participation))).toBe(true);
     expect(events.every((i) => i.status === (i.participation ? 'gepland' : 'idee') && i.owner === '')).toBe(true);
     expect(events.every((i) => /^2027-\d\d-\d\d$/.test(i.date) && i.endDate! >= i.date && itemOnDay(i, i.date))).toBe(true);
@@ -81,5 +81,44 @@ describe('templates and seed', () => {
     const mail = launch[2];
     expect(mail).toMatchObject({ time: '09:00', audiences: ['apothekers'], countries: ['BE'] });
     expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-2, -1, -1]);
+  });
+});
+
+describe('to-dos per language and country', () => {
+  const campaign: Item = { ...item, type: 'campaign', languages: ['nl', 'fr'], countries: ['BE', 'FR'] };
+
+  it('repeats the steps that differ per language or country, once for each', () => {
+    let n = 0;
+    const todos = todosFromTemplate(campaign, () => `t${n++}`);
+    const copy = todos.filter((t) => t.title === 'Advertentieteksten en visuals maken');
+    const targeting = todos.filter((t) => t.title === 'Targeting en tracking instellen');
+    expect(copy.map((t) => t.language)).toEqual(['nl', 'fr']);
+    expect(targeting.map((t) => t.country)).toEqual(['BE', 'FR']);
+    expect(todos.filter((t) => t.title === 'Resultaten rapporteren')).toHaveLength(1);
+  });
+
+  it('keeps one to-do per step while an item has no languages or countries', () => {
+    const todos = todosFromTemplate({ ...campaign, languages: [], countries: [] }, () => 'x');
+    expect(todos.every((t) => !t.language && !t.country)).toBe(true);
+    expect(todos).toHaveLength(6);
+  });
+
+  it('adds the variants a new language needs, giving an unscoped to-do the first one', () => {
+    let n = 0;
+    const before = todosFromTemplate({ ...campaign, languages: [], countries: ['BE'] }, () => `t${n++}`);
+    const after = scopeTodos({ ...campaign, countries: ['BE'] }, before, () => `new${n++}`);
+    const copy = after.filter((t) => t.title === 'Advertentieteksten en visuals maken');
+    expect(copy.map((t) => [t.id.startsWith('new'), t.language])).toEqual([[false, 'nl'], [true, 'fr']]);
+    expect(after.filter((t) => t.title === 'Targeting en tracking instellen')).toHaveLength(1);
+    expect(scopeTodos({ ...campaign, countries: ['BE'] }, after, () => 'again')).toEqual(after);
+  });
+});
+
+describe('Jira status', () => {
+  it('closes a to-do when its issue is done in Jira and reopens it otherwise', () => {
+    const done = applyJiraStatus(todo({}), { key: 'MKT-1', status: 'Done', statusCategory: 'done' }, 'now');
+    expect([done.done, done.doneAt, done.jira?.syncedAt]).toEqual([true, 'now', 'now']);
+    const reopened = applyJiraStatus(done, { key: 'MKT-1', status: 'In Progress', statusCategory: 'indeterminate' }, 'later');
+    expect([reopened.done, reopened.doneAt, reopened.jira?.status]).toEqual([false, undefined, 'In Progress']);
   });
 });

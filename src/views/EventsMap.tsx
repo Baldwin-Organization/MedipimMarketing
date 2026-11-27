@@ -1,48 +1,18 @@
-import { geoCentroid, geoNaturalEarth1, geoPath, type GeoProjection } from 'd3-geo';
-import type { Feature, Geometry, MultiPoint } from 'geojson';
+import { geoPath } from 'd3-geo';
 import { useMemo, useState } from 'react';
-import { feature } from 'topojson-client';
-import type { GeometryCollection, Topology } from 'topojson-specification';
-import world from 'world-atlas/countries-110m.json';
 import { ParticipationPill } from '../components/participation';
 import { Segmented } from '../components/ui';
 import { fmt } from '../data/dates';
-import { countryCode, countryName } from '../data/dimensions';
+import { countryName } from '../data/dimensions';
 import { participationKey, type ParticipationKey } from '../data/meta';
 import { cityCoordinates, type LngLat } from '../data/places';
 import type { Item } from '../data/types';
 import { itemText, itemTitle, t } from '../i18n';
 import { useUi } from '../ui-context';
+import { CENTROIDS, COUNTRIES, REGIONS, W, frameFor, type Region } from './worldMap';
 
-const W = 1000;
-const H_MAX = 480;
-
-type Region = keyof typeof t.events.map.regions;
-/** South-west and north-east corner of what each region shows; the world leaves out Antarctica. */
-const REGIONS: Record<Region, [LngLat, LngLat]> = {
-  wereld: [[-180, -56], [180, 82]],
-  europa: [[-11, 35], [31, 61]],
-  amerika: [[-128, 17], [-62, 56]],
-  azie: [[38, -42], [156, 42]],
-};
-
-/** The marker of a place takes the colour of its most committed event. */
+/** The marker of a place takes the colour of its most committed event; the most committed markers are drawn on top. */
 const STRONGEST: ParticipationKey[] = ['exposant', 'bezoeker', 'campagne', 'geen', 'open'];
-
-/** Natural Earth names that `Intl.DisplayNames` writes differently. */
-const NAME_TO_CODE: Record<string, string> = {
-  'United States of America': 'US', 'Dem. Rep. Congo': 'CD', 'Central African Rep.': 'CF', 'Bosnia and Herz.': 'BA',
-  'Czechia': 'CZ', 'Macedonia': 'MK', "Côte d'Ivoire": 'CI', 'S. Sudan': 'SS', 'Dominican Rep.': 'DO', 'Eq. Guinea': 'GQ',
-  'eSwatini': 'SZ', 'Solomon Is.': 'SB', 'Falkland Is.': 'FK', 'W. Sahara': 'EH', 'Kosovo': 'XK',
-};
-
-type Country = Feature<Geometry, { name: string }> & { code?: string };
-const topology = world as unknown as Topology<{ countries: GeometryCollection<{ name: string }> }>;
-const COUNTRIES: Country[] = feature(topology, topology.objects.countries).features.map((f) => ({
-  ...f,
-  code: NAME_TO_CODE[f.properties.name] ?? countryCode(f.properties.name, 'en'),
-}));
-const CENTROIDS = new Map(COUNTRIES.filter((c) => c.code).map((c) => [c.code!, geoCentroid(c) as LngLat]));
 
 interface Place {
   key: string;
@@ -69,23 +39,6 @@ function placesOf(events: Item[]): { places: Place[]; unplaced: Item[] } {
     places.set(key, place);
   }
   return { places: [...places.values()], unplaced };
-}
-
-/**
- * The projection fills the width with the region and the map gets the region's height, up to `H_MAX`.
- * The corners and the middle of both sides are fitted, since the projection is widest at the equator.
- */
-function frameFor(region: Region): { projection: GeoProjection; height: number } {
-  const [[w, s], [e, n]] = REGIONS[region];
-  const equator = Math.max(s, Math.min(n, 0));
-  const box: MultiPoint = { type: 'MultiPoint', coordinates: [[w, s], [e, s], [w, n], [e, n], [w, (s + n) / 2], [e, (s + n) / 2], [w, equator], [e, equator]] };
-  const pad = region === 'wereld' ? 8 : 24;
-  const projection = geoNaturalEarth1().fitWidth(W - 2 * pad, box);
-  const [[x0, y0], [, y1]] = geoPath(projection).bounds(box);
-  const height = y1 - y0 + 2 * pad;
-  if (height > H_MAX) return { projection: projection.fitExtent([[pad, pad], [W - pad, H_MAX - pad]], box), height: H_MAX };
-  const [tx, ty] = projection.translate();
-  return { projection: projection.translate([tx + pad - x0, ty + pad - y0]), height };
 }
 
 const strongest = (events: Item[]) => STRONGEST.find((k) => events.some((e) => participationKey(e.participation) === k))!;
@@ -118,9 +71,9 @@ export default function EventsMap({ events }: { events: Item[] }) {
           <path key={n} className="mc-map-country" data-events={(c.code && withEvents.has(c.code)) || undefined} d={path(c) ?? undefined} />
         ))}
         {places
-          .map((p) => ({ p, xy: projection(p.at) }))
-          .filter((m): m is { p: Place; xy: [number, number] } => !!m.xy)
-          .sort((a, b) => b.p.events.length - a.p.events.length)
+          .map((p) => ({ p, xy: projection(p.at), rank: STRONGEST.indexOf(strongest(p.events)) }))
+          .filter((m): m is { p: Place; xy: [number, number]; rank: number } => !!m.xy)
+          .sort((a, b) => b.rank - a.rank || b.p.events.length - a.p.events.length)
           .map(({ p, xy: [x, y] }) => {
             const r = (6 + 2.5 * Math.sqrt(p.events.length - 1)) * scale;
             const name = `${p.label}: ${p.events.map(itemTitle).join(', ')}`;

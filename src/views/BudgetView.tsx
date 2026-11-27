@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { PlanTable, periodText } from '../components/PlanTable';
 import { Button, Card, EmptyState, Icon, Stat } from '../components/ui';
-import { budgetLineOf, byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
+import { budgetLineOf, budgetYear, byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
 import { AUDIENCES } from '../data/dimensions';
 import { BUDGET_LINES } from '../data/meta';
 import { useStore } from '../data/store';
@@ -15,11 +15,7 @@ const TOP_ITEMS = 10;
 export function BudgetView() {
   const store = useStore();
   const { openItem } = useUi();
-  const [year, setYear] = useState(() => {
-    const current = Number(store.today.slice(0, 4));
-    const hasBudget = (y: number) => store.budgets.some((b) => b.year === y && b.amount > 0);
-    return !hasBudget(current) && hasBudget(current + 1) ? current + 1 : current;
-  });
+  const [year, setYear] = useState(() => budgetYear(store.budgets, store.today));
 
   const { rows, unassigned } = byLine(store.items, store.budgets, year);
   const total = rows.reduce(

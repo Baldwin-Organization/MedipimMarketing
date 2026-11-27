@@ -17,6 +17,10 @@ export interface TradeMedium {
   market: Text;
   /** ISO codes, copied onto a new PR item; empty for international titles. */
   countries: string[];
+  /** Countries the title reaches, with the share of its readers where the publisher gives one. */
+  geo: { code: string; share?: number }[];
+  /** Reach the countries in `geo` leave out. */
+  geoNote?: Text;
   audiences: Audience[];
   priority: MediaPriority;
   assessment: Text;
@@ -44,6 +48,7 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://www.pharmaceutiques.com',
     market: { nl: 'Frankrijk', en: 'France' },
     countries: ['FR'],
+    geo: [{ code: 'FR' }],
     audiences: PRODUCENTEN,
     priority: 'eerste_keuze',
     assessment: {
@@ -74,6 +79,7 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://www.pharma-relations.de',
     market: { nl: 'Duitsland', en: 'Germany' },
     countries: ['DE'],
+    geo: [{ code: 'DE' }],
     audiences: PRODUCENTEN,
     priority: 'eerste_keuze',
     assessment: {
@@ -104,6 +110,7 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://www.pmfarma.com',
     market: { nl: 'Spanje', en: 'Spain' },
     countries: ['ES'],
+    geo: [{ code: 'ES' }],
     audiences: PRODUCENTEN,
     priority: 'eerste_keuze',
     assessment: {
@@ -132,11 +139,69 @@ export const TRADE_MEDIA: TradeMedium[] = [
     checked: '2026-11',
   },
   {
+    medium: 'AJP Insights',
+    publisher: 'Australian Pharmaceutical Publishing Company',
+    url: 'https://ajp.com.au/ajp-insights/',
+    market: { nl: 'Australië', en: 'Australia' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    audiences: PRODUCENTEN,
+    priority: 'eerste_keuze',
+    assessment: {
+      nl: 'Het eerste mediacontact voor OTC-merkenteams in Australië. Een verhaal over hoe merken productinformatie en beelden bij Australische apotheken en webshops krijgen, past bij de doelgroep.',
+      en: 'The first media contact for OTC brand teams in Australia. A story on how brands get product information and images to Australian pharmacies and web shops fits the audience.',
+    },
+    reach: [
+      fact('Nieuwsbrief', 'Newsletter', 'maandelijks, voor marketeers in de apotheeksector; geen bereik gepubliceerd', 'monthly, for marketers in the pharmacy sector; no reach published'),
+    ],
+    readers: {
+      nl: 'Marketeers bij merken die via de apotheek verkopen. De nieuwsbrief brengt trends in apotheek, marketing en consumenten en kondigt advertentiemogelijkheden in de AJP aan. Engels.',
+      en: 'Marketers at brands that sell through pharmacy. The newsletter covers pharmacy, marketing and consumer trends and announces advertising opportunities in the AJP. English.',
+    },
+    ask: {
+      nl: 'Het aantal abonnees, en of externe partijen een plaatsing in de nieuwsbrief kunnen boeken.',
+      en: 'The number of subscribers, and whether third parties can book a placement in the newsletter.',
+    },
+    sources: [{ label: { nl: 'AJP Insights', en: 'AJP Insights' }, url: 'https://ajp.com.au/ajp-insights/' }],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Retail Pharmacy',
+    publisher: 'Retail Media',
+    url: 'https://retailpharmacymagazine.com.au',
+    market: { nl: 'Australië', en: 'Australia' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    audiences: ['apothekers'],
+    priority: 'eerste_keuze',
+    assessment: {
+      nl: 'De eerste keuze voor een Australische klantcase over catalogusbeheer, productfoto’s of de koppeling met een webshop of app. Het blad gaat over de bedrijfsvoering en de retailkant van apotheken.',
+      en: 'The first choice for an Australian customer case on catalogue management, product photos or the link with a web shop or app. The magazine covers running the business and the retail side of pharmacies.',
+    },
+    reach: [
+      fact('Magazine', 'Magazine', '15.148 lezers, maandelijks (CAB-geauditeerd)', '15,148 readers, monthly (CAB audited)'),
+      fact('Nieuwsbrief', 'Newsletter', 'wekelijks; geen aantal gepubliceerd', 'weekly; no number published'),
+      fact('Retail Media', 'Retail Media', '40.000+ beslissers in grocery, apotheek en convenience (alle titels samen)', '40,000+ decision-makers across grocery, pharmacy and convenience (all titles together)'),
+    ],
+    readers: {
+      nl: 'Apothekers en apotheekeigenaars als ondernemers: retailmanagement, marketing, financiën, personeel en assortiment. Niet verbonden aan een beroepsvereniging. Zustertitel Retail Pharmacy Assistants voor apotheekassistenten. Engels.',
+      en: 'Pharmacists and pharmacy owners as business operators: retail management, marketing, finance, staffing and range. Not tied to a professional association. Sister title Retail Pharmacy Assistants for pharmacy assistants. English.',
+    },
+    ask: { nl: 'De mediakit 2027, en of ze klantcases als redactioneel stuk of als advertorial plaatsen.', en: 'The 2027 media kit, and whether they run customer cases as editorial or as advertorial.' },
+    sources: [
+      { label: { nl: 'Over Retail Pharmacy', en: 'About Retail Pharmacy' }, url: 'https://retailpharmacymagazine.com.au/about-us/' },
+      { label: { nl: 'Retail Media', en: 'Retail Media' }, url: 'https://www.retailmedia.com.au/' },
+    ],
+    checked: '2026-11',
+  },
+  {
     medium: 'pharmaphorum Deep Dive',
     publisher: 'pharmaphorum (EVERSANA)',
     url: 'https://pharmaphorum.com',
     market: { nl: 'VK / internationaal', en: 'UK / international' },
     countries: ['GB'],
+    geo: [{ code: 'US', share: 45 }, { code: 'GB', share: 21 }],
+    geoNote: { nl: 'Verder 27% elders in Europa, zonder landverdeling (mediakit 2024).', en: 'Another 27% elsewhere in Europe, without a country split (2024 media kit).' },
     audiences: PRODUCENTEN,
     priority: 'interessant',
     assessment: {
@@ -170,6 +235,8 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://insights.citeline.com/generics-bulletin/',
     market: { nl: 'Internationaal', en: 'International' },
     countries: [],
+    geo: [],
+    geoNote: { nl: 'Wereldwijd, zonder landverdeling.', en: 'Worldwide, without a country split.' },
     audiences: PRODUCENTEN,
     priority: 'interessant',
     assessment: {
@@ -204,6 +271,7 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://www.communicationsinternationalgroup.com',
     market: { nl: 'VK', en: 'UK' },
     countries: ['GB'],
+    geo: [{ code: 'GB' }],
     audiences: ['apothekers'],
     priority: 'interessant',
     assessment: {
@@ -238,12 +306,99 @@ export const TRADE_MEDIA: TradeMedium[] = [
     checked: '2026-11',
   },
   {
+    medium: 'Pharma in Focus',
+    publisher: 'Lush Media',
+    url: 'https://pharmainfocus.com.au',
+    market: { nl: 'Australië en Nieuw-Zeeland', en: 'Australia and New Zealand' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }, { code: 'NZ' }],
+    audiences: PRODUCENTEN,
+    priority: 'interessant',
+    assessment: {
+      nl: 'Voor geneesmiddelenfabrikanten: het nieuwsoverzicht van de Australische farma-industrie, met senior management onder de lezers.',
+      en: 'For drug manufacturers: the news service of the Australian pharma industry, with senior management among its readers.',
+    },
+    reach: [
+      fact('Nieuwsbrief', 'Newsletter', 'bijna 9.000 lezers, twee keer per werkdag plus breaking news', 'almost 9,000 readers, twice every business day plus breaking news'),
+    ],
+    readers: {
+      nl: 'Mensen in de farma-industrie, van management tot C-suite, bij elk groot farmabedrijf in Australië en Nieuw-Zeeland, plus verwante bedrijven en de overheid. Geen verdeling per land of functie. Toegang via een betaald lidmaatschap. Engels.',
+      en: 'People in the pharma industry, from management to C-suite, at every major drug company in Australia and New Zealand, plus related businesses and government. No split by country or function. Access through a paid membership. English.',
+    },
+    ask: { nl: 'Hoeveel lezers in Australië zelf zitten en welke functies ze hebben, en de tarieven.', en: 'How many readers are in Australia itself and what their functions are, and the rates.' },
+    sources: [
+      { label: { nl: 'Over Pharma in Focus', en: 'About Pharma in Focus' }, url: 'https://pharmainfocus.com.au/about.php' },
+      { label: { nl: 'Adverteren', en: 'Advertise' }, url: 'https://pharmainfocus.com.au/advertise.php' },
+    ],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Australian Journal of Pharmacy',
+    publisher: 'Australian Pharmaceutical Publishing Company',
+    url: 'https://ajp.com.au',
+    market: { nl: 'Australië', en: 'Australia' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    audiences: ['apothekers'],
+    priority: 'interessant',
+    assessment: {
+      nl: 'Voor brede bekendheid onder Australische apothekers: het blad met de grootste oplage in de sector. Biedt ook gesponsorde opleidingen aan.',
+      en: 'For broad awareness among Australian pharmacists: the title with the largest circulation in the sector. Also offers sponsored education.',
+    },
+    reach: [
+      fact('Magazine', 'Magazine', '19.446 exemplaren gemiddeld (netto printverspreiding juli 2025 – juni 2026), 11 nummers per jaar', '19,446 copies on average (net print distribution July 2025 – June 2026), 11 issues a year'),
+      fact('AJP Daily', 'AJP Daily', '20.600+ abonnees (februari 2026)', '20,600+ subscribers (February 2026)'),
+      fact('Website', 'Website', '40.000+ geregistreerde gebruikers; e-mag 36.500+ abonnees', '40,000+ registered users; e-mag 36,500+ subscribers'),
+    ],
+    readers: {
+      nl: 'Openbare apothekers: volgens de uitgever krijgen 9 op de 10 het blad, en het staat eerst in een lezersonderzoek naar apotheekbladen. Nieuws, bedrijfsvoering en klinische updates. Engels.',
+      en: 'Community pharmacists: according to the publisher 9 out of 10 receive the magazine, and it ranks first in a readership survey of pharmacy publications. News, business and clinical updates. English.',
+    },
+    rates: {
+      nl: 'Advertenties in print en online, plus gesponsorde opleidingen, webinars en podcasts; tarieven in de mediakit op aanvraag.',
+      en: 'Print and online advertising, plus sponsored education, webinars and podcasts; rates in the media kit on request.',
+    },
+    ask: { nl: 'De mediakit 2027 met tarieven, en wat een gesponsorde opleiding kost.', en: 'The 2027 media kit with rates, and what sponsored education costs.' },
+    sources: [{ label: { nl: 'Adverteren in de AJP', en: 'Advertise with the AJP' }, url: 'https://ajp.com.au/advertise-with-us/' }],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Pharmacy Daily',
+    url: 'https://pharmacydaily.com.au',
+    market: { nl: 'Australië', en: 'Australia' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    geoNote: { nl: 'Ook lezers buiten Australië, zonder verdeling.', en: 'Also readers outside Australia, without a split.' },
+    audiences: ['apothekers', 'groothandels', 'producenten'],
+    priority: 'interessant',
+    assessment: {
+      nl: 'Voor een concreet nieuwsmoment, zoals een lokale samenwerking, een integratie of de uitbreiding van de Australische catalogus.',
+      en: 'For a concrete news moment, such as a local partnership, an integration or the expansion of the Australian catalogue.',
+    },
+    reach: [
+      fact('Nieuwsbrief', 'Newsletter', '20.000+ ontvangers, elke werkdag', '20,000+ recipients, every business day'),
+    ],
+    readers: {
+      nl: 'Openbare apotheken, ziekenhuizen, overheid, beroepsorganisaties, groothandels, fabrikanten, studenten en opleidingen. Geen verdeling per groep. Engels.',
+      en: 'Community pharmacies, hospitals, government, peak pharmacy groups, wholesalers, manufacturers, students and educational institutions. No split by group. English.',
+    },
+    rates: {
+      nl: 'Advertenties van één tot vier kolommen of een volle pagina als bijlage; tarieven op aanvraag.',
+      en: 'Ads from one to four columns wide, or a full page as an attachment; rates on request.',
+    },
+    ask: { nl: 'De tarieven, en hoeveel ontvangers in apotheken en hoeveel bij fabrikanten werken.', en: 'The rates, and how many recipients work in pharmacies and how many at manufacturers.' },
+    sources: [{ label: { nl: 'Adverteren', en: 'Advertising' }, url: 'https://pharmacydaily.com.au/pharmacy-daily-advertising' }],
+    checked: '2026-11',
+  },
+  {
     medium: 'PharmaManufacturingIQ',
     formerly: ['European Pharmaceutical Manufacturer'],
     publisher: 'ManufacturingIQ',
     url: 'https://www.pharmamanufacturingiq.com',
     market: { nl: 'Europa', en: 'Europe' },
     countries: [],
+    geo: [{ code: 'GB', share: 26 }, { code: 'DE', share: 18 }, { code: 'IT', share: 13 }, { code: 'ES', share: 12 }, { code: 'FR', share: 12 }],
+    geoNote: { nl: 'Verdeling van de printabonnees; de websitebezoekers komen vooral uit de VS en India.', en: 'Split of the print subscribers; website visitors come mostly from the US and India.' },
     audiences: PRODUCENTEN,
     priority: 'selectief',
     assessment: {
@@ -273,6 +428,8 @@ export const TRADE_MEDIA: TradeMedium[] = [
     url: 'https://www.europeanpharmaceuticalreview.com',
     market: { nl: 'Europa', en: 'Europe' },
     countries: [],
+    geo: [],
+    geoNote: { nl: 'Vooral Europa, zonder landverdeling.', en: 'Mainly Europe, without a country split.' },
     audiences: PRODUCENTEN,
     priority: 'selectief',
     assessment: {
@@ -291,6 +448,97 @@ export const TRADE_MEDIA: TradeMedium[] = [
     },
     ask: { nl: 'De mediaplanner 2027 met nieuwsbriefcijfers, lezersverdeling en tarieven.', en: 'The 2027 media planner with newsletter figures, readership breakdown and rates.' },
     sources: [{ label: { nl: 'Over EPR', en: 'About EPR' }, url: 'https://www.europeanpharmaceuticalreview.com/about-us' }],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Retail Beauty',
+    publisher: 'The Intermedia Group',
+    url: 'https://retailbeauty.com.au',
+    market: { nl: 'Australië / Azië-Pacific', en: 'Australia / Asia-Pacific' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    geoNote: { nl: 'Verder Azië-Pacific, zonder landverdeling.', en: 'Further Asia-Pacific, without a country split.' },
+    audiences: ['producenten', 'apothekers'],
+    priority: 'selectief',
+    assessment: {
+      nl: 'Voor dermocosmetica en verzorging, vooral om tegelijk merken en inkopers bij winkels en apotheken te bereiken.',
+      en: 'For dermocosmetics and personal care, especially to reach brands and buyers at stores and pharmacies at the same time.',
+    },
+    reach: [
+      fact('Magazine', 'Magazine', '5.500 exemplaren, 4 nummers per jaar; de uitgever schat 24.800 lezers, waaronder ±4.500 beautyassistenten in apotheken op naam', '5,500 copies, 4 issues a year; the publisher estimates 24,800 readers, including about 4,500 named pharmacy beauty assistants'),
+      fact('Nieuwsbrief', 'Newsletter', '11.400 abonnees, wekelijks (mediakit 2022)', '11,400 subscribers, weekly (2022 media kit)'),
+      fact('Website', 'Website', '10.000 unieke bezoekers per maand (mediakit 2022)', '10,000 unique visitors a month (2022 media kit)'),
+    ],
+    readers: {
+      nl: 'Beautyadviseurs, counter managers, inkopers en management bij apotheken, warenhuizen en webwinkels, plus eigenaars, marketeers en sales bij beauty- en gezondheidsmerken. Engels.',
+      en: 'Beauty advisors, counter managers, buyers and management at pharmacies, department stores and online stores, plus owners, marketers and sales at beauty and health brands. English.',
+    },
+    rates: {
+      nl: 'Solo-mailing A$ 2.100, nieuwsbrief-takeover of gesponsord artikel A$ 1.600 voor 2 weken (mediakit 2022, excl. GST).',
+      en: 'Solus email A$ 2,100, newsletter takeover or sponsored content A$ 1,600 for 2 weeks (2022 media kit, excl. GST).',
+    },
+    ask: { nl: 'De mediakit 2027, en welk deel van de lezers in Australië en in apotheken zit.', en: 'The 2027 media kit, and what share of the readers are in Australia and in pharmacies.' },
+    sources: [
+      { label: { nl: 'Retail Beauty bij Intermedia', en: 'Retail Beauty at Intermedia' }, url: 'https://intermedia.com.au/print/retailbeauty/' },
+      { label: { nl: 'Mediakit 2022', en: 'Media kit 2022' }, url: 'https://intermedia-sites.s3.ap-southeast-2.amazonaws.com/Retail+Beauty/RBeauty+Media+kit+2022+v4.pdf' },
+    ],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Inside FMCG',
+    publisher: 'Octomedia',
+    url: 'https://insidefmcg.com.au',
+    market: { nl: 'Australië', en: 'Australia' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }],
+    audiences: PRODUCENTEN,
+    priority: 'selectief',
+    assessment: {
+      nl: 'Voor consumentenmerken die via apotheken én andere retailkanalen verkopen. Apotheek is er één kanaal naast grocery en convenience.',
+      en: 'For consumer brands that sell through pharmacies and other retail channels. Pharmacy is one channel next to grocery and convenience.',
+    },
+    reach: [
+      fact('Nieuwsbrief', 'Newsletter', '26.000 abonnees, dagelijks', '26,000 subscribers, daily'),
+      fact('Magazine', 'Magazine', 'per kwartaal; geen oplage gepubliceerd', 'quarterly; no circulation published'),
+    ],
+    readers: {
+      nl: 'Leveranciers en retailers in grocery, convenience, apotheek en impulsaankopen. Geen verdeling per kanaal of functie. Engels.',
+      en: 'Suppliers and retailers in grocery, convenience, pharmacy and impulse. No split by channel or function. English.',
+    },
+    ask: { nl: 'De mediakit, en hoeveel abonnees bij merken werken die via de apotheek verkopen.', en: 'The media kit, and how many subscribers work at brands that sell through pharmacy.' },
+    sources: [
+      { label: { nl: 'Inside FMCG bij Octomedia', en: 'Inside FMCG at Octomedia' }, url: 'https://octomedia.com.au/our-brands/inside-fmcg/' },
+      { label: { nl: 'Adverteren', en: 'Advertise' }, url: 'https://insidefmcg.com.au/advertise-with-us/' },
+    ],
+    checked: '2026-11',
+  },
+  {
+    medium: 'Australasian Pharmacy',
+    formerly: ['In the Know'],
+    publisher: 'Gold Cross (Pharmacy Guild of Australia)',
+    url: 'https://australasianpharmacy.com.au',
+    market: { nl: 'Australië en Nieuw-Zeeland', en: 'Australia and New Zealand' },
+    countries: ['AU'],
+    geo: [{ code: 'AU' }, { code: 'NZ' }],
+    audiences: ['apothekers'],
+    priority: 'selectief',
+    assessment: {
+      nl: 'Het vakblad van de Pharmacy Guild, tot 2024 In the Know. Interessant voor commerciële zichtbaarheid bij openbare apotheken, maar de oplage is onduidelijk.',
+      en: 'The Pharmacy Guild’s trade journal, called In the Know until 2024. Interesting for commercial visibility with community pharmacies, but the circulation is unclear.',
+    },
+    reach: [
+      fact('Magazine', 'Magazine', '6 nummers per jaar; de Guild meldde in 2022 een oplage van 11.000, het blad zelf drukte in september 2022 5.267 exemplaren', '6 issues a year; the Guild reported a circulation of 11,000 in 2022, while the magazine itself printed 5,267 copies in September 2022'),
+      fact('Nieuwsbrief', 'Newsletter', 'wekelijks; geen aantal gepubliceerd', 'weekly; no number published'),
+    ],
+    readers: {
+      nl: 'Apotheekeigenaars en -managers, apothekers en leveranciers. Werd vroeger naar elke Australische apotheek gestuurd, gemiddeld naar twee apothekers per apotheek; sinds de nieuwe naam ook Nieuw-Zeeland. Engels.',
+      en: 'Pharmacy owners and managers, pharmacists and suppliers. Used to be sent to every Australian pharmacy, on average to two pharmacists per pharmacy; since the new name also New Zealand. English.',
+    },
+    ask: { nl: 'De actuele oplage per land, waar het verschil tussen 11.000 en 5.267 vandaan komt, en de tarieven.', en: 'The current circulation per country, where the gap between 11,000 and 5,267 comes from, and the rates.' },
+    sources: [
+      { label: { nl: 'In the Know bij de Guild (2022)', en: 'In the Know at the Guild (2022)' }, url: 'https://www.guild.org.au/about-us/guild-publications/in-the-know-itk' },
+      { label: { nl: 'Gold Cross partnergids 2025', en: 'Gold Cross partner guide 2025' }, url: 'https://goldx.com.au/docs/goldxlibraries/d/endorsed-partner-booklet-20257ee5fee3-4f4b-4bc3-b0a1-0911d88aed7d.pdf?sfvrsn=5ba12c0b_1' },
+    ],
     checked: '2026-11',
   },
 ];

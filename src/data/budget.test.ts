@@ -15,6 +15,7 @@ const item = (over: Partial<Item>): Item => ({
   audiences: [],
   productTypes: [],
   countries: [],
+  languages: [],
   createdAt: '',
   updatedAt: '',
   ...over,

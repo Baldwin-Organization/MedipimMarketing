@@ -1,6 +1,6 @@
 import { daysBetween, shiftIso } from './dates';
-import { TODO_TEMPLATES } from './templates';
-import type { IsoDate, Item, Todo } from './types';
+import { TODO_TEMPLATES, type TodoTemplate } from './templates';
+import type { IsoDate, Item, JiraLink, Todo } from './types';
 
 export interface ScheduledTodo extends Todo {
   /** The day the to-do shows on: its due date, or today when it is open and overdue. */
@@ -53,16 +53,58 @@ export function moveTodo(todo: Todo, item: Item | undefined, newDate: IsoDate): 
   };
 }
 
-export function todosFromTemplate(item: Item, makeId: () => string): Todo[] {
-  return TODO_TEMPLATES[item.type].map((t) => ({
+type Scope = Pick<Todo, 'language' | 'country'>;
+
+/** The language or country variants a template step needs for this item; one unscoped to-do when it has none. */
+function scopesFor(template: TodoTemplate, item: Item): Scope[] {
+  if (template.per === 'language' && item.languages?.length) return item.languages.map((language) => ({ language }));
+  if (template.per === 'country' && item.countries.length) return item.countries.map((country) => ({ country }));
+  return [{}];
+}
+
+const sameScope = (todo: Todo, scope: Scope) => todo.language === scope.language && todo.country === scope.country;
+
+function fromTemplate(item: Item, template: TodoTemplate, scope: Scope, makeId: () => string): Todo {
+  return {
     id: makeId(),
     itemId: item.id,
-    title: t.title,
-    dueDate: shiftIso(item.date, t.offsetDays),
-    offsetDays: t.offsetDays,
+    title: template.title,
+    dueDate: shiftIso(item.date, template.offsetDays),
+    offsetDays: template.offsetDays,
     done: false,
     owner: item.owner,
-  }));
+    ...scope,
+  };
+}
+
+/** The default to-dos of a new item: steps that differ per language or country come once for each. */
+export function todosFromTemplate(item: Item, makeId: () => string): Todo[] {
+  return TODO_TEMPLATES[item.type].flatMap((t) => scopesFor(t, item).map((scope) => fromTemplate(item, t, scope, makeId)));
+}
+
+/**
+ * Brings an item's to-dos in line with its languages and countries after they changed: every default step that
+ * differs per language or country gets the variants it is missing. A to-do of that step without a language or
+ * country takes the first missing one, so it is not done twice. Other to-dos stay as they are.
+ */
+export function scopeTodos(item: Item, todos: Todo[], makeId: () => string): Todo[] {
+  const result = [...todos];
+  for (const template of TODO_TEMPLATES[item.type].filter((t) => t.per)) {
+    const missing = scopesFor(template, item).filter((s) =>
+      !result.some((t) => t.title === template.title && (sameScope(t, s) || (!s.language && !s.country))));
+    for (const scope of missing) {
+      const unscoped = result.findIndex((t) => t.title === template.title && !t.language && !t.country);
+      if (unscoped >= 0 && (scope.language || scope.country)) result[unscoped] = { ...result[unscoped], ...scope };
+      else result.push(fromTemplate(item, template, scope, makeId));
+    }
+  }
+  return result;
+}
+
+/** Takes over the status of the to-do's Jira issue; a status in Jira's done category closes the to-do, any other reopens it. */
+export function applyJiraStatus(todo: Todo, jira: JiraLink, now: string): Todo {
+  const done = jira.statusCategory ? jira.statusCategory === 'done' : todo.done;
+  return { ...todo, jira: { ...jira, syncedAt: now }, done, doneAt: done ? todo.doneAt ?? now : undefined };
 }
 
 /** True when the item occupies `day` (events span their period). */

@@ -2,7 +2,7 @@ import { addWeeks, startOfISOWeek } from 'date-fns';
 import { daysBetween, fromIso, shiftIso, toIso } from './dates';
 import type { Contents } from './repository';
 import { todosFromTemplate } from './schedule';
-import { MONTH_END_PIECES } from './seed-content';
+import { ACADEMY_CONTENT, ACADEMY_COUNTRIES, ACADEMY_LANGUAGES, ACADEMY_THEME, MONTH_END_PIECES } from './seed-content';
 import type { ContentPiece, IsoDate, Item, Todo } from './types';
 
 export const WEEKLY_CHANNEL = 'LinkedIn · Medipim';
@@ -62,25 +62,30 @@ export function scheduleWeekly(data: Pick<Contents, 'items' | 'content' | 'pilla
   const days = freeTuesdays(data.items);
   const pairs = inPublishingOrder(open, pillarOrder).slice(0, days.length).map((piece, n) => ({ piece, date: days[n] }));
 
-  const items = pairs.map(({ piece, date }): Item => ({
-    id: makeId(),
-    type: 'social',
-    title: piece.title,
-    description: piece.description,
-    channel: WEEKLY_CHANNEL,
-    date,
-    time: '10:00',
-    status: 'gepland',
-    owner: piece.owner,
-    campaign: '',
-    audiences: piece.audiences,
-    productTypes: [],
-    countries: [],
-    translations: { en: { title: piece.translations?.en?.title, description: piece.translations?.en?.description } },
-    contentId: piece.id,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  const items = pairs.map(({ piece, date }): Item => {
+    const academy = ACADEMY_CONTENT.includes(piece.id);
+    const campaign = academy ? ACADEMY_THEME : '';
+    return {
+      id: makeId(),
+      type: 'social',
+      title: piece.title,
+      description: piece.description,
+      channel: WEEKLY_CHANNEL,
+      date,
+      time: '10:00',
+      status: 'gepland',
+      owner: piece.owner,
+      campaign,
+      audiences: piece.audiences,
+      productTypes: [],
+      countries: academy ? ACADEMY_COUNTRIES : [],
+      languages: academy ? ACADEMY_LANGUAGES : [],
+      translations: { en: { title: piece.translations?.en?.title, description: piece.translations?.en?.description, ...(campaign && { campaign }) } },
+      contentId: piece.id,
+      createdAt: now,
+      updatedAt: now,
+    };
+  });
   const todos: Todo[] = items.flatMap((item) => todosFromTemplate(item, makeId).map((t) => {
     const dueDate = beforeWeekend(t.dueDate);
     return { ...t, dueDate, offsetDays: daysBetween(item.date, dueDate) };

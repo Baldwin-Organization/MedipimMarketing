@@ -121,6 +121,7 @@ function planEvent(event: Item, makeId: () => string, now: string): { items: Ite
       audiences: event.audiences,
       productTypes: event.productTypes,
       countries: event.countries,
+      languages: [],
       translations: { en: { title: p.title(name).en, description: p.description(name, where).en, campaign: name } },
       createdAt: now,
       updatedAt: now,

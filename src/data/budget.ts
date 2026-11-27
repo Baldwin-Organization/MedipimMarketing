@@ -1,11 +1,18 @@
 import { t } from '../i18n';
 import { isExistingMarket } from './dimensions';
 import { BUDGET_LINES } from './meta';
-import type { Audience, Budget, BudgetLine, Item } from './types';
+import type { Audience, Budget, BudgetLine, IsoDate, Item } from './types';
 
 /** An item's costs count in the year (and quarter) of its start date. */
 export const yearOf = (item: Item) => Number(item.date.slice(0, 4));
 export const quarterOf = (item: Item) => Math.floor((Number(item.date.slice(5, 7)) - 1) / 3) + 1;
+
+/** The current year, or next year when only that one has a budget yet. */
+export function budgetYear(budgets: Budget[], today: IsoDate): number {
+  const current = Number(today.slice(0, 4));
+  const hasBudget = (y: number) => budgets.some((b) => b.year === y && b.amount > 0);
+  return !hasBudget(current) && hasBudget(current + 1) ? current + 1 : current;
+}
 
 export interface Totals { planned: number; actual: number }
 

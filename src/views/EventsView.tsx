@@ -3,13 +3,13 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
 import { ParticipationLegend, ParticipationPicker } from '../components/participation';
-import { Button, Checkbox, EmptyState, Icon, LateBadge, Segmented, StatusPill } from '../components/ui';
+import { Button, Checkbox, EmptyState, Icon, JiraBadge, LateBadge, Segmented, StatusPill } from '../components/ui';
 import { daysBetween, fmt, fmtDate, fromIso, toIso } from '../data/dates';
-import { audienceOptions, matchesCountry, productOptions, type CountryFilter } from '../data/dimensions';
+import { audienceOptions, matchesCountry, productOptions, todoLabel, type CountryFilter } from '../data/dimensions';
 import { CHANNELS, OWNERS, STATUSES, participationKey, type ParticipationKey } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Audience, Item, ItemStatus, Participation, ProductType } from '../data/types';
-import { channelLabel, itemText, itemTitle, statusLabel, t, todoText } from '../i18n';
+import { channelLabel, itemText, itemTitle, statusLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -252,8 +252,9 @@ function EventCard({ event }: { event: Item }) {
         <ul className="mc-checklist">
           {prep.map((todo) => (
             <li key={todo.id} data-done={todo.done || undefined}>
-              <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoText(todo))} />
-              <span className="mc-checklist-title">{todoText(todo)}</span>
+              <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo))} />
+              <span className="mc-checklist-title">{todoLabel(todo)}</span>
+              <JiraBadge jira={todo.jira} />
               <LateBadge days={todo.lateDays} />
               <span className="mc-muted mc-checklist-date">
                 {fmt(todo.dueDate, 'd MMM')} · {offsetText(todo.offsetDays)}

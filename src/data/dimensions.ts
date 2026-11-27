@@ -1,5 +1,5 @@
-import { audienceLabel, productLabel, t } from '../i18n';
-import type { Audience, Item, ProductType } from './types';
+import { audienceLabel, productLabel, t, todoText } from '../i18n';
+import type { Audience, Item, ProductType, Todo } from './types';
 
 export const AUDIENCES: Audience[] = ['groothandels', 'producenten', 'apothekers', 'ziekenhuizen'];
 export const PRODUCT_TYPES: ProductType[] = ['geneesmiddelen', 'cannabis', 'cosmetica', 'voeding', 'baby'];
@@ -28,6 +28,35 @@ function namesFor(locale: string) {
 
 /** Country name in the current language. */
 export const countryName = (code: string) => namesFor(t.regionLocale).of(code) ?? code;
+
+/** Languages content is made in, ISO 639-1. */
+export const LANGUAGES = ['nl', 'fr', 'de', 'en', 'es', 'it'];
+
+/** Languages of the existing markets; picking one of these countries adds its languages. */
+export const COUNTRY_LANGUAGES: Record<string, string[]> = {
+  BE: ['nl', 'fr'], FR: ['fr'], DE: ['de'], GB: ['en'], LU: ['fr', 'de'], AT: ['de'], ES: ['es'], US: ['en'], AU: ['en'],
+};
+
+const languageNames = new Map<string, Intl.DisplayNames>();
+
+/** Language name in the current language, e.g. "Frans". */
+export function languageName(code: string): string {
+  if (!languageNames.has(t.regionLocale)) languageNames.set(t.regionLocale, new Intl.DisplayNames(t.regionLocale, { type: 'language' }));
+  return languageNames.get(t.regionLocale)!.of(code) ?? code;
+}
+
+/** The countries with the languages of any newly picked country added. */
+export function withCountryLanguages(before: string[], countries: string[], languages: string[]): string[] {
+  const added = countries.filter((c) => !before.includes(c)).flatMap((c) => COUNTRY_LANGUAGES[c] ?? []);
+  return [...new Set([...languages, ...added])];
+}
+
+/** What sets a to-do apart from the others of its step: its language or country. */
+export const todoScope = (todo: Pick<Todo, 'language' | 'country'>) =>
+  todo.language ? languageName(todo.language) : todo.country ? countryName(todo.country) : '';
+
+/** To-do title with its language or country, e.g. "Copy schrijven · Frans". */
+export const todoLabel = (todo: Todo) => [todoText(todo), todoScope(todo)].filter(Boolean).join(' · ');
 
 export const byCountryName = (a: string, b: string) => countryName(a).localeCompare(countryName(b), t.regionLocale);
 

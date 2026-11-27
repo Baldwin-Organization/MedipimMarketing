@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
 import { DimensionFields } from '../components/dimensions';
-import { Button, Checkbox, Drawer, Field, Icon, LateBadge, Segmented } from '../components/ui';
+import { Button, Checkbox, Drawer, Field, Icon, JiraBadge, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
 import { autoBudgetLine } from '../data/budget';
+import { countryName, languageName, todoLabel } from '../data/dimensions';
 import { BUDGET_LINES, CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, TYPE_META } from '../data/meta';
 import { newId } from '../data/repository';
-import { rollForward } from '../data/schedule';
+import { rollForward, scopeTodos } from '../data/schedule';
 import { useStore, type ItemDraft } from '../data/store';
-import type { BudgetLine, ItemType, Todo } from '../data/types';
-import { budgetLineLabel, channelLabel, itemTitle, lang, local, otherLang, statusLabel, t, textIn, todoText, todoTextIn, typeLabel, type Lang, type TextField } from '../i18n';
+import type { BudgetLine, Item, ItemType, Todo } from '../data/types';
+import { budgetLineLabel, channelLabel, itemTitle, lang, local, otherLang, statusLabel, t, textIn, todoTextIn, typeLabel, type Lang, type TextField } from '../i18n';
 import { ParticipationPicker } from '../components/participation';
 import { useUi } from '../ui-context';
 
 const blank = (date: string): ItemDraft => ({
   type: 'social', title: '', description: '', channel: CHANNELS.social[0], date, time: '', status: 'idee',
-  owner: '', campaign: '', audiences: [], productTypes: [], countries: [],
+  owner: '', campaign: '', audiences: [], productTypes: [], countries: [], languages: [],
 });
 
 export function ItemDrawer() {
@@ -69,6 +70,20 @@ export function ItemDrawer() {
   };
   const auto = autoBudgetLine(draft);
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
+  const asItem = (): Item => ({ ...draft, id: draft.id ?? '', createdAt: '', updatedAt: '' });
+  const scoped = todos.length && draft.date ? scopeTodos(asItem(), todos, newId) : todos;
+  const toScope = scoped.filter((todo, n) => todo !== todos[n]).length;
+  const scopeOptions = (todo: Todo) => [
+    ...[...new Set([...draft.languages, ...(todo.language ? [todo.language] : [])])].map((l) => ({ value: `language:${l}`, label: languageName(l) })),
+    ...[...new Set([...draft.countries, ...(todo.country ? [todo.country] : [])])].map((c) => ({ value: `country:${c}`, label: countryName(c) })),
+  ];
+  const scopeValue = (todo: Todo) => (todo.language ? `language:${todo.language}` : todo.country ? `country:${todo.country}` : '');
+  const setScope = (todo: Todo, value: string) => {
+    const [kind, code] = value.split(':');
+    updateTodo(todo.id, { language: kind === 'language' ? code : undefined, country: kind === 'country' ? code : undefined });
+  };
+  const setJiraKey = (todo: Todo, key: string) =>
+    updateTodo(todo.id, { jira: key.trim() ? { ...todo.jira, key: key.trim().toUpperCase() } : undefined });
 
   const save = async () => {
     if (!draft.title.trim() && !draft.translations?.en?.title?.trim()) return setError(t.drawer.errTitle);
@@ -242,24 +257,39 @@ export function ItemDrawer() {
               <span>{t.drawer.addTemplateFor(typeLabel(draft.type).toLowerCase())}</span>
             </label>
           )}
+          <p className="mc-muted">{t.drawer.perLanguageHint}</p>
           {preview.length > 0 && (
             <ul className="mc-template-list">
               {preview.map((todo) => (
-                <li key={todo.id}><Icon name="checklist" size={16} /><span>{todoText(todo)}</span><span className="mc-muted">{fmt(todo.dueDate, 'EEE d MMM')}</span></li>
+                <li key={todo.id}><Icon name="checklist" size={16} /><span>{todoLabel(todo)}</span><span className="mc-muted">{fmt(todo.dueDate, 'EEE d MMM')}</span></li>
               ))}
             </ul>
+          )}
+          {toScope > 0 && (
+            <Button variant="outlined" intent="secondary" startIcon="add" onClick={() => setTodos(scoped)}>{t.drawer.scopeTodos(toScope)}</Button>
           )}
           {todos.length > 0 && (
             <ul className="mc-todo-edit">
               {todos.map((todo) => {
                 const late = rollForward(todo, store.today).lateDays;
+                const options = scopeOptions(todo);
                 return (
                   <li key={todo.id} data-done={todo.done || undefined}>
-                    <Checkbox checked={todo.done} onChange={() => updateTodo(todo.id, { done: !todo.done, doneAt: todo.done ? undefined : new Date().toISOString() })} label={t.common.check(todoText(todo))} />
+                    <Checkbox checked={todo.done} onChange={() => updateTodo(todo.id, { done: !todo.done, doneAt: todo.done ? undefined : new Date().toISOString() })} label={t.common.check(todoLabel(todo))} />
                     <input className="mc-input mc-input-inline" aria-label={t.drawer.todo} value={todoTextIn(todo, lang)} placeholder={todoTextIn(todo, other)} onChange={(e) => updateTodo(todo.id, todoTitlePatch(todo, lang, e.target.value))} />
                     <LateBadge days={late} />
                     <input type="date" className="mc-input mc-input-date" aria-label={t.drawer.dueDate} value={todo.dueDate} onChange={(e) => updateTodo(todo.id, { dueDate: e.target.value })} />
                     <Button variant="text" intent="secondary" size="small" icon="delete" label={t.drawer.removeTodo} onClick={() => setTodos((list) => list.filter((x) => x.id !== todo.id))} />
+                    <div className="mc-todo-meta">
+                      {options.length > 0 && (
+                        <select className="mc-input mc-input-scope" aria-label={t.drawer.todoScope} value={scopeValue(todo)} onChange={(e) => setScope(todo, e.target.value)}>
+                          <option value="">{t.drawer.wholeItem}</option>
+                          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      )}
+                      <input className="mc-input mc-input-jira" aria-label={t.drawer.jiraKey} placeholder={t.drawer.jiraKeyPlaceholder} value={todo.jira?.key ?? ''} onChange={(e) => setJiraKey(todo, e.target.value)} />
+                      {todo.jira?.status && <JiraBadge jira={todo.jira} />}
+                    </div>
                   </li>
                 );
               })}

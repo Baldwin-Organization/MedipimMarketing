@@ -20,6 +20,20 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   supplementen, baby) en landen. België, Frankrijk, Duitsland, VK, Luxemburg, Oostenrijk,
   Spanje, VS en Australië zijn bestaande markten (`EXISTING_MARKETS` in
   `src/data/dimensions.ts`); elk ander land is een nieuwe markt.
+- **Talen** per item (Nederlands, Frans, Duits, Engels, Spaans, Italiaans). Kies je een
+  bestaande markt, dan komen haar talen er automatisch bij (België: Nederlands en Frans);
+  `COUNTRY_LANGUAGES` in `src/data/dimensions.ts`.
+- **To do's per taal of land**: standaardstappen die per taal verschillen (copy, visuals,
+  advertentieteksten, testmails) komen één keer per taal van het item, stappen per land
+  (targeting, verzendlijst) één keer per land. Elke to do toont zijn taal of land
+  ("Copy schrijven · Frans"). Voeg je later een taal of land toe, dan vult een knop in het
+  itemformulier de ontbrekende to do's aan (`per` in `src/data/templates.ts`, `scopeTodos` in
+  `src/data/schedule.ts`).
+- **Klaar voor Jira**: elke to do kan een Jira-ticket hebben (`jira` op `Todo`: sleutel, link,
+  status en statuscategorie). Het ticketnummer vul je nu zelf in bij de to do. De brug naar
+  Jira komt later: die maakt per to do een ticket aan en koppelt de status terug via
+  `applyJiraStatus`; een status in de categorie "done" vinkt de to do af, elke andere zet hem
+  weer open. Jira is dan leidend voor de status.
 - **Drag-and-drop**: versleep items en to do's naar een andere dag. Verplaats je een item,
   dan schuiven de gekoppelde open to do's mee met dezelfde offset.
 - **Naar voren schuiven**: open to do's die over datum zijn, staan op vandaag met een badge
@@ -103,6 +117,12 @@ opstarten, enkel voor wat nog leeg is (het budget als er voor 2027 nog niets is 
 pijlers en ideeën als er nog geen pijlers zijn). De ideeën van het team kwamen later en worden
 apart toegevoegd; bestaande startideeën die erop lijken, worden enkel bijgewerkt als niemand ze
 al aanpaste.
+
+Tien wekelijkse posts in 2027 komen uit de Medipim Academy, korte video's en handleidingen voor
+Belgische apothekers (thema "Medipim Academy", `ACADEMY_CONTENT` in `src/data/seed-content.ts`).
+Ze vervingen algemenere posts op dezelfde dinsdag en binnen dezelfde pijler. Een browser met
+oudere startinhoud krijgt de nieuwe tekst eenmalig, enkel voor stukken en posts die nog de oude
+tekst hebben.
 
 Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
 (Medipim, Maarten (CEO), Medipim Australia, Medipim USA).

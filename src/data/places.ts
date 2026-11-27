@@ -60,8 +60,8 @@ const CITIES: [names: string[], at: LngLat][] = [
   [['new york'], [-74.01, 40.71]],
 ];
 
-const BY_NAME = new Map(CITIES.flatMap(([names, at]) => names.map((n) => [n, at] as const)));
 const normalise = (s: string) => s.trim().toLocaleLowerCase('nl').replace(/’/g, "'");
+const BY_NAME = new Map(CITIES.flatMap(([names, at]) => names.map((n) => [normalise(n), at] as const)));
 
 /** Where a `City, Country` location lies, when the city is known. */
 export function cityCoordinates(location?: string): LngLat | undefined {

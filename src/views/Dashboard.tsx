@@ -7,6 +7,7 @@ import { participationKey } from '../data/meta';
 import { useStore } from '../data/store';
 import { channelLabel, itemText, itemTitle, participationLabel, t } from '../i18n';
 import { useUi } from '../ui-context';
+import { ChannelMix } from './ChannelMix';
 import { PageHeader } from './PageHeader';
 
 export function Dashboard() {
@@ -19,7 +20,7 @@ export function Dashboard() {
     .filter((i) => i.date >= today && i.date <= horizon)
     .sort((a, b) => (a.date + (a.time ?? '')).localeCompare(b.date + (b.time ?? '')));
   const events = store.items
-    .filter((i) => i.type === 'event' && (i.endDate ?? i.date) >= today)
+    .filter((i) => i.type === 'event' && (i.participation === 'exposant' || i.participation === 'bezoeker') && (i.endDate ?? i.date) >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4);
 
@@ -42,76 +43,82 @@ export function Dashboard() {
       </div>
 
       <div className="mc-dash-grid">
-        <Card title={t.dashboard.upcoming} icon="schedule" className="mc-dash-upcoming" action={<Link className="mc-card-link" to="/kalender">{t.dashboard.toCalendar}</Link>}>
-          {byDay.size === 0 ? (
-            <EmptyState icon="calendar_month" title={t.dashboard.nothingPlanned} />
-          ) : (
-            <ol className="mc-day-list">
-              {[...byDay.entries()].map(([day, list]) => (
-                <li key={day}>
-                  <div className="mc-day-label">
-                    <span className="mc-day-num">{fmt(day, 'd')}</span>
-                    <span><span className="mc-day-name">{fmt(day, 'EEEE')}</span><span className="mc-muted">{relativeDay(day, today)}</span></span>
-                  </div>
-                  <ul className="mc-day-items">
-                    {list.map((i) => (
-                      <li key={i.id}>
-                        <button type="button" className="mc-row" onClick={() => openItem(i.id)}>
-                          <TypeBadge type={i.type} />
-                          <span className="mc-row-main">
-                            <span className="mc-row-title">{itemTitle(i)}</span>
-                            <span className="mc-muted">{[i.time, channelLabel(i.channel), i.owner].filter(Boolean).join(' · ')}</span>
-                          </span>
-                          <StatusPill status={i.status} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Card>
+        <div className="mc-dash-col">
+          <Card title={t.dashboard.upcoming} icon="schedule" className="mc-dash-upcoming" action={<Link className="mc-card-link" to="/kalender">{t.dashboard.toCalendar}</Link>}>
+            {byDay.size === 0 ? (
+              <EmptyState icon="calendar_month" title={t.dashboard.nothingPlanned} />
+            ) : (
+              <ol className="mc-day-list">
+                {[...byDay.entries()].map(([day, list]) => (
+                  <li key={day}>
+                    <div className="mc-day-label">
+                      <span className="mc-day-num">{fmt(day, 'd')}</span>
+                      <span><span className="mc-day-name">{fmt(day, 'EEEE')}</span><span className="mc-muted">{relativeDay(day, today)}</span></span>
+                    </div>
+                    <ul className="mc-day-items">
+                      {list.map((i) => (
+                        <li key={i.id}>
+                          <button type="button" className="mc-row" onClick={() => openItem(i.id)}>
+                            <TypeBadge type={i.type} />
+                            <span className="mc-row-main">
+                              <span className="mc-row-title">{itemTitle(i)}</span>
+                              <span className="mc-muted">{[i.time, channelLabel(i.channel), i.owner].filter(Boolean).join(' · ')}</span>
+                            </span>
+                            <StatusPill status={i.status} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Card>
+          <ChannelMix />
+        </div>
 
-        <Card title={t.dashboard.late} icon="warning" className="mc-dash-late">
-          {groups.late.length ? (
-            <div className="mc-stack">{groups.late.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
-          ) : (
-            <EmptyState icon="check_circle" title={t.dashboard.allDone}>{t.dashboard.noLate}</EmptyState>
-          )}
-          {groups.today.length > 0 && (
-            <>
-              <h3 className="mc-subhead">{t.dashboard.today}</h3>
-              <div className="mc-stack">{groups.today.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
-            </>
-          )}
-        </Card>
+        <div className="mc-dash-col">
+          <Card title={t.dashboard.late} icon="warning" className="mc-dash-late">
+            {groups.late.length ? (
+              <div className="mc-stack">{groups.late.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
+            ) : (
+              <EmptyState icon="check_circle" title={t.dashboard.allDone}>{t.dashboard.noLate}</EmptyState>
+            )}
+            {groups.today.length > 0 && (
+              <>
+                <h3 className="mc-subhead">{t.dashboard.today}</h3>
+                <div className="mc-stack">{groups.today.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
+              </>
+            )}
+          </Card>
 
-        <Card title={t.dashboard.events} icon="storefront" className="mc-dash-events" action={<Link className="mc-card-link" to="/beurzen">{t.dashboard.timeline}</Link>}>
-          <div className="mc-event-mini-list">
-            {events.map((e) => {
-              const prep = store.todosFor(e.id);
-              const done = prep.filter((t) => t.done).length;
-              const n = daysBetween(today, e.date);
-              return (
-                <button key={e.id} type="button" className="mc-event-mini" onClick={() => openItem(e.id)}>
-                  <span className="mc-event-date" data-participation={participationKey(e.participation)} title={participationLabel(e.participation)}>
-                    <span className="mc-event-day">{fmt(e.date, 'd')}</span>
-                    <span className="mc-event-month">{fmt(e.date, 'MMM')}</span>
-                  </span>
-                  <span className="mc-row-main">
-                    <span className="mc-row-title">{itemTitle(e)}</span>
-                    <span className="mc-muted">{itemText(e, 'location')}</span>
-                    <span className="mc-progress" aria-label={t.dashboard.prepDone(done, prep.length)}>
-                      <span style={{ width: `${prep.length ? (done / prep.length) * 100 : 0}%` }} />
+          <Card title={t.dashboard.events} icon="storefront" className="mc-dash-events" action={<Link className="mc-card-link" to="/beurzen">{t.dashboard.timeline}</Link>}>
+            {events.length === 0 && <EmptyState icon="storefront" title={t.dashboard.noEventsAttending} />}
+            <div className="mc-event-mini-list">
+              {events.map((e) => {
+                const prep = store.todosFor(e.id);
+                const done = prep.filter((t) => t.done).length;
+                const n = daysBetween(today, e.date);
+                return (
+                  <button key={e.id} type="button" className="mc-event-mini" onClick={() => openItem(e.id)}>
+                    <span className="mc-event-date" data-participation={participationKey(e.participation)} title={participationLabel(e.participation)}>
+                      <span className="mc-event-day">{fmt(e.date, 'd')}</span>
+                      <span className="mc-event-month">{fmt(e.date, 'MMM')}</span>
                     </span>
-                  </span>
-                  <span className="mc-countdown">{n <= 0 ? t.common.countdown.running : t.common.countdown.daysShort(n)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </Card>
+                    <span className="mc-row-main">
+                      <span className="mc-row-title">{itemTitle(e)}</span>
+                      <span className="mc-muted">{itemText(e, 'location')}</span>
+                      <span className="mc-progress" aria-label={t.dashboard.prepDone(done, prep.length)}>
+                        <span style={{ width: `${prep.length ? (done / prep.length) * 100 : 0}%` }} />
+                      </span>
+                    </span>
+                    <span className="mc-countdown">{n <= 0 ? t.common.countdown.running : t.common.countdown.daysShort(n)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
 
         <Card title={t.dashboard.thisWeek} icon="calendar_month" className="mc-dash-week">
           <div className="mc-week-strip">

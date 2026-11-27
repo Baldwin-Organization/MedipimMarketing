@@ -1,12 +1,13 @@
 import type { DragEvent } from 'react';
 import { TYPE_META } from '../data/meta';
-import { itemTitle, participationLabel, t, todoText, typeLabel } from '../i18n';
+import { todoLabel } from '../data/dimensions';
+import { itemTitle, participationLabel, t, typeLabel } from '../i18n';
 import type { ScheduledTodo } from '../data/schedule';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
 import { useUi } from '../ui-context';
 import { ParticipationDot } from './participation';
-import { Checkbox, Icon, LateBadge } from './ui';
+import { Checkbox, Icon, JiraBadge, LateBadge } from './ui';
 
 const MIME = 'application/x-mc-entry';
 
@@ -90,11 +91,12 @@ export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledT
       draggable={!todo.done}
       onDragStart={(e) => startDrag(e, { kind: 'todo', id: todo.id })}
     >
-      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoText(todo))} />
+      <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo))} />
       <button type="button" className="mc-todo-body" onClick={() => item && openItem(item.id)}>
-        <span className="mc-entry-title">{todoText(todo)}</span>
+        <span className="mc-entry-title">{todoLabel(todo)}</span>
         {showItem && item && <span className="mc-todo-item">{itemTitle(item)}</span>}
       </button>
+      {!compact && <JiraBadge jira={todo.jira} />}
       <LateBadge days={todo.lateDays} compact={compact} />
     </div>
   );

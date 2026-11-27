@@ -7,7 +7,7 @@ const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
 describe('event planning', () => {
   it('plans posts and preparation for the three stands and GIRP, and nothing else', () => {
     const data = build();
-    const grouped = new Set(data.items.filter((i) => i.type !== 'event' && i.campaign && i.campaign !== 'Nieuwe UX Belgisch platform').map((i) => i.campaign));
+    const grouped = new Set(data.items.filter((i) => i.type !== 'event' && i.campaign && !['Nieuwe UX Belgisch platform', 'Medipim Academy'].includes(i.campaign)).map((i) => i.campaign));
     expect([...grouped].sort()).toEqual(['Expopharm', 'GIRP PharmaConnect 2027', 'PharmagoraPlus', 'The Pharmacy Show']);
     const withTodos = data.items.filter((i) => i.type === 'event' && data.todos.some((t) => t.itemId === i.id)).map((i) => i.title).sort();
     expect(withTodos).toEqual(['Expopharm', 'GIRP PharmaConnect 2027', 'PharmagoraPlus', 'The Pharmacy Show']);

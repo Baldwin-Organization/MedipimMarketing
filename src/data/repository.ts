@@ -143,7 +143,7 @@ export function toDataset({ items, todos, budgets, pillars, content }: Contents)
 
 /** Fills the dimension fields for items stored or exported before they existed. */
 export function normalizeItem(item: Item): Item {
-  return { ...item, audiences: item.audiences ?? [], productTypes: item.productTypes ?? [], countries: item.countries ?? [] };
+  return { ...item, audiences: item.audiences ?? [], productTypes: item.productTypes ?? [], countries: item.countries ?? [], languages: item.languages ?? [] };
 }
 
 export function parseDataset(json: string): Dataset & Contents {

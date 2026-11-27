@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { PlanTable } from '../components/PlanTable';
 import { Button, EmptyState, Icon, Pill, Segmented, Stat } from '../components/ui';
 import { euro, yearOf } from '../data/budget';
@@ -12,6 +12,10 @@ import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
 const ALL = 'alle';
+
+const MediaMap = lazy(() => import('./MediaMap'));
+
+const cardId = (medium: string) => `medium-${medium.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
 export function PrView() {
   const store = useStore();
@@ -83,73 +87,96 @@ const PRIORITY_TONE: Record<MediaPriority, 'success' | 'info' | 'neutral'> = { e
 function MediaShortlist({ items }: { items: Item[] }) {
   const { openItem } = useUi();
   const { today } = useStore();
+  const [view, setView] = useState<'lijst' | 'kaart'>('lijst');
+  const show = (medium: string) => {
+    setView('lijst');
+    requestAnimationFrame(() => {
+      const card = document.getElementById(cardId(medium));
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card?.focus({ preventScroll: true });
+    });
+  };
   return (
     <section className="mc-plan-group" aria-label={t.pr.shortlist}>
-      <div>
-        <h2>{t.pr.shortlist}</h2>
-        <p className="mc-muted">{t.pr.shortlistHint}</p>
+      <div className="mc-view-bar">
+        <div>
+          <h2>{t.pr.shortlist}</h2>
+          <p className="mc-muted">{t.pr.shortlistHint}</p>
+        </div>
+        <Segmented
+          label={t.pr.views.label}
+          value={view}
+          onChange={setView}
+          options={[{ value: 'lijst', label: t.pr.views.list, icon: 'view_list' }, { value: 'kaart', label: t.pr.views.map, icon: 'language' }]}
+        />
       </div>
-      <ul className="mc-media-grid">
-        {TRADE_MEDIA.map((m) => {
-          const planned = items.filter((i) => isInMedium(m, i.medium)).length;
-          return (
-            <li key={m.medium} className="mc-card mc-media-card">
-              <header className="mc-media-head">
-                <div>
-                  <h3>{m.medium}</h3>
-                  <p className="mc-muted">{[m.publisher, m.market[lang]].filter(Boolean).join(' · ')}</p>
-                </div>
-                <Pill tone={PRIORITY_TONE[m.priority]}>{t.pr.priority[m.priority]}</Pill>
-              </header>
-              {!m.audiences.includes('producenten') && (
-                <p className="mc-media-audience">
-                  {m.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{t.pr.audienceOther(audienceLabel(a))}</span>)}
-                </p>
-              )}
-              <p className="mc-media-text">{m.assessment[lang]}</p>
-              <section className="mc-media-section" aria-label={`${t.pr.reach}: ${m.medium}`}>
-                <h4>{t.pr.reach}</h4>
-                <dl className="mc-media-facts">
-                  {m.reach.map((f) => (
-                    <div key={f.label.nl}>
-                      <dt>{f.label[lang]}</dt>
-                      <dd>{f.value[lang]}</dd>
-                    </div>
+      {view === 'kaart' ? (
+        <Suspense fallback={<p className="mc-muted">{t.events.map.loading}</p>}>
+          <MediaMap onShow={show} />
+        </Suspense>
+      ) : (
+        <ul className="mc-media-grid">
+          {TRADE_MEDIA.map((m) => {
+            const planned = items.filter((i) => isInMedium(m, i.medium)).length;
+            return (
+              <li key={m.medium} id={cardId(m.medium)} tabIndex={-1} className="mc-card mc-media-card">
+                <header className="mc-media-head">
+                  <div>
+                    <h3>{m.medium}</h3>
+                    <p className="mc-muted">{[m.publisher, m.market[lang]].filter(Boolean).join(' · ')}</p>
+                  </div>
+                  <Pill tone={PRIORITY_TONE[m.priority]}>{t.pr.priority[m.priority]}</Pill>
+                </header>
+                {!m.audiences.includes('producenten') && (
+                  <p className="mc-media-audience">
+                    {m.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{t.pr.audienceOther(audienceLabel(a))}</span>)}
+                  </p>
+                )}
+                <p className="mc-media-text">{m.assessment[lang]}</p>
+                <section className="mc-media-section" aria-label={`${t.pr.reach}: ${m.medium}`}>
+                  <h4>{t.pr.reach}</h4>
+                  <dl className="mc-media-facts">
+                    {m.reach.map((f) => (
+                      <div key={f.label.nl}>
+                        <dt>{f.label[lang]}</dt>
+                        <dd>{f.value[lang]}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+                <section className="mc-media-section">
+                  <h4>{t.pr.readers}</h4>
+                  <p className="mc-media-text">{m.readers[lang]}</p>
+                </section>
+                {m.rates && <p className="mc-media-text"><strong>{t.pr.rates}:</strong> {m.rates[lang]}</p>}
+                {m.ask && <p className="mc-media-text"><strong>{t.pr.ask}:</strong> {m.ask[lang]}</p>}
+                <p className="mc-muted">
+                  {t.pr.checked(fmt(`${m.checked}-01`, 'MMMM yyyy'))} {t.pr.sources}:{' '}
+                  {m.sources.map((s, i) => (
+                    <span key={s.url}>
+                      {i > 0 && ', '}
+                      <a className="mc-card-link" href={s.url} target="_blank" rel="noreferrer">{s.label[lang]}</a>
+                    </span>
                   ))}
-                </dl>
-              </section>
-              <section className="mc-media-section">
-                <h4>{t.pr.readers}</h4>
-                <p className="mc-media-text">{m.readers[lang]}</p>
-              </section>
-              {m.rates && <p className="mc-media-text"><strong>{t.pr.rates}:</strong> {m.rates[lang]}</p>}
-              {m.ask && <p className="mc-media-text"><strong>{t.pr.ask}:</strong> {m.ask[lang]}</p>}
-              <p className="mc-muted">
-                {t.pr.checked(fmt(`${m.checked}-01`, 'MMMM yyyy'))} {t.pr.sources}:{' '}
-                {m.sources.map((s, i) => (
-                  <span key={s.url}>
-                    {i > 0 && ', '}
-                    <a className="mc-card-link" href={s.url} target="_blank" rel="noreferrer">{s.label[lang]}</a>
-                  </span>
-                ))}
-              </p>
-              <footer className="mc-media-foot">
-                <a className="mc-card-link mc-media-link" href={m.url} target="_blank" rel="noreferrer" title={m.url} aria-label={`${t.pr.website}: ${m.medium}`}>{t.pr.website}<Icon name="open_in_new" size={14} /></a>
-                {planned > 0 && <span className="mc-muted">{t.pr.plannedFor(planned)}</span>}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon="add"
-                  aria-label={`${t.pr.plan}: ${m.medium}`}
-                  onClick={() => openItem(undefined, { type: 'pr', medium: m.medium, audiences: m.audiences, countries: m.countries, date: today })}
-                >
-                  {t.pr.plan}
-                </Button>
-              </footer>
-            </li>
-          );
-        })}
-      </ul>
+                </p>
+                <footer className="mc-media-foot">
+                  <a className="mc-card-link mc-media-link" href={m.url} target="_blank" rel="noreferrer" title={m.url} aria-label={`${t.pr.website}: ${m.medium}`}>{t.pr.website}<Icon name="open_in_new" size={14} /></a>
+                  {planned > 0 && <span className="mc-muted">{t.pr.plannedFor(planned)}</span>}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon="add"
+                    aria-label={`${t.pr.plan}: ${m.medium}`}
+                    onClick={() => openItem(undefined, { type: 'pr', medium: m.medium, audiences: m.audiences, countries: m.countries, date: today })}
+                  >
+                    {t.pr.plan}
+                  </Button>
+                </footer>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

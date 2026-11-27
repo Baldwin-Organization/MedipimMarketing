@@ -184,6 +184,20 @@ describe('events in the Gulf region', () => {
   });
 });
 
+describe('Pharmacy Connect', () => {
+  it('seeds it undecided in Sydney, and adds only it once to older data', () => {
+    let n = 0;
+    const { items } = buildSeed(() => `id${n++}`);
+    const pc = items.find((i) => i.title === 'Pharmacy Connect')!;
+    expect([pc.date, pc.endDate, pc.countries, pc.participation, pc.status]).toEqual(['2027-09-07', '2027-09-09', ['AU'], undefined, 'idee']);
+    expect(pc.translations?.en?.location).toBe('Sydney, Australia');
+
+    const old = items.filter((i) => i !== pc);
+    expect(addEvents(old, () => 'new', ['Pharmacy Connect']).map((i) => i.title)).toEqual(['Pharmacy Connect']);
+    expect(addEvents(items, () => 'new', ['Pharmacy Connect'])).toHaveLength(0);
+  });
+});
+
 describe('weekly rhythm 2027', () => {
   it('adds the single posts per pillar once, to data that predates them', () => {
     const { content, pillars } = buildSeed(() => 'x');

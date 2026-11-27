@@ -1,11 +1,12 @@
 import { useId, type ReactNode } from 'react';
-import { audienceOptions, countryName, existingMarketsSorted, isExistingMarket, newMarkets, productOptions } from '../data/dimensions';
+import { LANGUAGES, audienceOptions, countryName, existingMarketsSorted, isExistingMarket, languageName, newMarkets, productOptions, withCountryLanguages } from '../data/dimensions';
 import { audienceLabel, productLabel, t } from '../i18n';
 import type { Audience, Item, ProductType } from '../data/types';
 import { Icon, Pill, ToggleChipGroup } from './ui';
 
-export function DimensionTags({ item }: { item: Pick<Item, 'audiences' | 'productTypes' | 'countries'> }) {
-  if (!item.audiences.length && !item.productTypes.length && !item.countries.length) return null;
+export function DimensionTags({ item }: { item: Pick<Item, 'audiences' | 'productTypes' | 'countries' | 'languages'> }) {
+  const languages = item.languages ?? [];
+  if (!item.audiences.length && !item.productTypes.length && !item.countries.length && !languages.length) return null;
   return (
     <div className="mc-tags" aria-label={t.dims.region}>
       {item.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{audienceLabel(a)}</span>)}
@@ -15,6 +16,7 @@ export function DimensionTags({ item }: { item: Pick<Item, 'audiences' | 'produc
           {countryName(c)}{isExistingMarket(c) ? '' : t.dims.newMarketSuffix}
         </Pill>
       ))}
+      {languages.map((l) => <Pill key={l} tone="info">{languageName(l)}</Pill>)}
     </div>
   );
 }
@@ -29,11 +31,13 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-interface Value { audiences: Audience[]; productTypes: ProductType[]; countries: string[] }
+interface Value { audiences: Audience[]; productTypes: ProductType[]; countries: string[]; languages: string[] }
 
-export function DimensionFields({ value, onChange }: { value: Value; onChange: (patch: Partial<Value>) => void }) {
+export function DimensionFields({ value, onChange: change }: { value: Value; onChange: (patch: Partial<Value>) => void }) {
   const existing = value.countries.filter(isExistingMarket);
   const added = value.countries.filter((c) => !isExistingMarket(c));
+  const onChange = (patch: Partial<Value>) =>
+    change(patch.countries ? { ...patch, languages: withCountryLanguages(value.countries, patch.countries, value.languages) } : patch);
   return (
     <>
       <Group label={t.dims.audience}>
@@ -75,6 +79,15 @@ export function DimensionFields({ value, onChange }: { value: Value; onChange: (
             {newMarkets().filter((c) => !added.includes(c)).map((c) => <option key={c} value={c}>{countryName(c)}</option>)}
           </select>
         </div>
+      </Group>
+      <Group label={t.dims.languages}>
+        <ToggleChipGroup
+          label={t.dims.languages}
+          value={value.languages}
+          onChange={(languages) => onChange({ languages })}
+          options={[...new Set([...LANGUAGES, ...value.languages])].map((l) => ({ value: l, label: languageName(l) }))}
+        />
+        <span className="mc-muted">{t.dims.languagesHint}</span>
       </Group>
     </>
   );

@@ -2,7 +2,7 @@ import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { planEvents } from './seed-events';
-import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
+import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { scheduleWeekly } from './seed-weekly';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
 import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
@@ -96,6 +96,7 @@ const EVENTS: SeedEvent[] = [
 
   // September 2027
   { title: 'HDA Annual Board and Membership Meeting', date: '2027-09-12', endDate: '2027-09-15', location: 'Park City, Verenigde Staten', channel: 'Netwerkevent', audiences: GROOTHANDELS, relevance: 'Hoog voor Amerikaanse strategische contacten', description: 'HDA-leden bespreken hier de koers van de organisatie en ontwikkelingen in beleid en farmaceutische distributie. Vooral geschikt voor senior relaties en bestaande introducties.' },
+  { title: 'Pharmacy Connect', date: '2027-09-07', endDate: '2027-09-09', location: 'Sydney, Australië', channel: 'Beurs', audiences: ['apothekers', 'producenten'], relevance: 'Hoog voor Australië', description: 'Jaarcongres van The Pharmacy Guild of Australia in het Hyatt Regency Sydney, met meer dan 1.300 apothekers, apotheekhouders, apotheekassistenten en mensen uit de industrie. Naast tweeënhalve dag programma een vakbeurs met 90 stands, in 2026 uitverkocht, met onder meer Haleon, Pfizer, Bayer, Galderma, Arrotex en groothandel Symbion.' },
   { title: 'FIP World Congress of Pharmacy and Pharmaceutical Sciences', date: '2027-09-12', endDate: '2027-09-15', location: 'Kuala Lumpur, Maleisië', channel: 'Congres', audiences: APOTHEKERS, relevance: 'Middel tot hoog voor internationaal netwerk', description: 'Brengt apotheekleiders, apothekers, docenten en farmaceutische wetenschappers uit de hele wereld samen.' },
   { title: 'Vital Member Forum', date: '2027-09-14', location: 'Angus Glen, Canada', channel: 'Netwerkevent', audiences: GROOTHANDELS, relevance: 'Middel tot hoog voor netwerk in Canada', description: 'Kleinschaliger ledenforum met briefings en gesprekken over actuele operationele en beleidsmatige thema’s in de Canadese supply chain.' },
   { title: 'Agential Cannabis', date: '2027-09-22', endDate: '2027-09-23', location: 'Bangkok, Thailand', channel: 'Beurs', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Specifiek voor de medicinale-cannabisketen in Azië-Pacific, van productie en kwaliteit tot markttoegang.' },
@@ -241,6 +242,9 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-10', apply: fillAndScheduleWeekly },
   { key: 'mc-seed-updates-11', apply: (data) => ({ items: addEvents(data.items, newId) }) },
   { key: 'mc-seed-updates-12', apply: (data) => ({ deleteItems: duplicateEvents(data.items, data.todos) }) },
+  { key: 'mc-seed-updates-14', apply: (data) => ({ items: addEvents(data.items, newId, ['Pharmacy Connect']) }) },
+  { key: 'mc-seed-updates-15', apply: (data) => academyUpdate(data, new Date().toISOString()) },
+  { key: 'mc-seed-updates-16', apply: (data) => ({ items: academyLanguages(data.items, new Date().toISOString()) }) },
 ];
 
 /** The December pieces, then one post a week in the calendar. */
@@ -257,13 +261,13 @@ function mergeById<T extends { id: string }>(base: T[], changes: T[]): T[] {
 }
 
 /** Events added to the calendar after it was first seeded, still undecided. */
-const ADDED_EVENTS = ['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'];
+const GULF_EVENTS = ['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'];
 
 /** The added events, for data seeded before them; an event already in the calendar under that title is left alone. */
-export function addEvents(items: Item[], makeId: () => string): Item[] {
+export function addEvents(items: Item[], makeId: () => string, titles = GULF_EVENTS): Item[] {
   const now = new Date().toISOString();
   return EVENTS
-    .filter((e) => ADDED_EVENTS.includes(e.title) && !items.some((i) => i.type === 'event' && i.title === e.title))
+    .filter((e) => titles.includes(e.title) && !items.some((i) => i.type === 'event' && i.title === e.title))
     .map((e) => eventItem(e, makeId(), now));
 }
 
@@ -288,6 +292,7 @@ function eventItem(e: SeedEvent, id: string, now: string): Item {
     audiences: e.audiences,
     productTypes: e.products ?? ['geneesmiddelen'],
     countries: [countryCode(e.location.split(',').pop()!)].filter((c): c is string => !!c),
+    languages: [],
     translations: {
       en: {
         title: e.tentative ? `${e.title} ${TENTATIVE_EN}` : en.title ?? e.title,
@@ -321,6 +326,7 @@ export function buildSeed(makeId: () => string): Contents {
       audiences: a.audiences,
       productTypes: ALL_PRODUCTS,
       countries: a.countries,
+      languages: a.languages ?? [],
       translations: { en: { ...ACTIONS_EN[a.title], campaign: UX_LAUNCH_EN } },
       contentId: UX_LAUNCH_CONTENT_ID,
       createdAt: now,
@@ -371,6 +377,7 @@ function buildRetargeting(makeId: () => string, now: string): { item: Item; todo
       audiences: ALL_AUDIENCES,
       productTypes: ALL_PRODUCTS,
       countries: ['BE', 'FR', 'AU', 'DE'],
+      languages: ['nl', 'fr', 'de', 'en'],
       translations: {
         en: {
           title: 'Google retargeting of website visitors (BE, FR, AU, DE)',
@@ -415,6 +422,7 @@ const ACTIONS: {
   owner: string;
   audiences: Audience[];
   countries: string[];
+  languages?: string[];
   todos?: { title: string; dueDate: IsoDate }[];
 }[] = [
   {
@@ -427,6 +435,7 @@ const ACTIONS: {
     owner: 'Maarten',
     audiences: ALL_AUDIENCES,
     countries: [],
+    languages: ['en'],
   },
   {
     type: 'social',

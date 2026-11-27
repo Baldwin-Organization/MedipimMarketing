@@ -50,6 +50,8 @@ export interface Item {
   productTypes: ProductType[];
   /** ISO 3166-1 alpha-2 codes; whether a country is an existing or new market follows from `EXISTING_MARKETS`. */
   countries: string[];
+  /** ISO 639-1 codes of the languages the item is made in; to-dos that differ per language come once per language. */
+  languages: string[];
   /** The plain text fields are Dutch; this holds the English version. */
   translations?: { en?: ItemText };
   /** The content piece this item publishes or shares. */
@@ -71,6 +73,22 @@ export interface Todo {
   owner?: string;
   /** `title` is Dutch; this holds the English version. */
   translations?: { en?: { title?: string } };
+  /** ISO 639-1 code when the to-do is one of a set, one per language of the item. */
+  language?: string;
+  /** ISO 3166-1 alpha-2 code when the to-do is one of a set, one per country of the item. */
+  country?: string;
+  /** The Jira issue that carries out this to-do. */
+  jira?: JiraLink;
+}
+
+/** A to-do's issue in Jira. The Jira status is leading: a status in the done category closes the to-do. */
+export interface JiraLink {
+  key: string;
+  url?: string;
+  /** Status name as Jira shows it, e.g. "In Progress". */
+  status?: string;
+  statusCategory?: 'new' | 'indeterminate' | 'done';
+  syncedAt?: string;
 }
 
 export type BudgetLine =

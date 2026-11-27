@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } f
 import { ICON_PATHS, type IconName } from '../icons.generated';
 import { STATUS_META, TYPE_META } from '../data/meta';
 import { statusLabel, t, typeLabel } from '../i18n';
-import type { ItemStatus, ItemType } from '../data/types';
+import type { ItemStatus, ItemType, JiraLink } from '../data/types';
 
 export function Icon({ name, size = 20, className }: { name: IconName; size?: number; className?: string }) {
   return (
@@ -73,6 +73,16 @@ export function LateBadge({ days, compact }: { days: number; compact?: boolean }
       {compact ? `${days} ${t.dates.dayShort}` : full}
     </span>
   );
+}
+
+const JIRA_TONE = { new: 'neutral', indeterminate: 'info', done: 'success' } as const;
+
+/** The Jira issue that carries out a to-do, with the status Jira reported. */
+export function JiraBadge({ jira }: { jira?: JiraLink }) {
+  if (!jira) return null;
+  const label = jira.status ? `${jira.key} · ${jira.status}` : jira.key;
+  const pill = <Pill tone={jira.statusCategory ? JIRA_TONE[jira.statusCategory] : 'neutral'}>{label}</Pill>;
+  return jira.url ? <a className="mc-jira" href={jira.url} target="_blank" rel="noreferrer" title={t.jira.open}>{pill}</a> : pill;
 }
 
 export function ToggleChipGroup<T extends string>({ options, value, onChange, label }: {
