@@ -486,6 +486,7 @@ export const nl = {
     dealsTable: 'Deals in deze periode',
     created: 'Aangemaakt',
     customer: 'Bedrijf',
+    country: 'Land',
     deal: 'Deal',
     phase: 'Fase',
     sourceCol: 'Bron',

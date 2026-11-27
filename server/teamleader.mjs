@@ -74,16 +74,17 @@ async function all(endpoint, body) {
   return rows;
 }
 
-/** Names of the companies and contacts the deals are for, a list call per kind. */
+/** Name and country of the companies and contacts the deals are for, a list call per kind. */
 async function customers(refs) {
   const ids = (type) => [...new Set(refs.filter((c) => c.type === type).map((c) => c.id))];
   const [companies, contacts] = await Promise.all([
     ids('company').length ? all('companies.list', { filter: { ids: ids('company') } }) : [],
     ids('contact').length ? all('contacts.list', { filter: { ids: ids('contact') } }) : [],
   ]);
+  const country = (c) => c.primary_address?.country ?? null;
   return new Map([
-    ...companies.map((c) => [c.id, c.name]),
-    ...contacts.map((c) => [c.id, [c.first_name, c.last_name].filter(Boolean).join(' ')]),
+    ...companies.map((c) => [c.id, { name: c.name, country: country(c) }]),
+    ...contacts.map((c) => [c.id, { name: [c.first_name, c.last_name].filter(Boolean).join(' '), country: country(c) }]),
   ]);
 }
 
@@ -95,13 +96,14 @@ export async function teamleader(from, to) {
   const deals = (await all('deals.list', { filter: { updated_since: `${from}T00:00:00+00:00` }, sort: [{ field: 'created_at', order: 'desc' }] }))
     .filter((d) => d.created_at.slice(0, 10) >= from && d.created_at.slice(0, 10) <= to);
   const sourceName = new Map(sources.map((s) => [s.id, s.name]));
-  const customerName = await customers(deals.map((d) => d.lead?.customer).filter(Boolean));
+  const customer = await customers(deals.map((d) => d.lead?.customer).filter(Boolean));
   return {
     phases,
     deals: deals.map((d) => ({
       id: d.id,
       title: d.title,
-      customer: customerName.get(d.lead?.customer?.id) ?? null,
+      customer: customer.get(d.lead?.customer?.id)?.name ?? null,
+      country: customer.get(d.lead?.customer?.id)?.country ?? null,
       created: d.created_at.slice(0, 10),
       status: d.status,
       phase: d.current_phase?.id ?? null,

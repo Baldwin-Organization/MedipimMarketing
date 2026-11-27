@@ -537,6 +537,7 @@ export const en: Dict = {
     dealsTable: 'Deals in this period',
     created: 'Created',
     customer: 'Company',
+    country: 'Country',
     deal: 'Deal',
     phase: 'Phase',
     sourceCol: 'Source',

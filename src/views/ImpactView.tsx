@@ -157,13 +157,14 @@ function TeamleaderPanel({ data, from, to }: { data: TeamleaderData; from: IsoDa
       <div className="mc-table-wrap">
         <table className="mc-table" aria-label={t.impact.dealsTable}>
           <thead>
-            <tr><th>{t.impact.created}</th><th>{t.impact.customer}</th><th>{t.impact.deal}</th><th>{t.impact.phase}</th><th>{t.impact.sourceCol}</th><th className="mc-num">{t.impact.value}</th></tr>
+            <tr><th>{t.impact.created}</th><th>{t.impact.customer}</th><th>{t.impact.country}</th><th>{t.impact.deal}</th><th>{t.impact.phase}</th><th>{t.impact.sourceCol}</th><th className="mc-num">{t.impact.value}</th></tr>
           </thead>
           <tbody>
             {data.deals.map((d) => (
               <tr key={d.id}>
                 <td className="mc-nowrap">{d.created}</td>
                 <td className={d.customer ? '' : 'mc-muted'}>{d.customer ?? '–'}</td>
+                <td className={d.country ? '' : 'mc-muted'}>{d.country ? countryName(d.country) : '–'}</td>
                 <td><a href={d.url} target="_blank" rel="noreferrer" className="mc-impact-link">{d.title}<Icon name="open_in_new" size={14} /></a></td>
                 <td>{(d.phase && phaseName.get(d.phase)) ?? '–'}{d.status === 'won' && <> <Pill tone="success">{t.impact.won}</Pill></>}{d.status === 'lost' && <> <Pill tone="error">{t.impact.lost}</Pill></>}</td>
                 <td className={d.source ? '' : 'mc-muted'}>{d.source ?? t.impact.noSource}</td>
