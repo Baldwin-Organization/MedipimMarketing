@@ -127,7 +127,9 @@ const NO_LONGER_EXHIBITING = ['APP Conference and Trade Exhibition', 'GIRP Pharm
 /** Conferences Medipim attends without a stand; they fall under the visitor budget line. */
 const VISITING = ['GIRP PharmaConnect 2027'];
 /** Someone from Medipim attends together with partner Meditech, at no cost to Medipim. */
-const VIA_MEDITECH = ['World Health Expo Dubai', 'Pharmacy Connect'];
+const VIA_MEDITECH = ['World Health Expo Dubai'];
+/** Events the earlier Meditech updates handled; Pharmacy Connect went to the distributor afterwards. */
+const MEDITECH_BEFORE = [...VIA_MEDITECH, 'Pharmacy Connect'];
 const VIA_MEDITECH_NL = 'Beslissing: iemand van Medipim gaat mee met Meditech, budgetneutraal voor Medipim.';
 const VIA_MEDITECH_NL_BEFORE = 'Beslissing: budgetneutraal voor Medipim, Meditech gaat.';
 
@@ -135,7 +137,7 @@ const VIA_MEDITECH_NL_BEFORE = 'Beslissing: budgetneutraal voor Medipim, Meditec
 export function markViaMeditech(items: Item[]): Item[] {
   const now = new Date().toISOString();
   return items
-    .filter((i) => i.type === 'event' && VIA_MEDITECH.includes(i.title) && !i.participation && i.budgetPlanned == null && i.budgetActual == null)
+    .filter((i) => i.type === 'event' && MEDITECH_BEFORE.includes(i.title) && !i.participation && i.budgetPlanned == null && i.budgetActual == null)
     .map((i) => ({ ...viaMeditech(i), updatedAt: now }));
 }
 
@@ -147,7 +149,7 @@ export function meditechAttends(data: Pick<Contents, 'items' | 'todos'>, makeId:
   const now = new Date().toISOString();
   const swap = (text: string | undefined, before: string, after: string) => text?.replace(before, after);
   const events = data.items
-    .filter((i) => i.type === 'event' && VIA_MEDITECH.includes(i.title) && i.participation === 'geen' && i.description.includes(VIA_MEDITECH_NL_BEFORE))
+    .filter((i) => i.type === 'event' && MEDITECH_BEFORE.includes(i.title) && i.participation === 'geen' && i.description.includes(VIA_MEDITECH_NL_BEFORE))
     .map((i): Item => ({
       ...i,
       participation: 'bezoeker',
@@ -161,6 +163,10 @@ export function meditechAttends(data: Pick<Contents, 'items' | 'todos'>, makeId:
 
 const viaMeditech = (i: Item) => budgetNeutral(i, VIA_MEDITECH_NL, VIA_MEDITECH_EN);
 
+/** Earlier decision notes, removed when another partner takes over the costs. */
+const PARTNER_NOTES = [VIA_MEDITECH_NL, VIA_MEDITECH_NL_BEFORE, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE];
+const withoutPartnerNotes = (text = '') => PARTNER_NOTES.reduce((t, note) => t.replace(`\n\n${note}`, ''), text);
+
 /** Medipim attends at no cost because a partner pays; keeps a stand someone chose, otherwise a visit. */
 function budgetNeutral(i: Item, nl: string, en: string): Item {
   return {
@@ -168,13 +174,13 @@ function budgetNeutral(i: Item, nl: string, en: string): Item {
     participation: i.participation === 'exposant' ? 'exposant' : 'bezoeker',
     status: i.status === 'idee' ? 'gepland' : i.status,
     budgetPlanned: 0,
-    description: `${i.description}\n\n${nl}`,
-    translations: { ...i.translations, en: { ...i.translations?.en, description: `${i.translations?.en?.description ?? ''}\n\n${en}`.trim() } },
+    description: `${withoutPartnerNotes(i.description)}\n\n${nl}`,
+    translations: { ...i.translations, en: { ...i.translations?.en, description: `${withoutPartnerNotes(i.translations?.en?.description)}\n\n${en}`.trim() } },
   };
 }
 
 /** Our distributor in Australia pays for Medipim's presence at these events. */
-const VIA_DISTRIBUTOR = ['APP Conference and Trade Exhibition'];
+const VIA_DISTRIBUTOR = ['APP Conference and Trade Exhibition', 'Pharmacy Connect'];
 const VIA_DISTRIBUTOR_NL = 'Beslissing: Medipim gaat, onze distributeur in Australië betaalt de kosten. Budgetneutraal voor Medipim.';
 const viaDistributor = (i: Item) => budgetNeutral(i, VIA_DISTRIBUTOR_NL, VIA_DISTRIBUTOR_EN);
 
@@ -320,6 +326,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-22', apply: (data) => ({ revenues: seedRevenues(data.revenues) }) },
   { key: 'mc-seed-updates-23', apply: (data) => distributorPays(data, newId) },
   { key: 'mc-seed-updates-24', apply: (data) => ({ items: reestimateVisits(data.items) }) },
+  { key: 'mc-seed-updates-25', apply: (data) => distributorPays(data, newId) },
 ];
 
 /** The visitor estimate before Belgium counted as home and before published ticket prices. */
