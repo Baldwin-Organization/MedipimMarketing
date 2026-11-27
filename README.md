@@ -84,8 +84,9 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   `src/data/budget.ts`): als exposant € 20.000 in Europa en € 30.000 daarbuiten; als bezoeker
   ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur;
   "campagne" € 2.500 LinkedIn-advertenties. Wie de beslissing wijzigt, krijgt het nieuwe bedrag,
-  tenzij iemand het bedrag zelf aanpaste. World Health Expo Dubai en Pharmacy Connect zijn
-  budgetneutraal: Medipim gaat niet zelf, partner Meditech gaat.
+  tenzij iemand het bedrag zelf aanpaste. Op World Health Expo Dubai en Pharmacy Connect gaat
+  iemand van Medipim mee met Meditech: bezoeker, budgetneutraal (€ 0), met de posts en
+  voorbereiding van een bezoek.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser
