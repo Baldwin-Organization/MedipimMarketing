@@ -258,7 +258,7 @@ export const nl = {
     addTodo: 'To do toevoegen',
     estimateHint: {
       exposant: (amount: string) => `Inschatting als exposant: ${amount} voor stand, opbouw, materiaal, reis en verblijf.`,
-      bezoeker: (amount: string) => `Inschatting als bezoeker: ${amount} voor twee personen, met ticket, reis, hotel en dagvergoeding.`,
+      bezoeker: (amount: string) => `Inschatting als bezoeker: ${amount} voor twee personen, met ticket, reis, hotel en dagvergoeding; in België alleen ticket en een trein- of parkingticket.`,
       campagne: (amount: string) => `Inschatting: ${amount} voor LinkedIn-advertenties rond het event.`,
     },
     perLanguageHint: 'Stappen zoals copy of visuals komen één keer per taal, targeting en verzendlijsten één keer per land.',

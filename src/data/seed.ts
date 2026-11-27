@@ -319,7 +319,20 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-21', apply: (data) => meditechAttends(data, newId) },
   { key: 'mc-seed-updates-22', apply: (data) => ({ revenues: seedRevenues(data.revenues) }) },
   { key: 'mc-seed-updates-23', apply: (data) => distributorPays(data, newId) },
+  { key: 'mc-seed-updates-24', apply: (data) => ({ items: reestimateVisits(data.items) }) },
 ];
+
+/** The visitor estimate before Belgium counted as home and before published ticket prices. */
+const previousVisitEstimate = (i: Item) => eventEstimate({ ...i, title: '', countries: i.countries.map((c) => (c === 'BE' ? 'NL' : c)) });
+
+/** Visits whose planned amount is still the earlier estimate, at the current estimate; amounts someone entered stay. */
+export function reestimateVisits(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items
+    .filter((i) => i.type === 'event' && i.participation === 'bezoeker' && i.budgetPlanned != null
+      && i.budgetPlanned === previousVisitEstimate(i) && i.budgetPlanned !== eventEstimate(i))
+    .map((i) => ({ ...i, budgetPlanned: eventEstimate(i), updatedAt: now }));
+}
 
 /** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
 const MEDIMAPPER_TEXT: [string, string][] = [

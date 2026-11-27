@@ -114,6 +114,15 @@ describe('budget', () => {
     expect(autoBudgetLine({ ...app, participation: 'campagne' })).toBe('linkedin');
   });
 
+  it('counts no hotel or allowance at home in Belgium, and uses a published ticket price', () => {
+    const brussels = item({ type: 'event', channel: 'Conferentie', countries: ['BE'], date: '2027-02-24', endDate: '2027-02-25', participation: 'bezoeker' });
+    expect(eventEstimate(brussels)).toBe(2000);
+    expect(eventEstimate({ ...brussels, title: 'Cann-Reg 2027' })).toBe(2500);
+    expect(eventEstimate({ ...brussels, countries: ['BE', 'DE'] })).toBe(3500);
+    expect(eventEstimate({ ...brussels, countries: [] })).toBe(3500);
+    expect(eventEstimate({ ...brussels, participation: 'exposant' })).toBe(20000);
+  });
+
   it('lets the planned amount follow a new decision unless someone changed it', () => {
     const fair = item({ type: 'event', channel: 'Beurs', countries: ['DE'], date: '2027-09-28', endDate: '2027-09-30' });
     const exhibiting = withParticipation(fair, 'exposant');
