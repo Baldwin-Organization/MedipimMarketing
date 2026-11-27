@@ -1,0 +1,50 @@
+# Railpack's default static Caddyfile, plus basic auth. The login comes from the Railway
+# variables BASIC_AUTH_USER and BASIC_AUTH_HASH (a bcrypt hash from `caddy hash-password`).
+{
+	admin off
+	persist_config off
+	auto_https off
+
+	log {
+		format json
+	}
+
+	servers {
+		trusted_proxies static private_ranges 100.0.0.0/8
+	}
+}
+
+:{$PORT:80} {
+	log {
+		format json
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	handle /health {
+		respond 200
+	}
+
+	handle {
+		basic_auth {
+			{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+		}
+
+		root * {{.DIST_DIR}}
+
+		file_server {
+			hide .git
+			hide .env*
+		}
+
+		encode {
+			gzip
+			zstd
+		}
+
+		try_files {path} {path}.html {path}/index.html{{if .IndexFallback}} /index.html{{end}}
+	}
+}
