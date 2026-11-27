@@ -7,7 +7,7 @@ import type { ContentPiece, IsoDate, Item, Todo } from './types';
 
 export const WEEKLY_CHANNEL = 'LinkedIn · Medipim';
 /** First and last day of the weekly rhythm. */
-export const WEEKLY_FROM: IsoDate = '2026-12-01';
+export const WEEKLY_FROM: IsoDate = '2026-12-14';
 export const WEEKLY_TO: IsoDate = '2027-12-31';
 
 /** Event posts that publish a content piece. */
@@ -45,7 +45,7 @@ function inPublishingOrder(pieces: ContentPiece[], pillarOrder: string[]): Conte
 }
 
 /**
- * One post a week on the Medipim page from December 2026 to December 2027: every planned piece without a
+ * One post a week on the Medipim page from mid-December 2026 to December 2027: every planned piece without a
  * calendar item gets the next free week, in publishing order. A piece that moves to another month gets that month.
  */
 export function scheduleWeekly(data: Pick<Contents, 'items' | 'content' | 'pillars'>, makeId: () => string): Pick<Contents, 'items' | 'todos' | 'content'> {

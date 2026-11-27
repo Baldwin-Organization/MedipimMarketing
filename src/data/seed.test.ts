@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, removeMedimapper } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, removeMedimapper, startMidDecember } from './seed';
+import { moveItem } from './schedule';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -219,7 +220,7 @@ describe('Google retargeting campaign', () => {
   it('runs on Google Ads in the four markets, with its set-up to-dos', () => {
     const data = build();
     const campaign = data.items.find((i) => i.type === 'campaign' && i.channel === 'Google Ads')!;
-    expect(campaign).toMatchObject({ countries: ['BE', 'FR', 'AU', 'DE'], date: '2026-12-01', endDate: '2027-12-31', status: 'gepland' });
+    expect(campaign).toMatchObject({ countries: ['BE', 'FR', 'AU', 'DE'], date: '2026-12-17', endDate: '2027-12-31', status: 'gepland' });
     expect(campaign.translations?.en?.title).toBeTruthy();
     const todos = data.todos.filter((t) => t.itemId === campaign.id);
     expect(todos).toHaveLength(4);
@@ -258,5 +259,42 @@ describe('Medipim only', () => {
     expect([changes.content?.[0].title, changes.content?.[0].translations?.en?.title]).toEqual([piece.title, piece.translations?.en?.title]);
     expect(changes.pillars?.[0].description).toBe(pillar.description);
     expect(removeMedimapper(data)).toEqual({ items: [], todos: [], content: [], pillars: [] });
+  });
+});
+
+describe('start in the week of 14 December 2026', () => {
+  const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
+
+  it('plans nothing and no to-do before 14 December', () => {
+    const data = build();
+    expect(data.items.every((i) => i.date >= '2026-12-14')).toBe(true);
+    expect(data.todos.every((t) => t.dueDate >= '2026-12-14')).toBe(true);
+    expect(data.content.filter((p) => ['content-ux-tour', 'content-new-ux-highlights', 'content-new-ux-question'].includes(p.id)).every((p) => !p.month)).toBe(true);
+  });
+
+  it('moves older data to the same start, and leaves items someone moved alone', () => {
+    const fresh = build();
+    const old: Record<string, string> = {
+      'Aankondiging nieuwe UX Belgisch platform': '2026-11-23',
+      'Nieuwe UX Belgisch platform – post Medipim-pagina': '2026-11-25',
+      'Nieuwsbrief: nieuwe UX van het platform': '2026-11-27',
+    };
+    let todos = fresh.todos;
+    const items = fresh.items.map((i) => {
+      if (!old[i.title]) return i;
+      const back = moveItem(i, todos, old[i.title]);
+      todos = todos.map((t) => back.todos.find((b) => b.id === t.id) ?? t);
+      return back.item;
+    });
+    const followUp = { ...items.find((i) => i.title === 'Eindejaarsgroet van het team')!, id: 'follow-up', date: '2026-12-01', contentId: 'content-ux-tour' };
+    const moved = { ...items.find((i) => i.type === 'campaign' && i.channel === 'Google Ads')!, date: '2026-12-03' };
+    const content = fresh.content.map((p) => (p.id === 'content-ux-tour' ? { ...p, month: '2026-12' } : p.id === 'content-ux-launch' ? { ...p, month: '2026-11', status: 'gedeeld' as const } : p));
+
+    const changes = startMidDecember({ items: [...items.map((i) => (i.id === moved.id ? moved : i)), followUp], todos, content });
+    expect(changes.items!.map((i) => [i.title, i.date])).toEqual(Object.keys(old).map((t) => [t, fresh.items.find((i) => i.title === t)!.date]));
+    for (const t of changes.todos!) expect(t.dueDate).toBe(fresh.todos.find((f) => f.id === t.id)!.dueDate);
+    expect(changes.todos).toHaveLength(6);
+    expect(changes.deleteItems).toEqual(['follow-up']);
+    expect(changes.content!.map((p) => [p.id, p.month, p.status])).toEqual([['content-ux-launch', '2026-12', 'klaar'], ['content-ux-tour', undefined, 'idee']]);
   });
 });

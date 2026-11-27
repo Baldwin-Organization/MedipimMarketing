@@ -106,10 +106,16 @@ het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Ev
 "(datum te bevestigen)" in de titel.
 
 Daarnaast bevat de startinhoud de communicatie rond de nieuwe UX van het Belgische platform
-(thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten van 23 november 2026,
-een LinkedIn-post vanuit de Medipim-pagina op 25 november en een nieuwsbrief aan de
-Belgische apothekers op 27 november om 9:00, met to do's. Die drie items verwijzen naar het
+(thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten op maandag 14 december 2026,
+een LinkedIn-post vanuit de Medipim-pagina op 15 december en een nieuwsbrief aan de
+Belgische apothekers op vrijdag 18 december om 9:00, met to do's. Die drie items verwijzen naar het
 contentstuk "Lancering nieuwe UX Belgisch platform".
+
+De planning start in de week van 14 december 2026: geen item en geen to do valt eerder. De
+Google-retargeting wordt die week opgezet en gaat live op 17 december; de wekelijkse posts op de
+Medipim-pagina beginnen op 15 december. De drie vervolgposts over de nieuwe UX (rondleiding, drie
+dingen die je misschien nog niet zag, vraag van sales) staan als idee zonder datum. Een browser
+met oudere startinhoud verschuift eenmalig mee, behalve items die iemand al verplaatste.
 
 Het budget 2027, de vijf contentpijlers en de 28 contentideeën staan in
 `src/data/seed-content.ts`. Een browser met oudere startinhoud krijgt ze eenmalig bij het
