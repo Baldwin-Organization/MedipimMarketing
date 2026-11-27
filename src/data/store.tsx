@@ -40,6 +40,39 @@ interface Store {
 
 const StoreContext = createContext<Store | null>(null);
 
+const opening = new WeakMap<Repository, Promise<Contents>>();
+
+/** Seeds and updates a repository once; StrictMode mounts twice, and two overlapping runs would apply every pending seed update twice. */
+function openOnce(repo: Repository): Promise<Contents> {
+  if (!opening.has(repo)) opening.set(repo, seedAndUpdate(repo));
+  return opening.get(repo)!;
+}
+
+async function seedAndUpdate(repo: Repository): Promise<Contents> {
+  if (await repo.isEmpty()) await repo.replaceAll(buildSeed(newId));
+  const data = await repo.load();
+  for (const update of SEED_UPDATES) {
+    if (typeof localStorage === 'undefined' || localStorage.getItem(update.key)) continue;
+    const changes = update.apply(data);
+    for (const id of changes.deleteItems ?? []) await repo.deleteItem(id);
+    if (changes.items?.length) await repo.saveItems(changes.items);
+    if (changes.todos?.length) await repo.saveTodos(changes.todos);
+    if (changes.budgets?.length) await repo.saveBudgets(changes.budgets);
+    if (changes.pillars?.length) await repo.savePillars(changes.pillars);
+    if (changes.content?.length) await repo.saveContent(changes.content);
+    if (changes.deleteItems?.length) {
+      const gone = new Set(changes.deleteItems);
+      data.items = data.items.filter((i) => !gone.has(i.id));
+      data.todos = data.todos.filter((t) => !gone.has(t.itemId));
+    }
+    for (const key of ['items', 'todos', 'budgets', 'pillars', 'content'] as const) {
+      data[key] = merge(data[key] as { id: string }[], (changes[key] ?? []) as { id: string }[]) as never;
+    }
+    localStorage.setItem(update.key, '1');
+  }
+  return data;
+}
+
 export function StoreProvider({ children, repository }: { children: ReactNode; repository?: Repository }) {
   const [blocked, setBlocked] = useState(false);
   const [repo] = useState<Repository>(() => repository ?? new IndexedDbRepository(undefined, () => setBlocked(true)));
@@ -56,21 +89,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
     // A request queued behind another tab's blocked upgrade never gets a `blocked` event of its own.
     const slow = window.setTimeout(() => setBlocked(true), 4000);
     (async () => {
-      if (await repo.isEmpty()) await repo.replaceAll(buildSeed(newId));
-      const data = await repo.load();
-      for (const update of SEED_UPDATES) {
-        if (typeof localStorage === 'undefined' || localStorage.getItem(update.key)) continue;
-        const changes = update.apply(data);
-        if (changes.items?.length) await repo.saveItems(changes.items);
-        if (changes.todos?.length) await repo.saveTodos(changes.todos);
-        if (changes.budgets?.length) await repo.saveBudgets(changes.budgets);
-        if (changes.pillars?.length) await repo.savePillars(changes.pillars);
-        if (changes.content?.length) await repo.saveContent(changes.content);
-        for (const key of ['items', 'todos', 'budgets', 'pillars', 'content'] as const) {
-          data[key] = merge(data[key] as { id: string }[], (changes[key] ?? []) as { id: string }[]) as never;
-        }
-        localStorage.setItem(update.key, '1');
-      }
+      const data = await openOnce(repo);
       window.clearTimeout(slow);
       if (!alive) return;
       apply(data);

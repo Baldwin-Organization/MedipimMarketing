@@ -378,6 +378,13 @@ export const en: Dict = {
     noneFoundHint: 'Adjust the filters or include past items.',
     nonePlannedHint: 'Plan an advertisement, advertorial, press release or article in a trade medium.',
     tableLabel: (month) => `PR in ${month}`,
+    shortlist: 'Trade media for manufacturers',
+    shortlistHint: 'Titles to reach manufacturers, with our assessment and what we still need to ask the publisher.',
+    priority: { eerste_keuze: 'First choice', interessant: 'Interesting', selectief: 'Selective' },
+    ask: 'To ask',
+    website: 'Website',
+    plan: 'Plan a publication',
+    plannedFor: (n) => (n === 1 ? '1 item planned' : `${n} items planned`),
   },
 
   content: {

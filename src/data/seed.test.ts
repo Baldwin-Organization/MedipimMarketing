@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting } from './seed';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -165,6 +165,22 @@ describe('events in the Gulf region', () => {
     const old = items.filter((i) => !gulf.includes(i));
     expect(addEvents(old, () => 'new')).toHaveLength(3);
     expect(addEvents(items, () => 'new')).toHaveLength(0);
+  });
+
+  it('removes the copies a doubled update added, keeping the one someone worked on', () => {
+    const events = seed();
+    const copies = addEvents(events.filter((e) => !['World Health Expo Dubai', 'DUPHAT 2027', 'CPHI Middle East'].includes(e.title)), (() => {
+      let n = 0;
+      return () => `copy${n++}`;
+    })());
+    expect(duplicateEvents([...events, ...copies], [])).toHaveLength(3);
+    expect(duplicateEvents(events, [])).toHaveLength(0);
+
+    const duphat = events.find((e) => e.title === 'DUPHAT 2027')!;
+    const copy = copies.find((e) => e.title === 'DUPHAT 2027')!;
+    const edited = { ...copy, owner: 'Nele', updatedAt: 'later' };
+    expect(duplicateEvents([duphat, edited], [])).toEqual([duphat.id]);
+    expect(duplicateEvents([{ ...duphat, owner: 'Kjell', updatedAt: 'later' }, edited], [])).toEqual([]);
   });
 });
 

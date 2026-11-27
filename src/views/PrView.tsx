@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { PlanTable } from '../components/PlanTable';
-import { Button, EmptyState, Segmented, Stat } from '../components/ui';
+import { Button, EmptyState, Icon, Pill, Segmented, Stat } from '../components/ui';
 import { euro, yearOf } from '../data/budget';
 import { fmt } from '../data/dates';
+import { TRADE_MEDIA, type MediaPriority } from '../data/media';
 import { CHANNELS } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
-import { channelLabel, t } from '../i18n';
+import { channelLabel, lang, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -47,6 +48,7 @@ export function PrView() {
         <Stat label={t.plan.budgetYear(year)} value={euro(planned)} tone="neutral" icon="payments" hint={t.plan.plannedHint} />
         <Stat label={t.plan.spentYear(year)} value={euro(spent)} tone={spent > planned ? 'error' : 'neutral'} icon="history" hint={planned ? t.plan.ofPlanned(Math.round((spent / planned) * 100)) : t.plan.noBudget} />
       </div>
+      <MediaShortlist items={all} />
       <div className="mc-section-bar mc-filters">
         <div className="mc-filters">
           <select className="mc-input mc-filter-select" aria-label={t.pr.format} value={format} data-active={format !== ALL || undefined} onChange={(e) => setFormat(e.target.value)}>
@@ -73,5 +75,51 @@ export function PrView() {
         ))
       )}
     </div>
+  );
+}
+
+const PRIORITY_TONE: Record<MediaPriority, 'success' | 'info' | 'neutral'> = { eerste_keuze: 'success', interessant: 'info', selectief: 'neutral' };
+
+function MediaShortlist({ items }: { items: Item[] }) {
+  const { openItem } = useUi();
+  const { today } = useStore();
+  return (
+    <section className="mc-plan-group" aria-label={t.pr.shortlist}>
+      <div>
+        <h2>{t.pr.shortlist}</h2>
+        <p className="mc-muted">{t.pr.shortlistHint}</p>
+      </div>
+      <ul className="mc-media-grid">
+        {TRADE_MEDIA.map((m) => {
+          const planned = items.filter((i) => i.medium === m.medium).length;
+          return (
+            <li key={m.medium} className="mc-card mc-media-card">
+              <header className="mc-media-head">
+                <div>
+                  <h3>{m.medium}</h3>
+                  <p className="mc-muted">{[m.publisher, m.market[lang]].filter(Boolean).join(' · ')}</p>
+                </div>
+                <Pill tone={PRIORITY_TONE[m.priority]}>{t.pr.priority[m.priority]}</Pill>
+              </header>
+              <p className="mc-media-text">{m.assessment[lang]}</p>
+              {m.ask && <p className="mc-media-text"><strong>{t.pr.ask}:</strong> {m.ask[lang]}</p>}
+              <footer className="mc-media-foot">
+                <a className="mc-card-link mc-media-link" href={m.url} target="_blank" rel="noreferrer" title={m.url} aria-label={`${t.pr.website}: ${m.medium}`}>{t.pr.website}<Icon name="open_in_new" size={14} /></a>
+                {planned > 0 && <span className="mc-muted">{t.pr.plannedFor(planned)}</span>}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon="add"
+                  aria-label={`${t.pr.plan}: ${m.medium}`}
+                  onClick={() => openItem(undefined, { type: 'pr', medium: m.medium, audiences: m.audiences, countries: m.countries, date: today })}
+                >
+                  {t.pr.plan}
+                </Button>
+              </footer>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

@@ -328,6 +328,13 @@ export const nl = {
     noneFoundHint: 'Pas de filters aan of toon ook afgelopen items.',
     nonePlannedHint: 'Plan een advertentie, advertorial, persbericht of artikel in een vakmedium.',
     tableLabel: (month: string) => `PR in ${month}`,
+    shortlist: 'Vakmedia voor producenten',
+    shortlistHint: 'Titels om fabrikanten te bereiken, met onze inschatting en wat we de uitgever nog moeten vragen.',
+    priority: { eerste_keuze: 'Eerste keuze', interessant: 'Interessant', selectief: 'Selectief' },
+    ask: 'Navragen',
+    website: 'Website',
+    plan: 'Publicatie plannen',
+    plannedFor: (n: number) => (n === 1 ? '1 item gepland' : `${n} items gepland`),
   },
 
   content: {

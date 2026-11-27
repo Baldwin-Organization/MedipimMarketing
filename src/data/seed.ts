@@ -204,8 +204,31 @@ export function addBudgetAndContent(data: Contents): Partial<Contents> {
   };
 }
 
+/** Records to save, plus ids of items to delete together with their to-dos. */
+export type SeedChanges = Partial<Contents> & { deleteItems?: string[] };
+
+/**
+ * Events with the same title and start date that a doubled seed update added twice. The copy someone
+ * worked on stays; a duplicate is only removed while it is untouched, so nothing entered gets lost.
+ */
+export function duplicateEvents(items: Item[], todos: Todo[]): string[] {
+  const untouched = (i: Item) =>
+    i.createdAt === i.updatedAt && !i.participation && !i.owner && i.budgetPlanned == null && i.budgetActual == null && !todos.some((t) => t.itemId === i.id);
+  const groups = new Map<string, Item[]>();
+  for (const i of items) {
+    if (i.type !== 'event') continue;
+    const key = `${i.title}|${i.date}`;
+    groups.set(key, [...(groups.get(key) ?? []), i]);
+  }
+  return [...groups.values()].flatMap((group) => {
+    if (group.length < 2) return [];
+    const keep = group.find((i) => !untouched(i)) ?? group.reduce((a, b) => (b.createdAt < a.createdAt ? b : a));
+    return group.filter((i) => i !== keep && untouched(i)).map((i) => i.id);
+  });
+}
+
 /** Seed changes applied once to data that already exists in a browser, in order. Each returns only the records that change. */
-export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Contents> }[] = [
+export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges }[] = [
   { key: 'mc-seed-updates-1', apply: (data) => ({ items: markExhibitors(data.items) }) },
   { key: 'mc-seed-updates-2', apply: (data) => ({ items: addSeedTranslations(data.items) }) },
   { key: 'mc-seed-updates-3', apply: addBudgetAndContent },
@@ -217,6 +240,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => Partial<Con
   { key: 'mc-seed-updates-9', apply: (data) => ({ content: weeklyFillUpdate(data.content, data.pillars, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-10', apply: fillAndScheduleWeekly },
   { key: 'mc-seed-updates-11', apply: (data) => ({ items: addEvents(data.items, newId) }) },
+  { key: 'mc-seed-updates-12', apply: (data) => ({ deleteItems: duplicateEvents(data.items, data.todos) }) },
 ];
 
 /** The December pieces, then one post a week in the calendar. */
