@@ -344,7 +344,9 @@ describe('events Meditech attends', () => {
     const { items, todos } = buildSeed(() => `id${n++}`);
     const via = items.filter((i) => ['World Health Expo Dubai', 'Pharmacy Connect'].includes(i.title));
     expect(via.map((i) => [i.participation, i.budgetPlanned, i.status])).toEqual([['bezoeker', 0, 'gepland'], ['bezoeker', 0, 'gepland']]);
-    expect(via.every((i) => i.description.endsWith('budgetneutraal voor Medipim.') && i.translations?.en?.description?.endsWith('budget-neutral for Medipim.'))).toBe(true);
+    expect(via.every((i) => i.description.toLowerCase().endsWith('budgetneutraal voor medipim.') && i.translations?.en?.description?.toLowerCase().endsWith('budget-neutral for medipim.'))).toBe(true);
+    expect(via.find((i) => i.title === 'Pharmacy Connect')!.description).toContain('distributeur in Australië');
+    expect(via.every((i) => !i.description.includes('Meditech') || i.title === 'World Health Expo Dubai')).toBe(true);
     expect(via.every((i) => todos.some((t) => t.itemId === i.id))).toBe(true);
     expect(estimateEventBudgets(via)).toEqual([]);
 
@@ -412,5 +414,24 @@ describe('APP Conference, paid by the distributor', () => {
     expect(exhibiting.todos).toEqual([]);
 
     expect(distributorPays({ items: [...others, ...exhibiting.items], todos: standTodos }, () => 'x')).toEqual({ items: [], todos: [] });
+  });
+
+  it('takes Pharmacy Connect over from Meditech in older data, swapping the note, once', () => {
+    let n = 0;
+    const data = buildSeed(() => `id${n++}`);
+    const pc = data.items.find((i) => i.title === 'Pharmacy Connect')!;
+    const strip = (text = '') => text.replace(/\n\n(Beslissing|Decision): .*$/, '');
+    const viaMeditech = {
+      ...pc,
+      description: `${strip(pc.description)}\n\nBeslissing: iemand van Medipim gaat mee met Meditech, budgetneutraal voor Medipim.`,
+      translations: { en: { ...pc.translations?.en, description: `${strip(pc.translations?.en?.description)}\n\nDecision: someone from Medipim attends together with Meditech, budget-neutral for Medipim.` } },
+    };
+    const items = data.items.map((i) => (i.id === pc.id ? viaMeditech : i));
+    const changes = distributorPays({ items, todos: data.todos }, () => 'x');
+    expect(changes.items).toHaveLength(1);
+    expect(changes.items[0]).toMatchObject({ participation: 'bezoeker', budgetPlanned: 0 });
+    expect(changes.items[0].description).toBe(pc.description);
+    expect(changes.items[0].translations?.en?.description).toBe(pc.translations?.en?.description);
+    expect(changes.todos).toEqual([]);
   });
 });
