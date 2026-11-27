@@ -63,7 +63,7 @@ describe('templates and seed', () => {
     let n = 0;
     const { items, todos } = buildSeed(() => `id${n++}`);
     const events = items.filter((i) => i.type === 'event');
-    expect(events.length).toBe(60);
+    expect(events.length).toBe(59);
     expect(todos.every((t) => !events.some((e) => e.id === t.itemId && !e.participation))).toBe(true);
     expect(events.every((i) => i.status === (i.participation ? 'gepland' : 'idee') && i.owner === '')).toBe(true);
     expect(events.every((i) => /^2027-\d\d-\d\d$/.test(i.date) && i.endDate! >= i.date && itemOnDay(i, i.date))).toBe(true);
