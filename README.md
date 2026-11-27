@@ -93,7 +93,8 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   "campagne" € 2.500 LinkedIn-advertenties. Wie de beslissing wijzigt, krijgt het nieuwe bedrag,
   tenzij iemand het bedrag zelf aanpaste. Op World Health Expo Dubai en Pharmacy Connect gaat
   iemand van Medipim mee met Meditech: bezoeker, budgetneutraal (€ 0), met de posts en
-  voorbereiding van een bezoek.
+  voorbereiding van een bezoek. Op de APP Conference gaat Medipim op kosten van de distributeur
+  in Australië: ook budgetneutraal (€ 0), als bezoeker tenzij er al voor een stand gekozen was.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser

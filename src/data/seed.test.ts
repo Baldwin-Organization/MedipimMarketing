@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
+import type { Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -14,8 +15,8 @@ describe('event participation', () => {
     const exhibiting = events.filter((e) => e.participation === 'exposant');
     expect(exhibiting.map((e) => e.title).sort()).toEqual(['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']);
     expect(exhibiting.every((e) => e.status === 'gepland' && e.budgetPlanned === EXHIBITOR_BUDGET)).toBe(true);
-    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['World Health Expo Dubai', 'gepland'], ['GIRP PharmaConnect 2027', 'gepland'], ['Pharmacy Connect', 'gepland']]);
-    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 6);
+    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['World Health Expo Dubai', 'gepland'], ['APP Conference and Trade Exhibition', 'gepland'], ['GIRP PharmaConnect 2027', 'gepland'], ['Pharmacy Connect', 'gepland']]);
+    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 7);
     expect(events.filter((e) => e.budgetPlanned)).toHaveLength(4);
   });
 
@@ -307,6 +308,7 @@ describe('event budgets from the decisions', () => {
     expect(attended.map((i) => [i.title, i.budgetPlanned])).toEqual([
       ['World Health Expo Dubai', 0],
       ['PharmagoraPlus', 20000],
+      ['APP Conference and Trade Exhibition', 0],
       ['GIRP PharmaConnect 2027', 4000],
       ['Pharmacy Connect', 0],
       ['Expopharm', 20000],
@@ -362,5 +364,42 @@ describe('events Meditech attends', () => {
     expect(changes.items.filter((i) => i.type === 'social').map((i) => i.campaign).sort()).toEqual(['Pharmacy Connect', 'Pharmacy Connect', 'World Health Expo Dubai', 'World Health Expo Dubai']);
     expect(changes.todos.every((t) => t.dueDate >= '2026-12-14')).toBe(true);
     expect(meditechAttends({ items: [...before.items.filter((i) => !ids.has(i.id)), ...changes.items], todos: [...before.todos, ...changes.todos] }, () => 'x')).toEqual({ items: [], todos: [] });
+  });
+});
+
+describe('APP Conference, paid by the distributor', () => {
+  const APP = 'APP Conference and Trade Exhibition';
+
+  it('is a visit at no cost to Medipim in the seed', () => {
+    let n = 0;
+    const { items, todos } = buildSeed(() => `id${n++}`);
+    const app = items.find((i) => i.title === APP)!;
+    expect(app).toMatchObject({ participation: 'bezoeker', budgetPlanned: 0, status: 'gepland' });
+    expect(app.description).toContain('distributeur in Australië betaalt de kosten');
+    expect(app.translations?.en?.description).toContain('distributor in Australia pays the costs');
+    expect(todos.some((t) => t.itemId === app.id)).toBe(true);
+  });
+
+  it('sets older data to no cost, keeps a chosen stand, plans an undecided one, once', () => {
+    let n = 0;
+    const data = buildSeed(() => `id${n++}`);
+    const seeded = data.items.find((i) => i.title === APP)!;
+    const strip = (i: Item): Item => ({ ...i, participation: undefined, budgetPlanned: undefined, status: 'idee', description: i.description.replace(/\n\nBeslissing: .*$/, '') });
+    const others = data.items.filter((i) => i.id !== seeded.id && i.campaign !== APP);
+    const todos = data.todos.filter((t) => t.itemId !== seeded.id && !data.items.some((i) => i.id === t.itemId && i.campaign === APP));
+
+    let m = 0;
+    const undecided = distributorPays({ items: [...others, strip(seeded)], todos }, () => `m${m++}`);
+    expect(undecided.items.find((i) => i.id === seeded.id)).toMatchObject({ participation: 'bezoeker', budgetPlanned: 0, status: 'gepland' });
+    expect(undecided.todos.length).toBeGreaterThan(0);
+
+    const stand = { ...strip(seeded), participation: 'exposant' as const, status: 'gepland' as const, budgetPlanned: 30000 };
+    const standTodos = [...todos, { id: 't', itemId: seeded.id, title: 'x', dueDate: '2027-01-10', done: false, offsetDays: -67 }];
+    const exhibiting = distributorPays({ items: [...others, stand], todos: standTodos }, () => 'x');
+    expect(exhibiting.items).toHaveLength(1);
+    expect(exhibiting.items[0]).toMatchObject({ participation: 'exposant', budgetPlanned: 0 });
+    expect(exhibiting.todos).toEqual([]);
+
+    expect(distributorPays({ items: [...others, ...exhibiting.items], todos: standTodos }, () => 'x')).toEqual({ items: [], todos: [] });
   });
 });

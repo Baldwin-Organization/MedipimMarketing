@@ -7,7 +7,7 @@ import { planEvents } from './seed-events';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
 import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
-import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
+import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_DISTRIBUTOR_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
 import type { Audience, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
@@ -159,15 +159,36 @@ export function meditechAttends(data: Pick<Contents, 'items' | 'todos'>, makeId:
   return { items: [...events, ...plan.items], todos: plan.todos };
 }
 
-function viaMeditech(i: Item): Item {
+const viaMeditech = (i: Item) => budgetNeutral(i, VIA_MEDITECH_NL, VIA_MEDITECH_EN);
+
+/** Medipim attends at no cost because a partner pays; keeps a stand someone chose, otherwise a visit. */
+function budgetNeutral(i: Item, nl: string, en: string): Item {
   return {
     ...i,
-    participation: 'bezoeker',
-    status: 'gepland',
+    participation: i.participation === 'exposant' ? 'exposant' : 'bezoeker',
+    status: i.status === 'idee' ? 'gepland' : i.status,
     budgetPlanned: 0,
-    description: `${i.description}\n\n${VIA_MEDITECH_NL}`,
-    translations: { ...i.translations, en: { ...i.translations?.en, description: `${i.translations?.en?.description ?? ''}\n\n${VIA_MEDITECH_EN}`.trim() } },
+    description: `${i.description}\n\n${nl}`,
+    translations: { ...i.translations, en: { ...i.translations?.en, description: `${i.translations?.en?.description ?? ''}\n\n${en}`.trim() } },
   };
+}
+
+/** Our distributor in Australia pays for Medipim's presence at these events. */
+const VIA_DISTRIBUTOR = ['APP Conference and Trade Exhibition'];
+const VIA_DISTRIBUTOR_NL = 'Beslissing: Medipim gaat, onze distributeur in Australië betaalt de kosten. Budgetneutraal voor Medipim.';
+const viaDistributor = (i: Item) => budgetNeutral(i, VIA_DISTRIBUTOR_NL, VIA_DISTRIBUTOR_EN);
+
+/**
+ * The distributor events at no cost for data seeded before that decision, whatever amount they had, with the posts and
+ * preparation of a visit when they had no decision yet. Events already carrying the decision stay as they are.
+ */
+export function distributorPays(data: Pick<Contents, 'items' | 'todos'>, makeId: () => string): Pick<Contents, 'items' | 'todos'> {
+  const now = new Date().toISOString();
+  const events = data.items
+    .filter((i) => i.type === 'event' && VIA_DISTRIBUTOR.some((t) => i.title.startsWith(t)) && !i.description.includes(VIA_DISTRIBUTOR_NL))
+    .map((i) => ({ ...viaDistributor(i), updatedAt: now }));
+  const plan = planEvents({ items: [...events, ...data.items.filter((i) => i.type !== 'event')], todos: data.todos }, makeId);
+  return { items: [...events, ...plan.items], todos: plan.todos };
 }
 
 /** The visited conferences, for data seeded before they were chosen. Leaves any participation someone already set. */
@@ -297,6 +318,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-20', apply: (data) => ({ items: markViaMeditech(data.items) }) },
   { key: 'mc-seed-updates-21', apply: (data) => meditechAttends(data, newId) },
   { key: 'mc-seed-updates-22', apply: (data) => ({ revenues: seedRevenues(data.revenues) }) },
+  { key: 'mc-seed-updates-23', apply: (data) => distributorPays(data, newId) },
 ];
 
 /** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
@@ -439,6 +461,7 @@ function eventItem(e: SeedEvent, id: string, now: string): Item {
     updatedAt: now,
   };
   if (VIA_MEDITECH.includes(e.title)) return viaMeditech(item);
+  if (VIA_DISTRIBUTOR.includes(e.title)) return viaDistributor(item);
   return VISITING.includes(e.title) ? { ...item, budgetPlanned: eventEstimate(item) } : item;
 }
 

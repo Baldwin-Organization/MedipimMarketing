@@ -5,12 +5,12 @@ import { planEvents } from './seed-events';
 const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
 
 describe('event planning', () => {
-  it('plans posts and preparation for the three stands and the three visits, and nothing else', () => {
+  it('plans posts and preparation for the three stands and the four visits, and nothing else', () => {
     const data = build();
     const grouped = new Set(data.items.filter((i) => i.type !== 'event' && i.campaign && !['Nieuwe UX Belgisch platform', 'Medipim Academy'].includes(i.campaign)).map((i) => i.campaign));
-    expect([...grouped].sort()).toEqual(['Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);
+    expect([...grouped].sort()).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);
     const withTodos = data.items.filter((i) => i.type === 'event' && data.todos.some((t) => t.itemId === i.id)).map((i) => i.title).sort();
-    expect(withTodos).toEqual(['Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);
+    expect(withTodos).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);
   });
 
   it('places an exhibitor’s invitation, announcement, live post and recap around the event', () => {
@@ -47,7 +47,7 @@ describe('event planning', () => {
     const old = { items: data.items.filter((i) => i.type === 'event' || !i.campaign || i.campaign === 'Nieuwe UX Belgisch platform'), todos: data.todos.filter((t) => !eventIds.has(t.itemId)) };
     let n = 0;
     const added = planEvents(old, () => `new${n++}`);
-    expect(new Set(added.items.map((i) => i.campaign)).size).toBe(6);
+    expect(new Set(added.items.map((i) => i.campaign)).size).toBe(7);
     const expopharm = old.items.find((i) => i.title === 'Expopharm')!;
     const started = { ...old, todos: [...old.todos, { id: 't', itemId: expopharm.id, title: 'Al bezig', dueDate: '2027-09-01', done: false, offsetDays: -27 }] };
     expect(planEvents(started, () => 'y').items.some((i) => i.campaign === 'Expopharm')).toBe(false);
