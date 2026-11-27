@@ -1,3 +1,4 @@
+import { eventEstimate } from './budget';
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
@@ -5,7 +6,7 @@ import { planEvents } from './seed-events';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
 import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
-import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
+import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_MEDITECH_EN } from './seed-en';
 import type { Audience, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
@@ -124,6 +125,28 @@ export const EXHIBITOR_BUDGET = 20000;
 const NO_LONGER_EXHIBITING = ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027'];
 /** Conferences Medipim attends without a stand; they fall under the visitor budget line. */
 const VISITING = ['GIRP PharmaConnect 2027'];
+/** Medipim does not go itself: partner Meditech attends, at no cost to Medipim. */
+const VIA_MEDITECH = ['World Health Expo Dubai', 'Pharmacy Connect'];
+const VIA_MEDITECH_NL = 'Beslissing: budgetneutraal voor Medipim, Meditech gaat.';
+
+/** The events Meditech attends, for data seeded before that decision. Leaves events someone already decided on or budgeted. */
+export function markViaMeditech(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items
+    .filter((i) => i.type === 'event' && VIA_MEDITECH.includes(i.title) && !i.participation && i.budgetPlanned == null && i.budgetActual == null)
+    .map((i) => ({ ...viaMeditech(i), updatedAt: now }));
+}
+
+function viaMeditech(i: Item): Item {
+  return {
+    ...i,
+    participation: 'geen',
+    status: 'gepland',
+    budgetPlanned: 0,
+    description: `${i.description}\n\n${VIA_MEDITECH_NL}`,
+    translations: { ...i.translations, en: { ...i.translations?.en, description: `${i.translations?.en?.description ?? ''}\n\n${VIA_MEDITECH_EN}`.trim() } },
+  };
+}
 
 /** The visited conferences, for data seeded before they were chosen. Leaves any participation someone already set. */
 export function markVisitors(items: Item[]): Item[] {
@@ -248,6 +271,8 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-16', apply: (data) => ({ items: academyLanguages(data.items, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-17', apply: removeMedimapper },
   { key: 'mc-seed-updates-18', apply: startMidDecember },
+  { key: 'mc-seed-updates-19', apply: (data) => ({ items: estimateEventBudgets(data.items) }) },
+  { key: 'mc-seed-updates-20', apply: (data) => ({ items: markViaMeditech(data.items) }) },
 ];
 
 /** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
@@ -324,6 +349,15 @@ export function startMidDecember(data: Pick<Contents, 'items' | 'todos' | 'conte
   return { items, todos, content, deleteItems: followUps.map((i) => i.id) };
 }
 
+/** Events with a decision but no amounts yet get the estimate for that decision; amounts someone entered stay. */
+export function estimateEventBudgets(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items.flatMap((i) => {
+    const budgetPlanned = i.budgetPlanned == null && i.budgetActual == null ? eventEstimate(i) : undefined;
+    return budgetPlanned == null ? [] : [{ ...i, budgetPlanned, updatedAt: now }];
+  });
+}
+
 /** The December pieces, then one post a week in the calendar. */
 export function fillAndScheduleWeekly(data: Contents): Partial<Contents> {
   const added = decemberFillUpdate(data.content, data.pillars, new Date().toISOString());
@@ -350,7 +384,7 @@ export function addEvents(items: Item[], makeId: () => string, titles = GULF_EVE
 
 function eventItem(e: SeedEvent, id: string, now: string): Item {
   const en = EVENTS_EN[e.title];
-  return {
+  const item: Item = {
     id,
     type: 'event',
     title: e.tentative ? `${e.title} (datum te bevestigen)` : e.title,
@@ -380,6 +414,8 @@ function eventItem(e: SeedEvent, id: string, now: string): Item {
     createdAt: now,
     updatedAt: now,
   };
+  if (VIA_MEDITECH.includes(e.title)) return viaMeditech(item);
+  return VISITING.includes(e.title) ? { ...item, budgetPlanned: eventEstimate(item) } : item;
 }
 
 /** The starting content: the 2027 conference calendar, unassigned and without to-dos, enriched with audience, product type and country; the 2027 budget plan and the content mix. */

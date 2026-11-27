@@ -306,6 +306,11 @@ export const en: Dict = {
     newTodo: 'New to-do',
     newTodoPlaceholder: 'New to-do…',
     addTodo: 'Add to-do',
+    estimateHint: {
+      exposant: (amount: string) => `Estimate as exhibitor: ${amount} for the stand, build, materials, travel and stay.`,
+      bezoeker: (amount: string) => `Estimate as visitor: ${amount} for two people, with ticket, travel, hotel and daily allowance.`,
+      campagne: (amount: string) => `Estimate: ${amount} for LinkedIn ads around the event.`,
+    },
     perLanguageHint: 'Steps such as copy or visuals come once per language, targeting and mailing lists once per country.',
     scopeTodos: (n) => `Add ${n === 1 ? '1 to-do' : `${n} to-dos`} per language or country`,
     todoScope: 'For language or country',

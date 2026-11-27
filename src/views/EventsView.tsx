@@ -4,6 +4,7 @@ import { CountrySelect, FilterSelect } from '../components/filters';
 import { DimensionTags } from '../components/dimensions';
 import { ParticipationLegend, ParticipationPicker } from '../components/participation';
 import { Button, Checkbox, EmptyState, Icon, JiraBadge, LateBadge, Segmented, StatusPill } from '../components/ui';
+import { withParticipation } from '../data/budget';
 import { daysBetween, fmt, fmtDate, fromIso, toIso } from '../data/dates';
 import { audienceOptions, matchesCountry, productOptions, todoLabel, type CountryFilter } from '../data/dimensions';
 import { CHANNELS, OWNERS, STATUSES, participationKey, type ParticipationKey } from '../data/meta';
@@ -231,7 +232,7 @@ function EventCard({ event }: { event: Item }) {
             compact
             label={`${t.participationTitle}: ${itemTitle(event)}`}
             value={event.participation}
-            onChange={(participation) => store.saveItem({ ...event, participation }, prep)}
+            onChange={(participation) => store.saveItem(withParticipation(event, participation), prep)}
           />
         </div>
         <DimensionTags item={event} />

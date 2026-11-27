@@ -1,7 +1,8 @@
 import { t } from '../i18n';
 import { EXISTING_MARKETS, byCountryName, isExistingMarket } from './dimensions';
 import { BUDGET_LINES } from './meta';
-import type { Audience, Budget, BudgetLine, IsoDate, Item, MarketRevenue } from './types';
+import { daysBetween } from './dates';
+import type { Audience, Budget, BudgetLine, IsoDate, Item, MarketRevenue, Participation } from './types';
 
 /** An item's costs count in the year (and quarter) of its start date. */
 export const yearOf = (item: Item) => Number(item.date.slice(0, 4));
@@ -21,6 +22,9 @@ const sum = (items: Item[]): Totals => ({
   actual: items.reduce((n, i) => n + (i.budgetActual ?? 0), 0),
 });
 
+/** Not attending but running ads around an event counts as LinkedIn advertising. */
+const EVENT_LINES: Partial<Record<Participation, BudgetLine>> = { exposant: 'beurzen_exposant', bezoeker: 'beurzen_bezoeker', campagne: 'linkedin' };
+
 const CAMPAIGN_LINES: Record<string, BudgetLine> = {
   'LinkedIn Ads': 'linkedin',
   'Google Ads': 'google',
@@ -32,7 +36,7 @@ const CAMPAIGN_LINES: Record<string, BudgetLine> = {
 export function autoBudgetLine(item: Pick<Item, 'type' | 'channel' | 'participation'>): BudgetLine | undefined {
   switch (item.type) {
     case 'event':
-      return item.participation === 'exposant' ? 'beurzen_exposant' : item.participation === 'bezoeker' ? 'beurzen_bezoeker' : undefined;
+      return item.participation && EVENT_LINES[item.participation];
     case 'email':
       return 'email';
     case 'social':
@@ -44,6 +48,59 @@ export function autoBudgetLine(item: Pick<Item, 'type' | 'channel' | 'participat
     default:
       return undefined;
   }
+}
+
+/** Within reach by train or car from Belgium. */
+const NEARBY = ['BE', 'NL', 'LU', 'FR', 'DE'];
+const EUROPE = ['AT', 'CH', 'GB', 'IE', 'ES', 'PT', 'IT', 'MT', 'GR', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'RO', 'BG', 'DK', 'SE', 'NO', 'FI', 'EE', 'LV', 'LT'];
+type Region = 'nearby' | 'europe' | 'far';
+const regionOf = (countries: string[]): Region =>
+  countries.some((c) => !NEARBY.includes(c) && !EUROPE.includes(c)) ? 'far' : countries.some((c) => EUROPE.includes(c)) ? 'europe' : 'nearby';
+
+/** Assumptions behind the estimates, euro excl. btw. */
+export const ESTIMATE = {
+  /** Stand, build, materials, travel and stay for the team. */
+  exhibitor: { nearby: 20000, europe: 20000, far: 30000 },
+  visitors: 2,
+  ticket: { Beurs: 150, Conferentie: 900, Congres: 900, Netwerkevent: 600 } as Record<string, number>,
+  travel: { nearby: 250, europe: 450, far: 1500 },
+  hotelPerNight: 220,
+  allowancePerDay: 60,
+  /** LinkedIn ads around an event we do not attend. */
+  campaign: 2500,
+};
+
+const roundUp = (n: number) => Math.ceil(n / 500) * 500;
+
+/**
+ * Estimated cost of an event following from the decision: a stand as exhibitor, ticket, travel and stay for two as visitor,
+ * ads as campaign. Undecided and not going cost nothing.
+ */
+export function eventEstimate(item: Pick<Item, 'type' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate'>): number | undefined {
+  if (item.type !== 'event') return undefined;
+  const region = regionOf(item.countries);
+  switch (item.participation) {
+    case 'exposant':
+      return ESTIMATE.exhibitor[region];
+    case 'bezoeker': {
+      const days = daysBetween(item.date, item.endDate ?? item.date) + 1;
+      const nights = days + (region === 'far' ? 1 : 0);
+      const perPerson = (ESTIMATE.ticket[item.channel] ?? ESTIMATE.ticket.Conferentie) + ESTIMATE.travel[region]
+        + nights * ESTIMATE.hotelPerNight + days * ESTIMATE.allowancePerDay;
+      return roundUp(ESTIMATE.visitors * perPerson);
+    }
+    case 'campagne':
+      return ESTIMATE.campaign;
+    default:
+      return undefined;
+  }
+}
+
+/** The event with a new decision; a planned amount nobody changed by hand follows the estimate for that decision. */
+export function withParticipation<T extends Pick<Item, 'type' | 'participation' | 'countries' | 'channel' | 'date' | 'endDate' | 'budgetPlanned'>>(item: T, participation: Item['participation']): T {
+  const untouched = item.budgetPlanned == null || item.budgetPlanned === eventEstimate(item);
+  const next = { ...item, participation };
+  return untouched ? { ...next, budgetPlanned: eventEstimate(next) } : next;
 }
 
 export const budgetLineOf = (item: Pick<Item, 'type' | 'channel' | 'participation' | 'budgetLine'>): BudgetLine | undefined =>

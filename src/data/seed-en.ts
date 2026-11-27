@@ -82,3 +82,4 @@ export const UX_LAUNCH_EN = 'New UX Belgian platform';
 
 export const TENTATIVE_EN = '(date to be confirmed)';
 export const RELEVANCE_EN = 'Relevance for Medipim';
+export const VIA_MEDITECH_EN = 'Decision: budget-neutral for Medipim, Meditech attends.';

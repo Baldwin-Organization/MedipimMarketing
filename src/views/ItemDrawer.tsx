@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { DimensionFields } from '../components/dimensions';
 import { Button, Checkbox, Drawer, Field, Icon, JiraBadge, LateBadge, Segmented } from '../components/ui';
 import { fmt, shiftIso } from '../data/dates';
-import { autoBudgetLine } from '../data/budget';
+import { autoBudgetLine, euro as formatEuro, eventEstimate, withParticipation } from '../data/budget';
 import { countryName, languageName, todoLabel } from '../data/dimensions';
 import { BUDGET_LINES, CHANNELS, HAS_PERIOD, ITEM_TYPES, OWNERS, STATUSES, TYPE_META } from '../data/meta';
 import { newId } from '../data/repository';
@@ -69,6 +69,7 @@ export function ItemDrawer() {
     if (known && !text(otherLang(l), 'campaign')) setText(otherLang(l), 'campaign', textIn(known, otherLang(l), 'campaign'));
   };
   const auto = autoBudgetLine(draft);
+  const estimate = eventEstimate(draft);
   const preview = offerTemplate && applyTemplate && draft.date ? store.templateTodos(draft) : [];
   const asItem = (): Item => ({ ...draft, id: draft.id ?? '', createdAt: '', updatedAt: '' });
   const scoped = todos.length && draft.date ? scopeTodos(asItem(), todos, newId) : todos;
@@ -178,7 +179,7 @@ export function ItemDrawer() {
         {draft.type === 'event' && (
           <div className="mc-field" role="group" aria-label={t.participationTitle}>
             <span className="mc-field-label">{t.participationTitle}</span>
-            <ParticipationPicker value={draft.participation} onChange={(p) => set('participation', p)} />
+            <ParticipationPicker value={draft.participation} onChange={(p) => setDraft((d) => withParticipation(d, p))} />
           </div>
         )}
         {draft.type === 'event' && (
@@ -242,6 +243,9 @@ export function ItemDrawer() {
               <input id={id} type="number" min={0} step={50} inputMode="decimal" className="mc-input" value={draft.budgetActual ?? ''} onChange={(e) => set('budgetActual', euro(e.target.value))} />
             )}</Field>
           </div>
+          {estimate != null && draft.participation && draft.participation !== 'geen' && (
+            <p className="mc-muted">{t.drawer.estimateHint[draft.participation](formatEuro(estimate))}</p>
+          )}
         </section>
 
         <section className="mc-form-section" aria-label={t.drawer.enrichment}>

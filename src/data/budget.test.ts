@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoBudgetLine, byAudience, byCountry, byLine, byMarket, byQuarter, quarterOf } from './budget';
+import { autoBudgetLine, byAudience, byCountry, byLine, byMarket, byQuarter, eventEstimate, quarterOf, withParticipation } from './budget';
 import { EXISTING_MARKETS } from './dimensions';
 import type { Budget, Item, MarketRevenue } from './types';
 
@@ -89,5 +89,27 @@ describe('budget', () => {
     expect(rows.some((r) => r.country === 'JP')).toBe(false);
     expect(rows).toHaveLength(EXISTING_MARKETS.length + 2);
     expect(none).toEqual({ planned: 3000, actual: 3200 });
+  });
+
+  it('estimates an event from the decision, region, kind of event and length', () => {
+    const girp = item({ type: 'event', channel: 'Conferentie', countries: ['BG'], date: '2027-05-19', endDate: '2027-05-20' });
+    expect(eventEstimate({ ...girp, participation: 'bezoeker' })).toBe(4000);
+    expect(eventEstimate({ ...girp, participation: 'exposant' })).toBe(20000);
+    const app = item({ type: 'event', channel: 'Beurs', countries: ['AU'], date: '2027-03-18', endDate: '2027-03-20' });
+    expect(eventEstimate({ ...app, participation: 'bezoeker' })).toBe(5500);
+    expect(eventEstimate({ ...app, participation: 'exposant' })).toBe(30000);
+    expect(eventEstimate({ ...app, participation: 'campagne' })).toBe(2500);
+    expect(eventEstimate({ ...app, participation: 'geen' })).toBeUndefined();
+    expect(eventEstimate(app)).toBeUndefined();
+    expect(autoBudgetLine({ ...app, participation: 'campagne' })).toBe('linkedin');
+  });
+
+  it('lets the planned amount follow a new decision unless someone changed it', () => {
+    const fair = item({ type: 'event', channel: 'Beurs', countries: ['DE'], date: '2027-09-28', endDate: '2027-09-30' });
+    const exhibiting = withParticipation(fair, 'exposant');
+    expect(exhibiting.budgetPlanned).toBe(20000);
+    expect(withParticipation(exhibiting, 'bezoeker').budgetPlanned).toBe(eventEstimate({ ...fair, participation: 'bezoeker' }));
+    expect(withParticipation(exhibiting, 'geen').budgetPlanned).toBeUndefined();
+    expect(withParticipation({ ...exhibiting, budgetPlanned: 17500 }, 'bezoeker')).toMatchObject({ participation: 'bezoeker', budgetPlanned: 17500 });
   });
 });

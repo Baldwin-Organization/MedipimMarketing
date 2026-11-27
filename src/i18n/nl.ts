@@ -256,6 +256,11 @@ export const nl = {
     newTodo: 'Nieuwe to do',
     newTodoPlaceholder: 'Nieuwe to do…',
     addTodo: 'To do toevoegen',
+    estimateHint: {
+      exposant: (amount: string) => `Inschatting als exposant: ${amount} voor stand, opbouw, materiaal, reis en verblijf.`,
+      bezoeker: (amount: string) => `Inschatting als bezoeker: ${amount} voor twee personen, met ticket, reis, hotel en dagvergoeding.`,
+      campagne: (amount: string) => `Inschatting: ${amount} voor LinkedIn-advertenties rond het event.`,
+    },
     perLanguageHint: 'Stappen zoals copy of visuals komen één keer per taal, targeting en verzendlijsten één keer per land.',
     scopeTodos: (n: number) => `${n === 1 ? '1 to do' : `${n} to do's`} per taal of land aanvullen`,
     todoScope: 'Voor taal of land',
