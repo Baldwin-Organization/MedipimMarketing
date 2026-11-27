@@ -536,6 +536,7 @@ export const en: Dict = {
     weekOf: (week: string, n: number) => `Week of ${week}: ${plural(n, 'deal', 'deals')}`,
     dealsTable: 'Deals in this period',
     created: 'Created',
+    customer: 'Company',
     deal: 'Deal',
     phase: 'Phase',
     sourceCol: 'Source',

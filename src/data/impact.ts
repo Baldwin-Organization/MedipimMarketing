@@ -22,7 +22,7 @@ export interface AnalyticsData {
   countries: ({ country: string } & AnalyticsMetrics)[];
 }
 
-export interface Deal { id: string; title: string; created: IsoDate; status: string; phase: string | null; source: string | null; value: number; url: string }
+export interface Deal { id: string; title: string; customer: string | null; created: IsoDate; status: string; phase: string | null; source: string | null; value: number; url: string }
 export interface DealPhase { id: string; name: string; order: number; pipeline: string }
 export interface TeamleaderData { phases: DealPhase[]; deals: Deal[] }
 

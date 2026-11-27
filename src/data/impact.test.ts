@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { actionsIn, bySource, change, daysOf, funnel, perWeek, type Deal, type TeamleaderData } from './impact';
 import type { Item } from './types';
 
-const deal = (over: Partial<Deal>): Deal => ({ id: 'd', title: 'Deal', created: '2026-11-03', status: 'open', phase: 'p1', source: null, value: 0, url: '', ...over });
+const deal = (over: Partial<Deal>): Deal => ({ id: 'd', title: 'Deal', customer: null, created: '2026-11-03', status: 'open', phase: 'p1', source: null, value: 0, url: '', ...over });
 
 describe('impact', () => {
   it('compares with the period before, and gives up when that was empty', () => {

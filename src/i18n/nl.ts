@@ -485,6 +485,7 @@ export const nl = {
     weekOf: (week: string, n: number) => `Week van ${week}: ${plural(n, 'deal', 'deals')}`,
     dealsTable: 'Deals in deze periode',
     created: 'Aangemaakt',
+    customer: 'Bedrijf',
     deal: 'Deal',
     phase: 'Fase',
     sourceCol: 'Bron',
