@@ -1,6 +1,9 @@
 import type { Audience, Budget, BudgetLine, ContentFormat, ContentPiece, ContentPillar, ContentStatus, Item } from './types';
 
-/** Marketing budget 2027, excl. VAT; total € 189,294. */
+/** Share of the other budget lines planned for the marketing agency's service fee. */
+export const AGENCY_SHARE = 0.1;
+
+/** Marketing budget 2027, excl. VAT; total € 208,223, of which the agency is 10% of the other lines (€ 189,294). */
 const BUDGET_2027: Record<BudgetLine, number> = {
   beurzen_exposant: 60000,
   beurzen_bezoeker: 22000,
@@ -10,6 +13,7 @@ const BUDGET_2027: Record<BudgetLine, number> = {
   vakmedia: 20000,
   lidmaatschappen: 10000,
   chatgpt: 12000,
+  agency: 18929,
   reserve: 12294,
 };
 

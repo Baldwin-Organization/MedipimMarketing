@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
-import type { Item } from './types';
+import type { Budget, Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
 
 const seed = () => {
@@ -114,9 +114,10 @@ describe('bilingual seed', () => {
 describe('budget plan and content mix', () => {
   const full = () => buildSeed(() => Math.random().toString(36));
 
-  it('seeds the 2027 budget of € 189,294 and a content mix that adds up to 100%', () => {
+  it('seeds the 2027 budget of € 208,223, the agency at 10% of the rest, and a content mix that adds up to 100%', () => {
     const { budgets, pillars, content, items } = full();
-    expect(budgets.reduce((n, b) => n + b.amount, 0)).toBe(189294);
+    expect(budgets.reduce((n, b) => n + b.amount, 0)).toBe(208223);
+    expect(budgets.find((b) => b.line === 'agency')?.amount).toBe(Math.round(0.1 * 189294));
     expect(budgets.find((b) => b.line === 'beurzen_exposant')?.amount).toBe(60000);
     expect(pillars.reduce((n, p) => n + p.target, 0)).toBe(100);
     expect(content.every((c) => pillars.some((p) => p.id === c.pillarId) && c.translations?.en?.title)).toBe(true);
@@ -127,7 +128,7 @@ describe('budget plan and content mix', () => {
     const { items, todos } = full();
     const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [], revenues: [] };
     const changes = addBudgetAndContent(old);
-    expect(changes.budgets).toHaveLength(9);
+    expect(changes.budgets).toHaveLength(10);
     expect(changes.pillars).toHaveLength(5);
     expect(changes.items?.every((i) => i.contentId)).toBe(true);
     expect(changes.items).toHaveLength(3);
@@ -324,6 +325,19 @@ describe('event budgets from the decisions', () => {
       return i;
     });
     expect(estimateEventBudgets(older).map((i) => [i.title, i.budgetPlanned])).toEqual([['DMEA', 2500], ['GIRP PharmaConnect 2027', 4000]]);
+  });
+});
+
+describe('agency budget', () => {
+  it('adds the agency at 10% of the other lines to years without it, once', () => {
+    const budgets: Budget[] = [
+      { id: '2027:linkedin', year: 2027, line: 'linkedin', amount: 18000 },
+      { id: '2027:google', year: 2027, line: 'google', amount: 22005 },
+      { id: '2028:linkedin', year: 2028, line: 'linkedin', amount: 5000 },
+      { id: '2028:agency', year: 2028, line: 'agency', amount: 1234 },
+    ];
+    expect(agencyBudgets(budgets)).toEqual([{ id: '2027:agency', year: 2027, line: 'agency', amount: 4001 }]);
+    expect(agencyBudgets([...budgets, ...agencyBudgets(budgets)])).toEqual([]);
   });
 });
 

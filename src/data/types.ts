@@ -100,6 +100,7 @@ export type BudgetLine =
   | 'vakmedia'
   | 'lidmaatschappen'
   | 'chatgpt'
+  | 'agency'
   | 'reserve';
 
 /** Annual budget for one budget line. */
