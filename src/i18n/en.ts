@@ -559,6 +559,10 @@ export const en: Dict = {
     countryNote: 'Enter last year\'s revenue and the target per country. An action in several countries is split evenly across them. Growth compares the target with last year\'s revenue; marketing / target is the planned amount against the target.',
     noAudienceTag: 'no audience',
     noCountryTag: 'no country',
+    potential: (year: number) => `Potential ${year}`,
+    potentialShare: (before: number, year: number) => `% of potential ${before} → ${year}`,
+    potentialNote: (before: number, pharmacies: string, penetration: string) =>
+      `Potential = number of pharmacies × what Medipim can earn per pharmacy. That amount comes from Belgium: revenue ${before} ÷ ${pharmacies} pharmacies ÷ ${penetration}, assuming Belgium reaches ${penetration} of its potential, and grows with indexation (4% in 2027, 3% in 2028 and 2029). Without ${before} revenue for Belgium the potential stays empty. The full analysis is in Medipim POTENTIAL 2026.xlsx.`,
   },
 
   brand: {

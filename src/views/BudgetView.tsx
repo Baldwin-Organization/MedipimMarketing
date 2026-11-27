@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { PlanTable, periodText } from '../components/PlanTable';
 import { Button, Card, EmptyState, Icon, Pill, Stat } from '../components/ui';
 import { budgetLineOf, budgetYear, byAudience, byCountry, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
+import { BENCHMARK, PHARMACIES } from '../data/potential';
 import { AUDIENCES, countryName, isExistingMarket } from '../data/dimensions';
 import { BUDGET_LINES } from '../data/meta';
 import { useStore } from '../data/store';
@@ -259,12 +260,20 @@ function ItemScope({ item }: { item: Item }) {
 function CountryCard({ year }: { year: number }) {
   const store = useStore();
   const { rows, none } = byCountry(store.items, store.revenues, year);
-  const sumOf = (key: 'revenueBefore' | 'target') => rows.reduce((n, r) => n + (r[key] ?? 0), 0);
+  const sumOf = (key: 'revenueBefore' | 'target' | 'potentialBefore' | 'potential', of = rows) => of.reduce((n, r) => n + (r[key] ?? 0), 0);
+  const reached = rows.filter((r) => r.potential && (r.revenueBefore || r.target));
   const total = {
     planned: rows.reduce((n, r) => n + r.planned, none.planned),
     actual: rows.reduce((n, r) => n + r.actual, none.actual),
     revenueBefore: sumOf('revenueBefore'),
     target: sumOf('target'),
+    potential: sumOf('potential'),
+  };
+  const totalReach = {
+    revenueBefore: sumOf('revenueBefore', reached),
+    target: sumOf('target', reached),
+    potentialBefore: sumOf('potentialBefore', reached),
+    potential: sumOf('potential', reached),
   };
   return (
     <Card title={t.budget.perCountry} icon="language">
@@ -278,6 +287,8 @@ function CountryCard({ year }: { year: number }) {
               <th className="mc-num">{t.budget.revenueBefore(year - 1)}</th>
               <th className="mc-num">{t.budget.target(year)}</th>
               <th className="mc-num">{t.budget.growth}</th>
+              <th className="mc-num">{t.budget.potential(year)}</th>
+              <th className="mc-num">{t.budget.potentialShare(year - 1, year)}</th>
               <th className="mc-num">{t.budget.marketingShare}</th>
             </tr>
           </thead>
@@ -305,6 +316,8 @@ function CountryCard({ year }: { year: number }) {
                   />
                 </td>
                 <td className="mc-num">{growth(r.revenueBefore, r.target)}</td>
+                <td className="mc-num">{r.potential ? euro(r.potential) : <span className="mc-muted">–</span>}</td>
+                <td className="mc-num"><Reach {...r} /></td>
                 <td className="mc-num">{share(r.planned, r.target)}</td>
               </tr>
             ))}
@@ -320,6 +333,8 @@ function CountryCard({ year }: { year: number }) {
                 <td className="mc-num mc-muted">–</td>
                 <td className="mc-num mc-muted">–</td>
                 <td className="mc-num mc-muted">–</td>
+                <td className="mc-num mc-muted">–</td>
+                <td className="mc-num mc-muted">–</td>
               </tr>
             )}
           </tbody>
@@ -331,14 +346,26 @@ function CountryCard({ year }: { year: number }) {
               <th className="mc-num">{total.revenueBefore ? euro(total.revenueBefore) : '–'}</th>
               <th className="mc-num">{total.target ? euro(total.target) : '–'}</th>
               <th className="mc-num">{growth(total.revenueBefore, total.target)}</th>
+              <th className="mc-num">{total.potential ? euro(total.potential) : '–'}</th>
+              <th className="mc-num"><Reach {...totalReach} /></th>
               <th className="mc-num">{share(total.planned, total.target)}</th>
             </tr>
           </tfoot>
         </table>
       </div>
       <p className="mc-muted">{t.budget.countryNote}</p>
+      <p className="mc-muted">
+        {t.budget.potentialNote(year - 1, PHARMACIES[BENCHMARK.country].toLocaleString(t.numberLocale), percent(BENCHMARK.penetration))}
+      </p>
     </Card>
   );
+}
+
+/** How much of each year's potential last year's revenue and this year's target reach. */
+function Reach({ revenueBefore, target, potentialBefore, potential }: { revenueBefore?: number; target?: number; potentialBefore?: number; potential?: number }) {
+  if (!potentialBefore || !potential || (!revenueBefore && !target)) return <span className="mc-muted">–</span>;
+  const part = (n: number | undefined, of: number) => (n ? percent(n / of) : '–');
+  return <span className="mc-reach">{part(revenueBefore, potentialBefore)} → {part(target, potential)}</span>;
 }
 
 const percent = (n: number, signed = false) =>

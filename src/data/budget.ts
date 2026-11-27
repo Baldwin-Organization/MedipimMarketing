@@ -2,6 +2,7 @@ import { t } from '../i18n';
 import { EXISTING_MARKETS, byCountryName, isExistingMarket } from './dimensions';
 import { BUDGET_LINES } from './meta';
 import { daysBetween } from './dates';
+import { INDEXATION, potentialOf, potentialPerPharmacy } from './potential';
 import type { Audience, Budget, BudgetLine, IsoDate, Item, MarketRevenue, Participation } from './types';
 
 /** An item's costs count in the year (and quarter) of its start date. */
@@ -164,11 +165,14 @@ export interface CountryRow extends Totals {
   revenueBefore?: number;
   /** Revenue target for the year. */
   target?: number;
+  /** Full potential last year and this year (indexed); see `potential.ts`. */
+  potentialBefore?: number;
+  potential?: number;
 }
 
 /**
- * Costs per country for the year, with last year's revenue and this year's target. The active markets always get a row,
- * other countries once they have costs or figures. Costs of items without a country land in `none`.
+ * Costs per country for the year, with last year's revenue, this year's target and the country's potential. The active
+ * markets always get a row, other countries once they have costs or figures. Costs of items without a country land in `none`.
  */
 export function byCountry(items: Item[], revenues: MarketRevenue[], year: number): { rows: CountryRow[]; none: Totals } {
   const costs = splitOver<string>(items.filter((i) => yearOf(i) === year), (i) => i.countries, '');
@@ -178,12 +182,15 @@ export function byCountry(items: Item[], revenues: MarketRevenue[], year: number
     .map((r) => r.country);
   const withCosts = [...costs].filter(([c, t]) => c && (t.planned || t.actual)).map(([c]) => c);
   const countries = [...new Set([...EXISTING_MARKETS, ...withCosts, ...withFigures])].sort(byCountryName);
+  const perPharmacy = potentialPerPharmacy(revenues, year - 1);
   return {
     rows: countries.map((country) => ({
       country,
       ...(costs.get(country) ?? { planned: 0, actual: 0 }),
       revenueBefore: figure(year - 1, country)?.revenue,
       target: figure(year, country)?.target,
+      potentialBefore: potentialOf(country, perPharmacy),
+      potential: potentialOf(country, perPharmacy && perPharmacy * (1 + (INDEXATION[year] ?? 0))),
     })),
     none: costs.get('') ?? { planned: 0, actual: 0 },
   };

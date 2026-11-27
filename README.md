@@ -80,6 +80,13 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   land. De kaart "Per land" zet per land het geplande en bestede bedrag naast de omzet van vorig
   jaar en de omzettarget van het gekozen jaar, met de groei en marketing als aandeel van de
   target. Omzet en target vul je daar per land in (`MarketRevenue`, één record per jaar en land).
+  De omzet 2024–2026 en de targets 2027–2029 van het budgetoverzicht van november 2026 zitten in
+  de startinhoud. Naast elk land staat zijn potentieel en welk % daarvan de omzet en de target
+  halen (`src/data/potential.ts`): aantal apotheken × potentieel per apotheek, afgeleid van
+  België (omzet ÷ apotheken ÷ 90%) en geïndexeerd zoals de targets. Apotheekcijfers: SIRIUS
+  Insight (BE, jan 2026), Ordre des pharmaciens (FR, jan 2026), ABDA (DE, sep 2026), Christie &
+  Co (GB, mrt 2026), Pharmacy Guild (AU, jun 2025), NCPA/IQVIA (US, jul 2026), PGEU country
+  profiles (overige, 2025); Tsjechië nog uit de analyse van 2023.
   De beslissing bij een beurs bepaalt een ingeschat bedrag (`eventEstimate` in
   `src/data/budget.ts`): als exposant € 20.000 in Europa en € 30.000 daarbuiten; als bezoeker
   ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur;

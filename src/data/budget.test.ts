@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { autoBudgetLine, byAudience, byCountry, byLine, byMarket, byQuarter, eventEstimate, quarterOf, withParticipation } from './budget';
 import { EXISTING_MARKETS } from './dimensions';
+import { PHARMACIES } from './potential';
 import type { Budget, Item, MarketRevenue } from './types';
 
 const item = (over: Partial<Item>): Item => ({
@@ -89,6 +90,15 @@ describe('budget', () => {
     expect(rows.some((r) => r.country === 'JP')).toBe(false);
     expect(rows).toHaveLength(EXISTING_MARKETS.length + 2);
     expect(none).toEqual({ planned: 3000, actual: 3200 });
+  });
+
+  it('derives each country\'s potential from Belgium\'s revenue last year', () => {
+    const revenues: MarketRevenue[] = [{ id: '2026:BE', year: 2026, country: 'BE', revenue: 900000 }];
+    const { rows } = byCountry([], revenues, 2027);
+    const perPharmacy = 900000 / PHARMACIES.BE / 0.9;
+    expect(rows.find((r) => r.country === 'BE')).toMatchObject({ potentialBefore: 1000000, potential: 1040000 });
+    expect(rows.find((r) => r.country === 'FR')?.potentialBefore).toBe(Math.round(PHARMACIES.FR * perPharmacy));
+    expect(byCountry([], revenues, 2028).rows.every((r) => r.potential === undefined)).toBe(true);
   });
 
   it('estimates an event from the decision, region, kind of event and length', () => {

@@ -653,3 +653,4 @@ a.mc-chan-node:hover, .mc-chan-node:focus-visible { border-color: var(--mp-conte
 }
 .mc-budget-scope { margin-top: var(--mp-space-1); }
 .mc-country-table .mc-budget-input { width: 7.5rem; }
+.mc-country-table .mc-reach { white-space: nowrap; }

@@ -509,6 +509,10 @@ export const nl = {
     countryNote: 'Vul per land de omzet van vorig jaar en de target in. Een actie in meerdere landen wordt gelijk over die landen verdeeld. Groei vergelijkt de target met de omzet van vorig jaar; marketing / target is het geplande bedrag tegenover de target.',
     noAudienceTag: 'geen doelgroep',
     noCountryTag: 'geen land',
+    potential: (year: number) => `Potentieel ${year}`,
+    potentialShare: (before: number, year: number) => `% potentieel ${before} → ${year}`,
+    potentialNote: (before: number, pharmacies: string, penetration: string) =>
+      `Potentieel = aantal apotheken × wat Medipim per apotheek kan halen. Dat bedrag volgt uit België: omzet ${before} ÷ ${pharmacies} apotheken ÷ ${penetration}, in de veronderstelling dat België ${penetration} van zijn potentieel haalt, en groeit mee met de indexatie (4% in 2027, 3% in 2028 en 2029). Zonder omzet ${before} voor België blijft het potentieel leeg. De volledige analyse staat in Medipim POTENTIAL 2026.xlsx.`,
   },
 
   brand: {

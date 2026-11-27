@@ -2,6 +2,7 @@ import { eventEstimate } from './budget';
 import { daysBetween } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
+import { seedRevenues } from './potential';
 import { planEvents } from './seed-events';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
@@ -295,6 +296,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-19', apply: (data) => ({ items: estimateEventBudgets(data.items) }) },
   { key: 'mc-seed-updates-20', apply: (data) => ({ items: markViaMeditech(data.items) }) },
   { key: 'mc-seed-updates-21', apply: (data) => meditechAttends(data, newId) },
+  { key: 'mc-seed-updates-22', apply: (data) => ({ revenues: seedRevenues(data.revenues) }) },
 ];
 
 /** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
@@ -482,7 +484,7 @@ export function buildSeed(makeId: () => string): Contents {
     budgets: SEED_BUDGETS,
     pillars: SEED_PILLARS,
     content: mergeById(content, weekly.content),
-    revenues: [],
+    revenues: seedRevenues([]),
   };
 }
 
