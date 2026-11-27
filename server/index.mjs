@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
-import { analytics, searchConsole } from './google.mjs';
+import { ads, analytics, searchConsole } from './google.mjs';
 import { teamleader } from './teamleader.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -41,7 +41,7 @@ async function authorized(header) {
 }
 
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
-const ROUTES = { search: searchConsole, analytics, teamleader };
+const ROUTES = { search: searchConsole, analytics, ads, teamleader };
 
 /** Answers per route and period are kept a quarter of an hour; the sources update a few times a day at most. */
 const cache = new Map();

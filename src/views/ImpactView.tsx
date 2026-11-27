@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Card, EmptyState, Icon, Pill, Stat, TypeBadge } from '../components/ui';
 import { euro } from '../data/budget';
 import { countryName } from '../data/dimensions';
 import {
   actionsIn, bySource, change, daysOf, fetchSource, funnel, perWeek,
-  type AnalyticsData, type SearchData, type Source, type TeamleaderData,
+  type AdsData, type AnalyticsData, type SearchData, type Source, type TeamleaderData,
 } from '../data/impact';
 import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
@@ -17,28 +17,36 @@ export const IMPACT_FROM: IsoDate = '2026-11-01';
 
 const num = (n: number, digits = 0) => n.toLocaleString(t.numberLocale, { maximumFractionDigits: digits, minimumFractionDigits: digits });
 const pct = (n: number) => `${num(n * 100, 1)}%`;
+const euroCents = (n: number) => n.toLocaleString(t.numberLocale, { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function useSources(from: IsoDate, to: IsoDate) {
   const [search, setSearch] = useState<Source<SearchData>>({ state: 'loading' });
   const [analytics, setAnalytics] = useState<Source<AnalyticsData>>({ state: 'loading' });
+  const [ads, setAds] = useState<Source<AdsData>>({ state: 'loading' });
   const [teamleader, setTeamleader] = useState<Source<TeamleaderData>>({ state: 'loading' });
+  // Typing a date fires a request per keystroke; only the answers to the latest one may land.
+  const latest = useRef(0);
   const load = useCallback((fresh = false) => {
+    const run = ++latest.current;
+    const current = <T,>(set: (s: Source<T>) => void) => (s: Source<T>) => { if (run === latest.current) set(s); };
     setSearch({ state: 'loading' });
+    setAds({ state: 'loading' });
     setAnalytics({ state: 'loading' });
     setTeamleader({ state: 'loading' });
-    fetchSource<SearchData>('search', from, to, fresh).then(setSearch);
-    fetchSource<AnalyticsData>('analytics', from, to, fresh).then(setAnalytics);
-    fetchSource<TeamleaderData>('teamleader', from, to, fresh).then(setTeamleader);
+    fetchSource<SearchData>('search', from, to, fresh).then(current(setSearch));
+    fetchSource<AnalyticsData>('analytics', from, to, fresh).then(current(setAnalytics));
+    fetchSource<AdsData>('ads', from, to, fresh).then(current(setAds));
+    fetchSource<TeamleaderData>('teamleader', from, to, fresh).then(current(setTeamleader));
   }, [from, to]);
   useEffect(() => { load(); }, [load]);
-  return { search, analytics, teamleader, reload: () => load(true) };
+  return { search, analytics, ads, teamleader, reload: () => load(true) };
 }
 
 export function ImpactView() {
   const store = useStore();
   const [from, setFrom] = useState<IsoDate>(IMPACT_FROM);
   const [to, setTo] = useState<IsoDate>(store.today);
-  const { search, analytics, teamleader, reload } = useSources(from, to);
+  const { search, analytics, ads, teamleader, reload } = useSources(from, to);
   const actions = actionsIn(store.items, from, to);
   const valid = from <= to;
 
@@ -94,6 +102,12 @@ export function ImpactView() {
           {(data) => <AnalyticsPanel data={data} from={from} to={to} actions={actions} />}
         </SourceState>
       </Card>
+
+      <Card title={t.impact.adsTitle} icon="ads_click">
+        <SourceState source={ads} name={t.impact.source.ads}>
+          {(data) => <AdsPanel data={data} from={from} to={to} actions={actions} />}
+        </SourceState>
+      </Card>
     </div>
   );
 }
@@ -101,7 +115,8 @@ export function ImpactView() {
 function changeText(now: number, before: number, lowerIsBetter = false) {
   const c = change(now, before);
   if (c === null) return t.impact.noComparison;
-  return t.impact.vsPrevious(`${c > 0 ? '+' : ''}${pct(lowerIsBetter ? -c : c)}`);
+  const shown = lowerIsBetter ? -c : c;
+  return t.impact.vsPrevious(`${shown > 0 ? '+' : ''}${pct(shown)}`);
 }
 
 function SourceState<T>({ source, name, children }: { source: Source<T>; name: string; children: (data: T) => ReactNode }) {
@@ -238,6 +253,55 @@ function AnalyticsPanel({ data, from, to, actions }: { data: AnalyticsData; from
         <MetricTable title={t.impact.countries} rows={data.countries.map((c) => ({ key: c.country === '(not set)' ? c.country : countryName(c.country), ...c }))} />
       </div>
       <MetricTable title={t.impact.landingPages} rows={data.pages.map((p) => ({ key: p.page, ...p }))} />
+    </div>
+  );
+}
+
+function AdsPanel({ data, from, to, actions }: { data: AdsData; from: IsoDate; to: IsoDate; actions: Item[] }) {
+  const { total, previous } = data;
+  const cpc = (m: { cost: number; clicks: number }) => (m.clicks ? m.cost / m.clicks : 0);
+  const perKey = (m: { cost: number; keyEvents: number }) => (m.keyEvents ? euroCents(m.cost / m.keyEvents) : '–');
+  const byDay = new Map(data.days.map((d) => [d.date, d.cost]));
+  return (
+    <div className="mc-impact-panel">
+      <dl className="mc-impact-figures">
+        <Figure label={t.impact.adCost} value={euroCents(total.cost)} hint={changeText(total.cost, previous.cost)} />
+        <Figure label={t.impact.adClicks} value={num(total.clicks)} hint={changeText(total.clicks, previous.clicks)} />
+        <Figure label={t.impact.impressions} value={num(total.impressions)} hint={changeText(total.impressions, previous.impressions)} />
+        <Figure label={t.impact.cpc} value={euroCents(cpc(total))} hint={changeText(cpc(total), cpc(previous), true)} />
+        <Figure label={t.impact.keyEvents} value={num(total.keyEvents)} hint={t.impact.costPerKeyEvent(perKey(total))} />
+      </dl>
+      <DailyChart title={t.impact.costPerDay} from={from} to={to} values={byDay} actions={actions} />
+      {data.campaigns.length > 0 ? (
+        <div className="mc-table-wrap">
+          <table className="mc-table" aria-label={t.impact.campaigns}>
+            <thead>
+              <tr>
+                <th>{t.impact.campaign}</th>
+                <th className="mc-num">{t.impact.adCost}</th>
+                <th className="mc-num">{t.impact.adClicks}</th>
+                <th className="mc-num">{t.impact.impressions}</th>
+                <th className="mc-num">{t.impact.cpc}</th>
+                <th className="mc-num">{t.impact.sessions}</th>
+                <th className="mc-num">{t.impact.keyEvents}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.campaigns.map((c) => (
+                <tr key={c.campaign}>
+                  <td className="mc-impact-key">{c.campaign}</td>
+                  <td className="mc-num">{euroCents(c.cost)}</td>
+                  <td className="mc-num">{num(c.clicks)}</td>
+                  <td className="mc-num">{num(c.impressions)}</td>
+                  <td className="mc-num">{euroCents(cpc(c))}</td>
+                  <td className="mc-num">{num(c.sessions)}</td>
+                  <td className="mc-num">{num(c.keyEvents)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : <EmptyState icon="ads_click" title={t.impact.noAds} />}
     </div>
   );
 }

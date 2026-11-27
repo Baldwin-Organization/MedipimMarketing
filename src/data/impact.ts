@@ -22,6 +22,14 @@ export interface AnalyticsData {
   countries: ({ country: string } & AnalyticsMetrics)[];
 }
 
+export interface AdsMetrics { cost: number; clicks: number; impressions: number; sessions: number; keyEvents: number }
+export interface AdsData {
+  total: AdsMetrics;
+  previous: AdsMetrics;
+  days: { date: IsoDate; cost: number; clicks: number }[];
+  campaigns: ({ campaign: string } & AdsMetrics)[];
+}
+
 export interface Deal { id: string; title: string; customer: string | null; country: string | null; created: IsoDate; status: string; phase: string | null; source: string | null; value: number; url: string }
 export interface DealPhase { id: string; name: string; order: number; pipeline: string }
 export interface TeamleaderData { phases: DealPhase[]; deals: Deal[] }
@@ -32,7 +40,7 @@ export type Source<T> =
   | { state: 'ready'; data: T }
   | { state: 'not_configured' | 'no_access' | 'error'; message?: string };
 
-export async function fetchSource<T>(route: 'search' | 'analytics' | 'teamleader', from: IsoDate, to: IsoDate, fresh = false): Promise<Source<T>> {
+export async function fetchSource<T>(route: 'search' | 'analytics' | 'ads' | 'teamleader', from: IsoDate, to: IsoDate, fresh = false): Promise<Source<T>> {
   try {
     const res = await fetch(`/api/impact/${route}?from=${from}&to=${to}${fresh ? '&fresh=1' : ''}`);
     const body = await res.json().catch(() => ({}));

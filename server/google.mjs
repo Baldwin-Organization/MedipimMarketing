@@ -1,5 +1,5 @@
 /**
- * Search Console and Google Analytics (GA4), read-only, through the OAuth client of the Google Cloud project
+ * Search Console, Google Analytics (GA4) and, through its link with GA4, Google Ads, read-only, through the OAuth client of the Google Cloud project
  * medipim-marketing-machine and a refresh token from `tools/google-auth.mjs`.
  */
 const SITE = 'https://www.medipim.com/';
@@ -113,5 +113,52 @@ export async function analytics(from, to) {
     channels: channels.map((c) => ({ channel: c.key[0], ...row(c) })),
     pages: pages.map((p) => ({ page: p.key[0], ...row(p) })),
     countries: countries.map((c) => ({ country: c.key[0], ...row(c) })),
+  };
+}
+
+const AD_METRICS = ['advertiserAdCost', 'advertiserAdClicks', 'advertiserAdImpressions', 'sessions', 'keyEvents'];
+
+/** Google Ads through its link with GA4: cost, clicks and impressions come from Ads, sessions and key events from GA4. */
+export async function ads(from, to) {
+  const id = ga4Property();
+  const before = previousPeriod(from, to);
+  // The advertiser metrics only combine with a campaign dimension, so totals are summed over the campaigns.
+  const [campaigns, campaignsBefore, days] = await Promise.all([
+    report(id, from, to, ['sessionGoogleAdsCampaignName'], AD_METRICS, 250),
+    report(id, before.from, before.to, ['sessionGoogleAdsCampaignName'], AD_METRICS, 250),
+    report(id, from, to, ['date', 'sessionGoogleAdsCampaignName'], ['advertiserAdCost', 'advertiserAdClicks'], 10000),
+  ]);
+  const paid = (rows) => rows.filter((r) => r.values.advertiserAdCost > 0 || r.values.advertiserAdClicks > 0);
+  const sum = (rows) => {
+    const t = { cost: 0, clicks: 0, impressions: 0, sessions: 0, keyEvents: 0 };
+    for (const r of paid(rows)) {
+      t.cost += r.values.advertiserAdCost;
+      t.clicks += r.values.advertiserAdClicks;
+      t.impressions += r.values.advertiserAdImpressions;
+      t.sessions += r.values.sessions;
+      t.keyEvents += r.values.keyEvents;
+    }
+    return t;
+  };
+  const perDay = new Map();
+  for (const r of days) {
+    const date = `${r.key[0].slice(0, 4)}-${r.key[0].slice(4, 6)}-${r.key[0].slice(6)}`;
+    const d = perDay.get(date) ?? { date, cost: 0, clicks: 0 };
+    d.cost += r.values.advertiserAdCost;
+    d.clicks += r.values.advertiserAdClicks;
+    perDay.set(date, d);
+  }
+  return {
+    total: sum(campaigns),
+    previous: sum(campaignsBefore),
+    days: [...perDay.values()].sort((a, b) => a.date.localeCompare(b.date)),
+    campaigns: paid(campaigns).map((r) => ({
+      campaign: r.key[0],
+      cost: r.values.advertiserAdCost,
+      clicks: r.values.advertiserAdClicks,
+      impressions: r.values.advertiserAdImpressions,
+      sessions: r.values.sessions,
+      keyEvents: r.values.keyEvents,
+    })),
   };
 }
