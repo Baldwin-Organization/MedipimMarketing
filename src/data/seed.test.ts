@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
 import type { Budget, Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
@@ -114,11 +114,12 @@ describe('bilingual seed', () => {
 describe('budget plan and content mix', () => {
   const full = () => buildSeed(() => Math.random().toString(36));
 
-  it('seeds the 2027 budget of € 208,223, the agency at 10% of the rest, and a content mix that adds up to 100%', () => {
+  it('seeds the 2027 budget of € 189,294 with the agency at 10% of it, and a content mix that adds up to 100%', () => {
     const { budgets, pillars, content, items } = full();
-    expect(budgets.reduce((n, b) => n + b.amount, 0)).toBe(208223);
+    expect(budgets.reduce((n, b) => n + b.amount, 0)).toBe(189294);
     expect(budgets.find((b) => b.line === 'agency')?.amount).toBe(Math.round(0.1 * 189294));
     expect(budgets.find((b) => b.line === 'beurzen_exposant')?.amount).toBe(60000);
+    expect(budgets.find((b) => b.line === 'beurzen_bezoeker')?.amount).toBe(22000);
     expect(pillars.reduce((n, p) => n + p.target, 0)).toBe(100);
     expect(content.every((c) => pillars.some((p) => p.id === c.pillarId) && c.translations?.en?.title)).toBe(true);
     expect(items.filter((i) => i.contentId === 'content-ux-launch')).toHaveLength(3);
@@ -338,6 +339,27 @@ describe('agency budget', () => {
     ];
     expect(agencyBudgets(budgets)).toEqual([{ id: '2027:agency', year: 2027, line: 'agency', amount: 4001 }]);
     expect(agencyBudgets([...budgets, ...agencyBudgets(budgets)])).toEqual([]);
+  });
+
+  it('takes the agency out of the 2027 total instead of adding it, leaving edited lines alone', () => {
+    const onTop: Budget[] = [
+      { id: '2027:beurzen_exposant', year: 2027, line: 'beurzen_exposant', amount: 60000 },
+      { id: '2027:beurzen_bezoeker', year: 2027, line: 'beurzen_bezoeker', amount: 22000 },
+      { id: '2027:email', year: 2027, line: 'email', amount: 15000 },
+      { id: '2027:linkedin', year: 2027, line: 'linkedin', amount: 18000 },
+      { id: '2027:google', year: 2027, line: 'google', amount: 20000 },
+      { id: '2027:vakmedia', year: 2027, line: 'vakmedia', amount: 20000 },
+      { id: '2027:lidmaatschappen', year: 2027, line: 'lidmaatschappen', amount: 10000 },
+      { id: '2027:chatgpt', year: 2027, line: 'chatgpt', amount: 12000 },
+      { id: '2027:agency', year: 2027, line: 'agency', amount: 18929 },
+      { id: '2027:reserve', year: 2027, line: 'reserve', amount: 12294 },
+    ];
+    const changed = agencyWithinBudget(onTop);
+    const after = onTop.map((b) => changed.find((c) => c.id === b.id) ?? b);
+    expect(after.reduce((n, b) => n + b.amount, 0)).toBe(189294);
+    expect(agencyWithinBudget(after)).toEqual([]);
+    const edited = onTop.map((b) => (b.line === 'google' ? { ...b, amount: 25000 } : b));
+    expect(agencyWithinBudget(edited).some((b) => b.line === 'google')).toBe(false);
   });
 });
 
