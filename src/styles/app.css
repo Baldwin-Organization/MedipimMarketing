@@ -484,9 +484,10 @@ textarea.mc-input { padding: var(--mp-space-2) var(--mp-space-3); resize: vertic
 /* Plan tables: campaigns, PR, budget */
 .mc-plan-group { display: flex; flex-direction: column; gap: var(--mp-space-3); }
 .mc-media-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--mp-space-3); }
+.mc-media-audience { display: flex; flex-wrap: wrap; gap: var(--mp-space-1); }
 .mc-media-section { display: flex; flex-direction: column; gap: var(--mp-space-1); }
 .mc-media-section h4 { color: var(--mp-content-tertiary); font-size: var(--mp-text-xs); line-height: var(--mp-text-xs-line); font-weight: var(--mp-font-weight-medium); text-transform: uppercase; letter-spacing: 0.04em; }
-.mc-media-facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--mp-space-1) var(--mp-space-3); margin: 0; font-size: var(--mp-text-sm); line-height: var(--mp-text-sm-line); }
+.mc-media-facts { display: grid; grid-template-columns: fit-content(40%) 1fr; gap: var(--mp-space-1) var(--mp-space-3); margin: 0; font-size: var(--mp-text-sm); line-height: var(--mp-text-sm-line); }
 .mc-media-facts > div { display: contents; }
 .mc-media-facts dt { color: var(--mp-content-primary); font-weight: var(--mp-font-weight-medium); }
 .mc-media-facts dd { margin: 0; color: var(--mp-content-secondary); }

@@ -199,6 +199,45 @@ export const TRADE_MEDIA: TradeMedium[] = [
     checked: '2026-11',
   },
   {
+    medium: 'P3pharmacy',
+    publisher: 'Communications International Group (CIG)',
+    url: 'https://www.communicationsinternationalgroup.com',
+    market: { nl: 'VK', en: 'UK' },
+    countries: ['GB'],
+    audiences: ['apothekers'],
+    priority: 'interessant',
+    assessment: {
+      nl: 'Britse vakuitgever voor de openbare apotheek, met P3pharmacy als ingang bij apotheekeigenaars en -ketens: een Britse klantcase over hoe een apotheekgroep productinformatie en -foto’s beheert over vestigingen en digitale kanalen. Daarnaast is CIG Healthcare Partnership, dat opleidingen maakt voor OTC-merken, een mogelijke partner en ingang bij die merken.',
+      en: 'UK trade publisher for community pharmacy, with P3pharmacy as the way in to pharmacy owners and chains: a UK customer case on how a pharmacy group manages product information and images across branches and digital channels. CIG Healthcare Partnership, which makes training for OTC brands, is also a possible partner and a way in to those brands.',
+    },
+    reach: [
+      fact('P3pharmacy', 'P3pharmacy', '14.002 exemplaren per nummer, 12 per jaar (ABC 2025); bedrijfsvoering van apotheken', '14,002 copies per issue, 12 a year (ABC 2025); running a pharmacy business'),
+      fact('Pharmacy Magazine', 'Pharmacy Magazine', '13.897 per nummer, 12 per jaar (ABC 2025); nieuws, klinische praktijk en bijscholing', '13,897 per issue, 12 a year (ABC 2025); news, clinical practice and training'),
+      fact('Independent Community Pharmacist', 'Independent Community Pharmacist', '7.024 per nummer, 10 per jaar (ABC 2025)', '7,024 per issue, 10 a year (ABC 2025)'),
+      fact('Training Matters', 'Training Matters', 'geen audit; in een campagne van 2024 14.565 exemplaren naar elke Britse apotheek', 'no audit; 14,565 copies to every UK pharmacy in a 2024 campaign'),
+      fact('The Pharmacy Network', 'The Pharmacy Network', '100.000+ apotheekmedewerkers met toegang via ketens en verenigingen', '100,000+ pharmacy staff with access through chains and associations'),
+    ],
+    readers: {
+      nl: 'Eigenaars, managers, apothekers en assistenten in de openbare apotheek; de bladen gaan vrijwel volledig gratis naar apotheken. Eén apotheek kan meerdere titels krijgen, dus het unieke bereik is onbekend. Pharmacy Magazine gaat volgens ABC ook naar fabrikanten en marketeers in de farma-industrie, zonder aantallen. Op The Pharmacy Show 2025 kwam 62% van de 9.613 bezoekers uit de openbare apotheek en was 2,2% fabrikant of leverancier. Engels.',
+      en: 'Owners, managers, pharmacists and assistants in community pharmacy; the titles go almost entirely free to pharmacies. One pharmacy can get several titles, so the unique reach is unknown. According to ABC, Pharmacy Magazine also goes to manufacturers and marketers in the pharma industry, without numbers. At The Pharmacy Show 2025, 62% of the 9,613 visitors came from community pharmacy and 2.2% were manufacturers or suppliers. English.',
+    },
+    rates: {
+      nl: 'Geen publieke mediakit of tarieven. Naast advertenties maakt CIG opleidingen op maat voor OTC-merken en doet het marktonderzoek met panels van apothekers.',
+      en: 'No public media kit or rates. Besides advertising, CIG makes bespoke training for OTC brands and runs market research with panels of pharmacists.',
+    },
+    ask: {
+      nl: 'Uniek bereik per functie en type organisatie, de overlap tussen de titels, recente nieuwsbriefkliks, hoeveel mensen ze bij Britse OTC- en cosmeticamerken bereiken, en hun rol op The Pharmacy Show van 10–11 oktober 2027 (in 2026 waren ze mediapartner).',
+      en: 'Unique reach by job function and type of organisation, the overlap between titles, recent newsletter clicks, how many people they reach at UK OTC and cosmetics brands, and their role at The Pharmacy Show on 10–11 October 2027 (media partner in 2026).',
+    },
+    sources: [
+      { label: { nl: 'ABC P3pharmacy', en: 'ABC P3pharmacy' }, url: 'https://www.abc.org.uk/product/10420' },
+      { label: { nl: 'ABC Pharmacy Magazine', en: 'ABC Pharmacy Magazine' }, url: 'https://www.abc.org.uk/product/7029' },
+      { label: { nl: 'CIG Healthcare', en: 'CIG Healthcare' }, url: 'https://www.cighealthcare.co.uk/route-to-market/' },
+      { label: { nl: 'The Pharmacy Show', en: 'The Pharmacy Show' }, url: 'https://www.thepharmacyshow.co.uk/partner/communications-international-group' },
+    ],
+    checked: '2026-11',
+  },
+  {
     medium: 'PharmaManufacturingIQ',
     formerly: ['European Pharmaceutical Manufacturer'],
     publisher: 'ManufacturingIQ',

@@ -7,7 +7,7 @@ import { TRADE_MEDIA, isInMedium, type MediaPriority } from '../data/media';
 import { CHANNELS } from '../data/meta';
 import { useStore } from '../data/store';
 import type { Item } from '../data/types';
-import { channelLabel, lang, t } from '../i18n';
+import { audienceLabel, channelLabel, lang, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
 
@@ -101,6 +101,11 @@ function MediaShortlist({ items }: { items: Item[] }) {
                 </div>
                 <Pill tone={PRIORITY_TONE[m.priority]}>{t.pr.priority[m.priority]}</Pill>
               </header>
+              {!m.audiences.includes('producenten') && (
+                <p className="mc-media-audience">
+                  {m.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{t.pr.audienceOther(audienceLabel(a))}</span>)}
+                </p>
+              )}
               <p className="mc-media-text">{m.assessment[lang]}</p>
               <section className="mc-media-section" aria-label={`${t.pr.reach}: ${m.medium}`}>
                 <h4>{t.pr.reach}</h4>
