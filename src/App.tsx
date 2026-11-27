@@ -13,10 +13,11 @@ import { CampaignsView } from './views/CampaignsView';
 import { ContentView } from './views/ContentView';
 import { Dashboard } from './views/Dashboard';
 import { EventsView } from './views/EventsView';
+import { ImpactView } from './views/ImpactView';
 import { ItemDrawer } from './views/ItemDrawer';
 import { PrView } from './views/PrView';
 
-/** Dashboard and the brand first, then the work that carries it, then the money; `group` starts a new block. */
+/** Dashboard and the brand first, then the work that carries it, then the money and what it brings; `group` starts a new block. */
 const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName; group?: true }[] = [
   { to: '/dashboard', key: 'dashboard', icon: 'space_dashboard' },
   { to: '/merk', key: 'brand', icon: 'verified' },
@@ -26,6 +27,7 @@ const NAV: { to: string; key: keyof typeof t.app.nav; icon: IconName; group?: tr
   { to: '/beurzen', key: 'events', icon: 'storefront' },
   { to: '/pr', key: 'pr', icon: 'article' },
   { to: '/budget', key: 'budget', icon: 'payments', group: true },
+  { to: '/impact', key: 'impact', icon: 'insights' },
 ];
 
 function useLanguage() {
@@ -131,6 +133,7 @@ export function App() {
               <Route path="/content" element={<ContentView />} />
               <Route path="/merk" element={<BrandView />} />
               <Route path="/budget" element={<BudgetView />} />
+              <Route path="/impact" element={<ImpactView />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           ) : (

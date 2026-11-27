@@ -5,3 +5,4 @@ demo-output
 .DS_Store
 .vite
 *.tsbuildinfo
+.env.local
