@@ -75,7 +75,7 @@ export async function searchConsole(from, to) {
 }
 
 /** The GA4 property "Medipim - LIVE - GA4", the stream of www.medipim.com since 2021. */
-const ga4Property = () => process.env.GA4_PROPERTY_ID ?? '38716622';
+const ga4Property = () => process.env.GA4_PROPERTY_ID ?? '270238929';
 
 async function report(id, from, to, dimensions, metrics, limit) {
   const answer = await post(`https://analyticsdata.googleapis.com/v1beta/properties/${id}:runReport`, {
