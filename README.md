@@ -1,4 +1,4 @@
-# Medipim Marketing System
+# Medipim Marketing Machine
 
 Lokaal prototype van een marketing- en communicatieplanner voor Medipim: social posts,
 e-mailings, calls, beurzen/conferenties, betalende campagnes en PR in vakmedia in één
