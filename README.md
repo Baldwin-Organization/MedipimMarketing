@@ -98,6 +98,15 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   voorbereiding van een bezoek. Op de APP Conference en Pharmacy Connect gaat Medipim op kosten
   van de distributeur in Australië: ook budgetneutraal (€ 0), als bezoeker tenzij er al voor een
   stand gekozen was.
+- **Impact**: wat de acties opleveren, voor een gekozen periode (standaard vanaf 1 november
+  2026). Uit Teamleader de deals die in die periode zijn aangemaakt, per fase van de Sales
+  Pipeline (zo zie je ook de geplande demo's), per bron en per week, met een waarschuwing
+  voor deals zonder bron. Uit Google Search Console klikken, vertoningen, doorklikratio en
+  gemiddelde positie, met de zoekopdrachten en hoe hun positie veranderde. Uit Google
+  Analytics sessies, gebruikers en conversies, per kanaal, land en landingspagina. Alles
+  tegenover de periode ervoor. Onder de grafieken per dag staan de mails, campagnes,
+  beurzen, PR en calls uit de planner op hun startdag. De cijfers komen van de server
+  (`server/`), zodat geen sleutel in de browser komt.
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser
@@ -177,6 +186,13 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 ## Structuur
 
 ```
+server/
+  index.mjs          serveert dist/ achter basic auth en /api/impact/*
+  google.mjs         Search Console en GA4 via een OAuth-client met leesrechten
+  teamleader.mjs     deals uit Teamleader, met het roterende refresh token
+tools/
+  teamleader-auth.mjs  Teamleader eenmalig autoriseren, token rechtstreeks naar Railway
+  google-auth.mjs      Google eenmalig autoriseren (leesrechten), token rechtstreeks naar Railway
 src/
   data/
     types.ts         Item, Todo, Budget, ContentPillar, ContentPiece, Dataset
@@ -193,7 +209,7 @@ src/
     nl.ts            Nederlandse interfacetekst (bron, bepaalt de vorm van het woordenboek)
     en.ts            Engelse vertaling
     index.ts         huidige taal, t, labels voor kanalen, statussen en to do's
-  views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Content, Budget, formulieren
+  views/             Dashboard, Kalender, Beurzen, Campagnes, PR, Content, Budget, Impact, formulieren
   components/        knoppen, chips, pills, kalenderitems (Medipim-stijl)
   styles/
     medipim-tokens.css  kopie van public/tokens uit het design system
@@ -203,23 +219,42 @@ src/
 ### Online versie (Railway)
 
 De app draait op Railway, project `medipim-marketingkalender`, service `web`:
-<https://medipim-marketing.up.railway.app>. Railway bouwt met `npm run build` en
-serveert `dist/` als statische site. Opnieuw deployen vanuit een lokale checkout:
+<https://medipim-marketing.up.railway.app>. Railway bouwt met `npm run build` en start
+`npm start`: een kleine Node-server (`server/index.mjs`) die `dist/` serveert en de
+impactcijfers ophaalt. Opnieuw deployen vanuit een lokale checkout:
 
 ```bash
 railway link        # eenmalig: project medipim-marketingkalender, service web
 railway up
 ```
 
-De online versie vraagt een login (HTTP basic auth, ingesteld in `Caddyfile`). Gebruikersnaam
+De online versie vraagt een login (HTTP basic auth, in `server/index.mjs`). Gebruikersnaam
 en wachtwoord staan niet in de code maar in de Railway-variabelen `BASIC_AUTH_USER` en
 `BASIC_AUTH_HASH`. Het wachtwoord wijzigen:
 
 ```bash
-railway variables --set "BASIC_AUTH_HASH=$(caddy hash-password --plaintext 'nieuw-wachtwoord')"
+node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" 'nieuw-wachtwoord' | railway variable set BASIC_AUTH_HASH --stdin
 ```
 
 Railway deployt daarna opnieuw. Zonder die twee variabelen start de server niet.
+
+De impactpagina gebruikt deze Railway-variabelen:
+
+| Variabele | Waarvoor |
+|---|---|
+| `TEAMLEADER_CLIENT_ID`, `TEAMLEADER_CLIENT_SECRET` | De Teamleader-integratie van de website |
+| `TEAMLEADER_REFRESH_TOKEN` | Een eigen autorisatie, gezet door `node tools/teamleader-auth.mjs` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Desktop-client van het Google Cloud-project `medipim-marketing-machine` en een login met leesrechten op Search Console en Analytics, gezet door `node tools/google-auth.mjs <client JSON>` |
+| `GA4_PROPERTY_ID` | De GA4-property van www.medipim.com |
+
+Een Teamleader-refresh token werkt één keer; de server bewaart het volgende op het volume
+`/data` (`TOKEN_DIR`). Gebruik daarom nooit het token van de website of van een andere
+omgeving: na `teamleader-auth.mjs` hoort het alleen op Railway. De Google-login hangt aan het
+account dat toestemming gaf en leest wat dat account in Search Console en Analytics mag zien.
+
+Lokaal: `npm run server` start de server op poort 8787 met de waarden uit `.env.local`
+(niet in git), en `npm run dev` stuurt `/api` daarheen. Voor lokaal testen zetten
+`teamleader-auth.mjs` en `google-auth.mjs` een access token van een uur in `.env.local`.
 
 Gegevens blijven ook online lokaal per browser; collega's zien elkaars wijzigingen
 pas met een gedeelde database (zie hieronder).
