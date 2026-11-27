@@ -95,6 +95,7 @@ export const en: Dict = {
     Netwerkevent: 'Networking event',
     'Nieuwsbrief apothekers': 'Pharmacist newsletter',
     'Nieuwsbrief industrie': 'Industry newsletter',
+    'Outbound-sequentie': 'Outbound sequence',
     Productupdate: 'Product update',
     Uitnodiging: 'Invitation',
     Klantcall: 'Customer call',

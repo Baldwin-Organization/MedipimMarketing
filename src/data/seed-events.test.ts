@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { buildSeed } from './seed';
 import { planEvents } from './seed-events';
+import { OUTBOUND } from './seed-outbound';
 
 const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
 
 describe('event planning', () => {
   it('plans posts and preparation for the three stands and the four visits, and nothing else', () => {
     const data = build();
-    const grouped = new Set(data.items.filter((i) => i.type !== 'event' && i.campaign && !['Nieuwe UX Belgisch platform', 'Medipim Academy'].includes(i.campaign)).map((i) => i.campaign));
+    const grouped = new Set(data.items.filter((i) => i.type !== 'event' && i.campaign && !['Nieuwe UX Belgisch platform', 'Medipim Academy', OUTBOUND].includes(i.campaign)).map((i) => i.campaign));
     expect([...grouped].sort()).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);
     const withTodos = data.items.filter((i) => i.type === 'event' && data.todos.some((t) => t.itemId === i.id)).map((i) => i.title).sort();
     expect(withTodos).toEqual(['APP Conference and Trade Exhibition', 'Expopharm', 'GIRP PharmaConnect 2027', 'Pharmacy Connect', 'PharmagoraPlus', 'The Pharmacy Show', 'World Health Expo Dubai']);

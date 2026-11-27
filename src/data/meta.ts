@@ -34,7 +34,7 @@ export const STATUS_META: Record<ItemStatus, { tone: 'neutral' | 'info' | 'warni
 
 export const CHANNELS: Record<ItemType, string[]> = {
   social: ['LinkedIn · Medipim', 'LinkedIn · Maarten (CEO)', 'LinkedIn · Medipim Australia', 'LinkedIn · Medipim USA'],
-  email: ['Nieuwsbrief apothekers', 'Nieuwsbrief industrie', 'Productupdate', 'Uitnodiging'],
+  email: ['Nieuwsbrief apothekers', 'Nieuwsbrief industrie', 'Productupdate', 'Uitnodiging', 'Outbound-sequentie'],
   call: ['Klantcall', 'Partnercall', 'Webinar', 'Interne sync'],
   event: ['Beurs', 'Conferentie', 'Congres', 'Netwerkevent'],
   campaign: ['LinkedIn Ads', 'Google Ads', 'ChatGPT Ads', 'Gezamenlijke campagne'],

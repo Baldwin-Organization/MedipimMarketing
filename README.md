@@ -152,6 +152,16 @@ Ze vervingen algemenere posts op dezelfde dinsdag en binnen dezelfde pijler. Een
 oudere startinhoud krijgt de nieuwe tekst eenmalig, enkel voor stukken en posts die nog de oude
 tekst hebben.
 
+De outbound naar groothandels en labo's in Europa (thema "Outbound Europa: groothandels en
+labo's", `src/data/seed-outbound.ts`) volgt de CRM-databank in CRM-business-medimapper en heeft
+als doel demo's van Medipim. Er zijn vier golven: nationale groothandels (GIRP) in januari,
+ketens in maart, landen zonder vereniging in mei en labo's in september. Elke golf heeft een eerste
+mail met een LinkedIn-connectie, een tweede mail twee weken later, een belronde en LinkedIn Ads op
+de bedrijvenlijst (€2.000 per golf, een inschatting). De eerste mail draagt de Bizzy-credits om
+masterdata-, e-commerce- en marketingcontacten te verrijken (€500 per golf, €1.500 voor de labo's).
+Elk kwartaal volgt een nieuwsbrief voor groothandels en labo's. In landen die vooraf toestemming
+vragen, start een golf met LinkedIn en telefoon in plaats van mail.
+
 Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
 (Medipim, Maarten (CEO), Medipim Australia, Medipim USA).
 
