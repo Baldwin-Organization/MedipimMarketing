@@ -75,7 +75,7 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   in het formulier kun je een andere post kiezen. Bedragen die onder geen post vallen, staan
   apart als "Niet toegewezen". Met opsplitsing per kwartaal, doelgroep en markt (bestaand of
   nieuw) en de grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum. Het
-  budget 2027 (€ 208.223, waarvan € 18.929 servicekost voor het marketingbureau: 10% van de andere posten) zit in de startinhoud. Bij elk item in de budgettabel staan de
+  budget 2027 (€ 189.294, waarvan € 18.929 servicekost voor het marketingbureau: 10% van het totaal, dus geen bedrag bovenop) zit in de startinhoud. Die servicekost komt evenredig uit e-mail, LinkedIn, Google, vakmedia, lidmaatschappen, ChatGPT en de reserve; de beurzen blijven gelijk. Bij elk item in de budgettabel staan de
   doelgroepen en landen; een item zonder land valt op, want zijn kosten tellen voor geen enkel
   land. De kaart "Per land" zet per land het geplande en bestede bedrag naast de omzet van vorig
   jaar en de omzettarget van het gekozen jaar, met de groei en marketing als aandeel van de
@@ -151,6 +151,16 @@ Belgische apothekers (thema "Medipim Academy", `ACADEMY_CONTENT` in `src/data/se
 Ze vervingen algemenere posts op dezelfde dinsdag en binnen dezelfde pijler. Een browser met
 oudere startinhoud krijgt de nieuwe tekst eenmalig, enkel voor stukken en posts die nog de oude
 tekst hebben.
+
+De outbound naar groothandels en labo's in Europa (thema "Outbound Europa: groothandels en
+labo's", `src/data/seed-outbound.ts`) volgt de CRM-databank in CRM-business-medimapper en heeft
+als doel demo's van Medipim. Er zijn vier golven: nationale groothandels (GIRP) in januari,
+ketens in maart, landen zonder vereniging in mei en labo's in september. Elke golf heeft een eerste
+mail met een LinkedIn-connectie, een tweede mail twee weken later, een belronde en LinkedIn Ads op
+de bedrijvenlijst (€2.000 per golf, een inschatting). De eerste mail draagt de Bizzy-credits om
+masterdata-, e-commerce- en marketingcontacten te verrijken (€500 per golf, €1.500 voor de labo's).
+Elk kwartaal volgt een nieuwsbrief voor groothandels en labo's. In landen die vooraf toestemming
+vragen, start een golf met LinkedIn en telefoon in plaats van mail.
 
 Social posts gaan enkel via LinkedIn; het kanaal is het account waarvandaan gepost wordt
 (Medipim, Maarten (CEO), Medipim Australia, Medipim USA).

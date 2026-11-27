@@ -3,17 +3,28 @@ import type { Audience, Budget, BudgetLine, ContentFormat, ContentPiece, Content
 /** Share of the other budget lines planned for the marketing agency's service fee. */
 export const AGENCY_SHARE = 0.1;
 
-/** Marketing budget 2027, excl. VAT; total € 208,223, of which the agency is 10% of the other lines (€ 189,294). */
+/** Marketing budget 2027, excl. VAT; total € 189,294, of which the agency takes 10%. */
 const BUDGET_2027: Record<BudgetLine, number> = {
   beurzen_exposant: 60000,
   beurzen_bezoeker: 22000,
+  email: 12350,
+  linkedin: 14820,
+  google: 16470,
+  vakmedia: 16470,
+  lidmaatschappen: 8240,
+  chatgpt: 9880,
+  agency: 18929,
+  reserve: 10135,
+};
+
+/** The 2027 lines before the agency fee came out of the same total, with the agency on top. */
+export const BUDGET_2027_AGENCY_ON_TOP: Partial<Record<BudgetLine, number>> = {
   email: 15000,
   linkedin: 18000,
   google: 20000,
   vakmedia: 20000,
   lidmaatschappen: 10000,
   chatgpt: 12000,
-  agency: 18929,
   reserve: 12294,
 };
 

@@ -78,8 +78,8 @@ export const nl = {
     google: { label: 'Google Ads en remarketing', hint: 'Campagnes op Google Ads' },
     vakmedia: { label: 'Vakmedia en gezamenlijke campagnes', hint: 'PR & vakmedia en gezamenlijke campagnes' },
     lidmaatschappen: { label: 'Lidmaatschappen en sectorpartnerschappen', hint: 'Zoals GIRP · kies deze post bij een actie' },
-    chatgpt: { label: 'Test met ChatGPT Ads', hint: 'Campagnes op ChatGPT Ads' },
-    agency: { label: 'Servicekost marketingbureau', hint: '10% van de andere posten' },
+    chatgpt: { label: 'ChatGPT Ads', hint: 'Campagnes op ChatGPT Ads' },
+    agency: { label: 'Servicekost marketingbureau', hint: '10% van het totale budget, binnen dat budget' },
     reserve: { label: 'Reserve', hint: 'Om tijdens het jaar bij te sturen' },
   } satisfies Record<BudgetLine, { label: string; hint: string }>,
 

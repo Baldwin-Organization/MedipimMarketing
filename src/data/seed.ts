@@ -4,7 +4,8 @@ import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { seedRevenues } from './potential';
 import { planEvents } from './seed-events';
-import { AGENCY_SHARE, SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
+import { addOutbound, buildOutbound } from './seed-outbound';
+import { AGENCY_SHARE, BUDGET_2027_AGENCY_ON_TOP, SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
 import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_DISTRIBUTOR_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
@@ -328,6 +329,8 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-25', apply: (data) => distributorPays(data, newId) },
   { key: 'mc-seed-updates-26', apply: (data) => ({ deleteItems: droppedEvents(data.items) }) },
   { key: 'mc-seed-updates-27', apply: (data) => ({ budgets: agencyBudgets(data.budgets) }) },
+  { key: 'mc-seed-updates-28', apply: (data) => addOutbound(data, newId) },
+  { key: 'mc-seed-updates-29', apply: (data) => ({ budgets: agencyWithinBudget(data.budgets) }) },
 ];
 
 /** The agency's service fee for every year with a budget and no agency line yet, at its share of the other lines. */
@@ -339,6 +342,18 @@ export function agencyBudgets(budgets: Budget[]): Budget[] {
     line: 'agency' as const,
     amount: Math.round(AGENCY_SHARE * budgets.filter((b) => b.year === year).reduce((n, b) => n + b.amount, 0)),
   })).filter((b) => b.amount > 0);
+}
+
+/**
+ * The agency fee comes out of the 2027 total instead of on top: the lines it is taken from get the seeded lower
+ * amount, but only while they still hold the amount from before, so edited lines stay as they are.
+ */
+export function agencyWithinBudget(budgets: Budget[]): Budget[] {
+  return budgets.flatMap((b) => {
+    const before = BUDGET_2027_AGENCY_ON_TOP[b.line];
+    const after = SEED_BUDGETS.find((s) => s.line === b.line)?.amount;
+    return b.year === 2027 && before === b.amount && after !== undefined && after !== b.amount ? [{ ...b, amount: after }] : [];
+  });
 }
 
 /** Events taken off the calendar, too expensive for what they bring. */
@@ -540,12 +555,13 @@ export function buildSeed(makeId: () => string): Contents {
   }
   const retargeting = buildRetargeting(makeId, now);
   const events = planEvents({ items, todos }, makeId);
-  const planned = [...items, retargeting.item, ...events.items];
+  const outbound = buildOutbound(makeId, now);
+  const planned = [...items, retargeting.item, ...events.items, ...outbound.items];
   const content = buildSeedContent(now);
   const weekly = scheduleWeekly({ items: planned, content, pillars: SEED_PILLARS }, makeId);
   return {
     items: mergeById(planned, weekly.items),
-    todos: [...todos, ...retargeting.todos, ...events.todos, ...weekly.todos],
+    todos: [...todos, ...retargeting.todos, ...events.todos, ...outbound.todos, ...weekly.todos],
     budgets: SEED_BUDGETS,
     pillars: SEED_PILLARS,
     content: mergeById(content, weekly.content),
