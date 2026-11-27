@@ -124,7 +124,7 @@ describe('budget plan and content mix', () => {
 
   it('adds them to existing data only where that part is still empty', () => {
     const { items, todos } = full();
-    const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [] };
+    const old = { items: items.map(({ contentId: _c, ...i }) => i), todos, budgets: [], pillars: [], content: [], revenues: [] };
     const changes = addBudgetAndContent(old);
     expect(changes.budgets).toHaveLength(9);
     expect(changes.pillars).toHaveLength(5);

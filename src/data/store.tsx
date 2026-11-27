@@ -4,7 +4,7 @@ import { IndexedDbRepository, newId, parseDataset, toDataset, type Contents, typ
 import { moveItem, moveTodo, rollForward, todosFromTemplate, type ScheduledTodo } from './schedule';
 import { SEED_UPDATES, buildSeed } from './seed';
 import { HAS_PERIOD } from './meta';
-import type { Budget, BudgetLine, ContentPiece, ContentPillar, IsoDate, Item, Todo } from './types';
+import type { Budget, BudgetLine, ContentPiece, ContentPillar, IsoDate, Item, MarketRevenue, Todo } from './types';
 
 export type ItemDraft = Omit<Item, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 export type ContentDraft = Omit<ContentPiece, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
@@ -20,6 +20,9 @@ interface Store {
   todosFor(itemId: string): ScheduledTodo[];
   budgets: Budget[];
   setBudget(year: number, line: BudgetLine, amount: number): Promise<void>;
+  revenues: MarketRevenue[];
+  /** Sets the achieved revenue or the target of one country in one year; an empty amount clears it. */
+  setRevenue(year: number, country: string, field: 'revenue' | 'target', amount: number | undefined): Promise<void>;
   /** Sorted by `order`. */
   pillars: ContentPillar[];
   savePillars(pillars: ContentPillar[]): Promise<void>;
@@ -60,12 +63,13 @@ async function seedAndUpdate(repo: Repository): Promise<Contents> {
     if (changes.budgets?.length) await repo.saveBudgets(changes.budgets);
     if (changes.pillars?.length) await repo.savePillars(changes.pillars);
     if (changes.content?.length) await repo.saveContent(changes.content);
+    if (changes.revenues?.length) await repo.saveRevenues(changes.revenues);
     if (changes.deleteItems?.length) {
       const gone = new Set(changes.deleteItems);
       data.items = data.items.filter((i) => !gone.has(i.id));
       data.todos = data.todos.filter((t) => !gone.has(t.itemId));
     }
-    for (const key of ['items', 'todos', 'budgets', 'pillars', 'content'] as const) {
+    for (const key of ['items', 'todos', 'budgets', 'pillars', 'content', 'revenues'] as const) {
       data[key] = merge(data[key] as { id: string }[], (changes[key] ?? []) as { id: string }[]) as never;
     }
     localStorage.setItem(update.key, '1');
@@ -82,6 +86,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [pillars, setPillars] = useState<ContentPillar[]>([]);
   const [content, setContent] = useState<ContentPiece[]>([]);
+  const [revenues, setRevenues] = useState<MarketRevenue[]>([]);
   const [today, setToday] = useState(todayIso);
 
   useEffect(() => {
@@ -113,6 +118,7 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
     setBudgets(data.budgets);
     setPillars(data.pillars);
     setContent(data.content);
+    setRevenues(data.revenues);
   };
 
   const todos = useMemo(() => rawTodos.map((t) => rollForward(t, today)), [rawTodos, today]);
@@ -202,6 +208,14 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         await repo.saveBudgets([budget]);
         setBudgets((prev) => merge(prev, [budget]));
       },
+      revenues,
+      async setRevenue(year, country, field, amount) {
+        const id = `${year}:${country}`;
+        const record: MarketRevenue = { ...(revenues.find((r) => r.id === id) ?? { id, year, country }), [field]: amount };
+        if (amount === undefined) delete record[field];
+        await repo.saveRevenues([record]);
+        setRevenues((prev) => merge(prev, [record]));
+      },
       pillars: sortedPillars,
       async savePillars(next) {
         await repo.savePillars(next);
@@ -226,14 +240,14 @@ export function StoreProvider({ children, repository }: { children: ReactNode; r
         const now = new Date().toISOString();
         await upsertItems(items.filter((i) => i.contentId === id).map(({ contentId: _c, ...i }) => ({ ...i, updatedAt: now })));
       },
-      exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets, pillars, content }), null, 2),
+      exportJson: () => JSON.stringify(toDataset({ items, todos: rawTodos, budgets, pillars, content, revenues }), null, 2),
       async importJson(json) {
         const data = parseDataset(json);
         await repo.replaceAll(data);
         apply(data);
       },
     };
-  }, [ready, blocked, today, items, itemsById, todos, rawTodos, budgets, pillars, sortedPillars, content, repo, upsertItems, upsertTodos]);
+  }, [ready, blocked, today, items, itemsById, todos, rawTodos, budgets, revenues, pillars, sortedPillars, content, repo, upsertItems, upsertTodos]);
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
 }

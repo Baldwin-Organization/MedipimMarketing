@@ -1,11 +1,11 @@
 import { Fragment, useEffect, useState } from 'react';
 import { PlanTable, periodText } from '../components/PlanTable';
-import { Button, Card, EmptyState, Icon, Stat } from '../components/ui';
-import { budgetLineOf, budgetYear, byAudience, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
-import { AUDIENCES } from '../data/dimensions';
+import { Button, Card, EmptyState, Icon, Pill, Stat } from '../components/ui';
+import { budgetLineOf, budgetYear, byAudience, byCountry, byLine, byMarket, byQuarter, euro, yearOf, type Totals } from '../data/budget';
+import { AUDIENCES, countryName, isExistingMarket } from '../data/dimensions';
 import { BUDGET_LINES } from '../data/meta';
 import { useStore } from '../data/store';
-import type { BudgetLine } from '../data/types';
+import type { BudgetLine, Item } from '../data/types';
 import { audienceLabel, budgetLineLabel, itemText, itemTitle, t } from '../i18n';
 import { useUi } from '../ui-context';
 import { PageHeader } from './PageHeader';
@@ -110,6 +110,7 @@ export function BudgetView() {
                         <td>
                           <span className="mc-budget-item">{itemTitle(i)}</span>
                           <span className="mc-budget-line-hint">{[periodText(i), itemText(i, 'location')].filter(Boolean).join(' · ')}</span>
+                          <ItemScope item={i} />
                         </td>
                         <td className="mc-num mc-muted">–</td>
                         <td className="mc-num mc-muted">{r.budget && i.budgetPlanned ? pct(i.budgetPlanned, r.budget) : '–'}</td>
@@ -158,6 +159,8 @@ export function BudgetView() {
         <p className="mc-muted">{t.budget.linesNote}</p>
       </Card>
 
+      <CountryCard year={year} />
+
       <div className="mc-budget-grid">
         <Card title={t.budget.perQuarter} icon="calendar_month">
           <Breakdown rows={byQuarter(store.items, year).map((q) => ({ label: `${t.dates.quarter}${q.quarter}`, ...q }))} />
@@ -203,11 +206,23 @@ const pct = (part: number, whole: number) => `${Math.round((part / whole) * 100)
 
 function BudgetInput({ year, line, amount }: { year: number; line: BudgetLine; amount: number }) {
   const store = useStore();
-  const [value, setValue] = useState(amount ? String(amount) : '');
-  useEffect(() => setValue(amount ? String(amount) : ''), [amount, year]);
+  return (
+    <AmountInput
+      amount={amount || undefined}
+      label={t.budget.inputLabel(budgetLineLabel(line), year)}
+      onCommit={(next) => store.setBudget(year, line, next ?? 0)}
+    />
+  );
+}
+
+/** An amount in euro that saves on blur or Enter; emptying it clears the amount. */
+function AmountInput({ amount, label, onCommit }: { amount?: number; label: string; onCommit: (next: number | undefined) => void }) {
+  const shown = amount ? String(amount) : '';
+  const [value, setValue] = useState(shown);
+  useEffect(() => setValue(shown), [shown]);
   const commit = () => {
-    const next = Math.max(0, Number(value) || 0);
-    if (next !== amount) store.setBudget(year, line, next);
+    const next = value.trim() ? Math.max(0, Number(value) || 0) : undefined;
+    if ((next || undefined) !== amount) onCommit(next);
   };
   return (
     <input
@@ -216,7 +231,7 @@ function BudgetInput({ year, line, amount }: { year: number; line: BudgetLine; a
       step={500}
       inputMode="decimal"
       className="mc-input mc-budget-input"
-      aria-label={t.budget.inputLabel(budgetLineLabel(line), year)}
+      aria-label={label}
       placeholder="0"
       value={value}
       onChange={(e) => setValue(e.target.value)}
@@ -225,6 +240,113 @@ function BudgetInput({ year, line, amount }: { year: number; line: BudgetLine; a
     />
   );
 }
+
+/** The audiences and countries an item's costs count for; a missing country stands out, since its costs count for none. */
+function ItemScope({ item }: { item: Item }) {
+  return (
+    <span className="mc-tags mc-budget-scope">
+      {item.audiences.length
+        ? item.audiences.map((a) => <span key={a} className="mc-pill" data-accent="2">{audienceLabel(a)}</span>)
+        : <Pill>{t.budget.noAudienceTag}</Pill>}
+      {item.countries.length
+        ? item.countries.map((c) => <Pill key={c} tone={isExistingMarket(c) ? 'neutral' : 'warning'}>{countryName(c)}</Pill>)
+        : <Pill tone="warning">{t.budget.noCountryTag}</Pill>}
+    </span>
+  );
+}
+
+/** Marketing costs per country next to last year's revenue and this year's target, both entered here. */
+function CountryCard({ year }: { year: number }) {
+  const store = useStore();
+  const { rows, none } = byCountry(store.items, store.revenues, year);
+  const sumOf = (key: 'revenueBefore' | 'target') => rows.reduce((n, r) => n + (r[key] ?? 0), 0);
+  const total = {
+    planned: rows.reduce((n, r) => n + r.planned, none.planned),
+    actual: rows.reduce((n, r) => n + r.actual, none.actual),
+    revenueBefore: sumOf('revenueBefore'),
+    target: sumOf('target'),
+  };
+  return (
+    <Card title={t.budget.perCountry} icon="language">
+      <div className="mc-table-wrap">
+        <table className="mc-table mc-budget-table mc-country-table" aria-label={t.budget.perCountry}>
+          <thead>
+            <tr>
+              <th>{t.budget.country}</th>
+              <th className="mc-num">{t.budget.planned}</th>
+              <th className="mc-num">{t.budget.spent}</th>
+              <th className="mc-num">{t.budget.revenueBefore(year - 1)}</th>
+              <th className="mc-num">{t.budget.target(year)}</th>
+              <th className="mc-num">{t.budget.growth}</th>
+              <th className="mc-num">{t.budget.marketingShare}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.country}>
+                <td>
+                  <span className="mc-budget-line">{countryName(r.country)}</span>
+                  {!isExistingMarket(r.country) && <span className="mc-budget-line-hint">{t.budget.newMarket}</span>}
+                </td>
+                <td className="mc-num">{r.planned ? euro(r.planned) : <span className="mc-muted">–</span>}</td>
+                <td className="mc-num">{r.actual ? euro(r.actual) : <span className="mc-muted">–</span>}</td>
+                <td className="mc-num">
+                  <AmountInput
+                    amount={r.revenueBefore}
+                    label={t.budget.revenueLabel(countryName(r.country), year - 1)}
+                    onCommit={(next) => store.setRevenue(year - 1, r.country, 'revenue', next)}
+                  />
+                </td>
+                <td className="mc-num">
+                  <AmountInput
+                    amount={r.target}
+                    label={t.budget.targetLabel(countryName(r.country), year)}
+                    onCommit={(next) => store.setRevenue(year, r.country, 'target', next)}
+                  />
+                </td>
+                <td className="mc-num">{growth(r.revenueBefore, r.target)}</td>
+                <td className="mc-num">{share(r.planned, r.target)}</td>
+              </tr>
+            ))}
+            {(none.planned > 0 || none.actual > 0) && (
+              <tr data-unassigned>
+                <td>
+                  <span className="mc-budget-line">{t.budget.noCountry}</span>
+                  <span className="mc-budget-line-hint">{t.budget.noCountryHint}</span>
+                </td>
+                <td className="mc-num">{euro(none.planned)}</td>
+                <td className="mc-num">{euro(none.actual)}</td>
+                <td className="mc-num mc-muted">–</td>
+                <td className="mc-num mc-muted">–</td>
+                <td className="mc-num mc-muted">–</td>
+                <td className="mc-num mc-muted">–</td>
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th>{t.budget.total}</th>
+              <th className="mc-num">{euro(total.planned)}</th>
+              <th className="mc-num">{euro(total.actual)}</th>
+              <th className="mc-num">{total.revenueBefore ? euro(total.revenueBefore) : '–'}</th>
+              <th className="mc-num">{total.target ? euro(total.target) : '–'}</th>
+              <th className="mc-num">{growth(total.revenueBefore, total.target)}</th>
+              <th className="mc-num">{share(total.planned, total.target)}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p className="mc-muted">{t.budget.countryNote}</p>
+    </Card>
+  );
+}
+
+const percent = (n: number, signed = false) =>
+  new Intl.NumberFormat(t.numberLocale, { style: 'percent', maximumFractionDigits: 1, ...(signed && { signDisplay: 'exceptZero' as const }) }).format(n);
+
+const growth = (before?: number, target?: number) => (before && target ? percent(target / before - 1, true) : '–');
+
+const share = (planned: number, target?: number) => (planned && target ? percent(planned / target) : '–');
 
 /** Planned and actual against the budget; without a budget, scaled to the larger of the two. */
 function BudgetBar({ budget, planned, actual }: Totals & { budget: number }) {

@@ -75,7 +75,11 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   in het formulier kun je een andere post kiezen. Bedragen die onder geen post vallen, staan
   apart als "Niet toegewezen". Met opsplitsing per kwartaal, doelgroep en markt (bestaand of
   nieuw) en de grootste posten. Kosten tellen in het jaar en kwartaal van de startdatum. Het
-  budget 2027 (€ 189.294) zit in de startinhoud.
+  budget 2027 (€ 189.294) zit in de startinhoud. Bij elk item in de budgettabel staan de
+  doelgroepen en landen; een item zonder land valt op, want zijn kosten tellen voor geen enkel
+  land. De kaart "Per land" zet per land het geplande en bestede bedrag naast de omzet van vorig
+  jaar en de omzettarget van het gekozen jaar, met de groei en marketing als aandeel van de
+  target. Omzet en target vul je daar per land in (`MarketRevenue`, één record per jaar en land).
 - **Lokale opslag** in IndexedDB, met JSON-export en -import en een knop om de
   startinhoud te herstellen. Donkere modus.
 - **Twee talen**: NL/EN-schakelaar onderaan de zijbalk; de keuze wordt in de browser

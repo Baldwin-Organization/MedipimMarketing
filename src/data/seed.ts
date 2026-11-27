@@ -424,6 +424,7 @@ export function buildSeed(makeId: () => string): Contents {
     budgets: SEED_BUDGETS,
     pillars: SEED_PILLARS,
     content: mergeById(content, weekly.content),
+    revenues: [],
   };
 }
 

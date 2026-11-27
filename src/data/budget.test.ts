@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { autoBudgetLine, byAudience, byLine, byMarket, byQuarter, quarterOf } from './budget';
-import type { Budget, Item } from './types';
+import { autoBudgetLine, byAudience, byCountry, byLine, byMarket, byQuarter, quarterOf } from './budget';
+import { EXISTING_MARKETS } from './dimensions';
+import type { Budget, Item, MarketRevenue } from './types';
 
 const item = (over: Partial<Item>): Item => ({
   id: Math.random().toString(36),
@@ -72,5 +73,21 @@ describe('budget', () => {
     expect(m.get('geen')?.planned).toBe(3000);
     const sum = [...m.values()].reduce((n, t) => n + t.planned, 0);
     expect(sum).toBe(4600);
+  });
+
+  it('counts costs per country next to last year\'s revenue and this year\'s target', () => {
+    const revenues: MarketRevenue[] = [
+      { id: '2026:BE', year: 2026, country: 'BE', revenue: 900000, target: 1 },
+      { id: '2027:BE', year: 2027, country: 'BE', target: 1000000 },
+      { id: '2027:NL', year: 2027, country: 'NL', target: 50000 },
+    ];
+    const { rows, none } = byCountry([...items, item({ countries: ['JP'] })], revenues, 2027);
+    expect(rows.find((r) => r.country === 'BE')).toMatchObject({ planned: 1300, actual: 800, revenueBefore: 900000, target: 1000000 });
+    expect(rows.find((r) => r.country === 'IT')).toMatchObject({ planned: 300, actual: 0 });
+    expect(rows.find((r) => r.country === 'NL')).toMatchObject({ planned: 0, target: 50000 });
+    expect(rows.find((r) => r.country === 'FR')).toMatchObject({ planned: 0, revenueBefore: undefined, target: undefined });
+    expect(rows.some((r) => r.country === 'JP')).toBe(false);
+    expect(rows).toHaveLength(EXISTING_MARKETS.length + 2);
+    expect(none).toEqual({ planned: 3000, actual: 3200 });
   });
 });

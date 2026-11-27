@@ -1,7 +1,7 @@
 import { t } from '../i18n';
-import { isExistingMarket } from './dimensions';
+import { EXISTING_MARKETS, byCountryName, isExistingMarket } from './dimensions';
 import { BUDGET_LINES } from './meta';
-import type { Audience, Budget, BudgetLine, IsoDate, Item } from './types';
+import type { Audience, Budget, BudgetLine, IsoDate, Item, MarketRevenue } from './types';
 
 /** An item's costs count in the year (and quarter) of its start date. */
 export const yearOf = (item: Item) => Number(item.date.slice(0, 4));
@@ -99,6 +99,37 @@ export function byMarket(items: Item[], year: number) {
     (i) => [...new Set(i.countries.map((c): MarketGroup => (isExistingMarket(c) ? 'bestaand' : 'nieuw')))],
     'geen',
   );
+}
+
+export interface CountryRow extends Totals {
+  country: string;
+  /** Revenue achieved the year before. */
+  revenueBefore?: number;
+  /** Revenue target for the year. */
+  target?: number;
+}
+
+/**
+ * Costs per country for the year, with last year's revenue and this year's target. The active markets always get a row,
+ * other countries once they have costs or figures. Costs of items without a country land in `none`.
+ */
+export function byCountry(items: Item[], revenues: MarketRevenue[], year: number): { rows: CountryRow[]; none: Totals } {
+  const costs = splitOver<string>(items.filter((i) => yearOf(i) === year), (i) => i.countries, '');
+  const figure = (y: number, country: string) => revenues.find((r) => r.year === y && r.country === country);
+  const withFigures = revenues
+    .filter((r) => (r.year === year && r.target != null) || (r.year === year - 1 && r.revenue != null))
+    .map((r) => r.country);
+  const withCosts = [...costs].filter(([c, t]) => c && (t.planned || t.actual)).map(([c]) => c);
+  const countries = [...new Set([...EXISTING_MARKETS, ...withCosts, ...withFigures])].sort(byCountryName);
+  return {
+    rows: countries.map((country) => ({
+      country,
+      ...(costs.get(country) ?? { planned: 0, actual: 0 }),
+      revenueBefore: figure(year - 1, country)?.revenue,
+      target: figure(year, country)?.target,
+    })),
+    none: costs.get('') ?? { planned: 0, actual: 0 },
+  };
 }
 
 export const euro = (n: number) =>

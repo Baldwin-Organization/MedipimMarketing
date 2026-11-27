@@ -111,6 +111,17 @@ export interface Budget {
   amount: number;
 }
 
+/** Revenue in one country for one year: what Medipim achieved and what it aims for. Euro, excl. btw. */
+export interface MarketRevenue {
+  /** `${year}:${country}` */
+  id: string;
+  year: number;
+  /** ISO 3166-1 alpha-2. */
+  country: string;
+  revenue?: number;
+  target?: number;
+}
+
 /** A theme in the content mix, with the share of content it should get. */
 export interface ContentPillar {
   id: string;
@@ -159,4 +170,6 @@ export interface Dataset {
   /** Absent in exports made before the content page existed. */
   pillars?: ContentPillar[];
   content?: ContentPiece[];
+  /** Absent in exports made before revenue per country existed. */
+  revenues?: MarketRevenue[];
 }

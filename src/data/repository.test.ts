@@ -10,12 +10,13 @@ describe('IndexedDbRepository', () => {
     expect(await repo.isEmpty()).toBe(true);
     let n = 0;
     const { items } = buildSeed(() => `id${n++}`);
-    const seed = { items, todos: items.flatMap((i) => todosFromTemplate(i, () => `id${n++}`)), budgets: [{ id: '2027:email', year: 2027, line: 'email' as const, amount: 15000 }], pillars: [], content: [] };
+    const seed = { items, todos: items.flatMap((i) => todosFromTemplate(i, () => `id${n++}`)), budgets: [{ id: '2027:email', year: 2027, line: 'email' as const, amount: 15000 }], pillars: [], content: [], revenues: [{ id: '2026:BE', year: 2026, country: 'BE', revenue: 1200000 }] };
     await repo.replaceAll(seed);
     const loaded = await repo.load();
     expect(loaded.items).toHaveLength(seed.items.length);
     expect(loaded.todos).toHaveLength(seed.todos.length);
     expect(loaded.budgets).toEqual(seed.budgets);
+    expect(loaded.revenues).toEqual(seed.revenues);
 
     const first = seed.items[0];
     await repo.deleteItem(first.id);
@@ -25,11 +26,12 @@ describe('IndexedDbRepository', () => {
   });
 
   it('round-trips a JSON export and rejects foreign files', () => {
-    const json = JSON.stringify(toDataset({ items: [], todos: [], budgets: [], pillars: [], content: [] }));
+    const json = JSON.stringify(toDataset({ items: [], todos: [], budgets: [], pillars: [], content: [], revenues: [] }));
     expect(parseDataset(json).version).toBe(1);
     const old = parseDataset('{"version":1,"items":[],"todos":[],"budgets":[{"id":"2027:event","year":2027,"type":"event","amount":1}]}');
     expect(old.budgets).toEqual([]);
     expect(old.content).toEqual([]);
+    expect(old.revenues).toEqual([]);
     expect(() => parseDataset('{"foo":1}')).toThrow();
   });
 });
