@@ -3,9 +3,10 @@ import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { planEvents } from './seed-events';
 import { SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
-import { scheduleWeekly } from './seed-weekly';
+import { moveItem } from './schedule';
+import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN } from './seed-en';
-import type { Audience, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
+import type { Audience, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
 
 interface SeedEvent {
   title: string;
@@ -246,6 +247,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-15', apply: (data) => academyUpdate(data, new Date().toISOString()) },
   { key: 'mc-seed-updates-16', apply: (data) => ({ items: academyLanguages(data.items, new Date().toISOString()) }) },
   { key: 'mc-seed-updates-17', apply: removeMedimapper },
+  { key: 'mc-seed-updates-18', apply: startMidDecember },
 ];
 
 /** The planner is about Medipim only: Medimapper phrases from earlier seeds and what replaces them, most specific first. */
@@ -275,6 +277,51 @@ export function removeMedimapper(data: Pick<Contents, 'items' | 'todos' | 'conte
     content: data.content.filter(mentions).map((p) => ({ ...withoutMedimapper(p), updatedAt: now })),
     pillars: data.pillars.filter(mentions).map(withoutMedimapper),
   };
+}
+
+/** Follow-up posts on the new UX that no longer fit December; they stay as ideas without a date. */
+const UX_FOLLOW_UPS = ['content-ux-tour', 'content-new-ux-highlights', 'content-new-ux-question'];
+
+/**
+ * Everything starts in the week of 14 December 2026: the UX launch and the retargeting campaign move there with their
+ * seeded to-dos, and the weekly UX follow-ups before Christmas leave the calendar. Items someone moved stay put.
+ */
+export function startMidDecember(data: Pick<Contents, 'items' | 'todos' | 'content'>): SeedChanges {
+  const now = new Date().toISOString();
+  /** Seeded items that started before the week of 14 December 2026, by title, with their old date. */
+  const earlyDates: Record<string, IsoDate> = {
+    'Aankondiging nieuwe UX Belgisch platform': '2026-11-23',
+    'Nieuwe UX Belgisch platform – post Medipim-pagina': '2026-11-25',
+    'Nieuwsbrief: nieuwe UX van het platform': '2026-11-27',
+    [RETARGETING_TITLE]: '2026-12-01',
+  };
+  const seeded = [
+    ...ACTIONS.map((a) => ({ title: a.title, date: a.date, todos: a.todos ?? [] })),
+    { title: RETARGETING_TITLE, date: RETARGETING_START, todos: RETARGETING_TODOS },
+  ];
+  const items: Item[] = [];
+  const todos: Todo[] = [];
+  for (const item of data.items) {
+    const seed = seeded.find((s) => s.title === item.title);
+    if (!seed || earlyDates[item.title] !== item.date) continue;
+    const moved = moveItem(item, data.todos, seed.date);
+    items.push({ ...moved.item, endDate: item.type === 'campaign' ? item.endDate : moved.item.endDate, updatedAt: now });
+    for (const t of data.todos.filter((t) => t.itemId === item.id)) {
+      const dueDate = seed.todos.find((s) => s.title === t.title)?.dueDate ?? moved.todos.find((m) => m.id === t.id)?.dueDate;
+      if (dueDate) todos.push({ ...t, dueDate, offsetDays: daysBetween(seed.date, dueDate) });
+    }
+  }
+  const followUps = data.items.filter((i) =>
+    i.type === 'social' && i.channel === WEEKLY_CHANNEL && UX_FOLLOW_UPS.includes(i.contentId ?? '') && ['idee', 'gepland'].includes(i.status));
+  const content = data.content.flatMap((p): ContentPiece[] => {
+    if (UX_FOLLOW_UPS.includes(p.id) && p.month === '2026-12') {
+      const { month: _, ...undated } = p;
+      return [{ ...undated, updatedAt: now }];
+    }
+    if (p.id === UX_LAUNCH_CONTENT_ID && p.month === '2026-11') return [{ ...p, month: '2026-12', status: 'klaar', updatedAt: now }];
+    return [];
+  });
+  return { items, todos, content, deleteItems: followUps.map((i) => i.id) };
 }
 
 /** The December pieces, then one post a week in the calendar. */
@@ -381,11 +428,11 @@ export function buildSeed(makeId: () => string): Contents {
 }
 
 const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
-const RETARGETING_START = '2026-12-01';
+const RETARGETING_START = '2026-12-17';
 const RETARGETING_TODOS: { title: string; en: string; dueDate: IsoDate }[] = [
-  { title: 'Google-tag en Consent Mode v2 nakijken op medipim.com', en: 'Check the Google tag and Consent Mode v2 on medipim.com', dueDate: '2026-11-26' },
-  { title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)', en: 'Create a remarketing audience per country (BE, FR, AU, DE)', dueDate: '2026-11-27' },
-  { title: 'Advertenties maken per taal (NL, FR, DE, EN)', en: 'Create ads per language (NL, FR, DE, EN)', dueDate: '2026-11-28' },
+  { title: 'Google-tag en Consent Mode v2 nakijken op medipim.com', en: 'Check the Google tag and Consent Mode v2 on medipim.com', dueDate: '2026-12-14' },
+  { title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)', en: 'Create a remarketing audience per country (BE, FR, AU, DE)', dueDate: '2026-12-15' },
+  { title: 'Advertenties maken per taal (NL, FR, DE, EN)', en: 'Create ads per language (NL, FR, DE, EN)', dueDate: '2026-12-16' },
   { title: 'Frequentielimiet instellen en campagne starten', en: 'Set a frequency cap and start the campaign', dueDate: RETARGETING_START },
 ];
 
@@ -440,7 +487,7 @@ const UX_LAUNCH = 'Nieuwe UX Belgisch platform';
 const ALL_AUDIENCES: Audience[] = ['groothandels', 'producenten', 'apothekers', 'ziekenhuizen'];
 const ALL_PRODUCTS: ProductType[] = ['geneesmiddelen', 'cannabis', 'cosmetica', 'voeding', 'baby'];
 
-/** Communication around the launch of the new UX of the Belgian platform (November 2026). */
+/** Communication around the launch of the new UX of the Belgian platform (week of 14 December 2026). */
 const ACTIONS: {
   type: ItemType;
   title: string;
@@ -460,7 +507,7 @@ const ACTIONS: {
     title: 'Aankondiging nieuwe UX Belgisch platform',
     description: 'LinkedIn-post in het Engels vanuit het profiel van Maarten (CEO), voor een internationaal publiek.',
     channel: 'LinkedIn · Maarten (CEO)',
-    date: '2026-11-23',
+    date: '2026-12-14',
     status: 'klaar',
     owner: 'Maarten',
     audiences: ALL_AUDIENCES,
@@ -472,15 +519,15 @@ const ACTIONS: {
     title: 'Nieuwe UX Belgisch platform – post Medipim-pagina',
     description: 'Tweede LinkedIn-post over de nieuwe UX, nu vanuit de Europese bedrijfspagina Medipim.',
     channel: 'LinkedIn · Medipim',
-    date: '2026-11-25',
+    date: '2026-12-15',
     status: 'gepland',
     owner: '',
     audiences: ALL_AUDIENCES,
     countries: [],
     todos: [
-      { title: 'Tekst schrijven', dueDate: '2026-11-24' },
-      { title: 'Visual kiezen', dueDate: '2026-11-24' },
-      { title: 'Inplannen op de Medipim-pagina', dueDate: '2026-11-25' },
+      { title: 'Tekst schrijven', dueDate: '2026-12-14' },
+      { title: 'Visual kiezen', dueDate: '2026-12-14' },
+      { title: 'Inplannen op de Medipim-pagina', dueDate: '2026-12-15' },
     ],
   },
   {
@@ -488,16 +535,16 @@ const ACTIONS: {
     title: 'Nieuwsbrief: nieuwe UX van het platform',
     description: 'Nieuwsbrief aan de Belgische apothekers over de nieuwe UX van het platform.',
     channel: 'Nieuwsbrief apothekers',
-    date: '2026-11-27',
+    date: '2026-12-18',
     time: '09:00',
     status: 'gepland',
     owner: '',
     audiences: ['apothekers'],
     countries: ['BE'],
     todos: [
-      { title: 'Tekst en visuals maken', dueDate: '2026-11-25' },
-      { title: 'Testmail versturen en goedkeuring vragen', dueDate: '2026-11-26' },
-      { title: 'Verzending inplannen op vrijdag 9:00', dueDate: '2026-11-26' },
+      { title: 'Tekst en visuals maken', dueDate: '2026-12-16' },
+      { title: 'Testmail versturen en goedkeuring vragen', dueDate: '2026-12-17' },
+      { title: 'Verzending inplannen op vrijdag 9:00', dueDate: '2026-12-17' },
     ],
   },
 ];
