@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
 import { moveItem } from './schedule';
 import type { Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
@@ -324,6 +324,18 @@ describe('event budgets from the decisions', () => {
       return i;
     });
     expect(estimateEventBudgets(older).map((i) => [i.title, i.budgetPlanned])).toEqual([['DMEA', 2500], ['GIRP PharmaConnect 2027', 4000]]);
+  });
+});
+
+describe('dropped events', () => {
+  it('leaves GS1 Global Healthcare out of the seed and removes it with its posts from older data', () => {
+    let n = 0;
+    const { items } = buildSeed(() => `id${n++}`);
+    expect(items.some((i) => i.title.startsWith('GS1 Global Healthcare') || i.campaign.startsWith('GS1 Global Healthcare'))).toBe(false);
+    expect(droppedEvents(items)).toEqual([]);
+    const gs1 = { ...items.find((i) => i.title === 'GS1 Connect')!, id: 'gs1', title: 'GS1 Global Healthcare Conference', participation: 'bezoeker' as const };
+    const post = { ...items.find((i) => i.type === 'social')!, id: 'post', campaign: 'GS1 Global Healthcare Conference' };
+    expect(droppedEvents([...items, gs1, post])).toEqual(['gs1', 'post']);
   });
 });
 

@@ -111,7 +111,6 @@ const EVENTS: SeedEvent[] = [
   { title: 'Pharmanology', date: '2027-10-12', tentative: true, location: 'Antwerpen, België', channel: 'Beurs', audiences: APOTHEKERS, relevance: 'Hoog', description: 'Apothekers en hun partners ontmoeten elkaar rond innovatie en praktijkwerking. Goede Belgische gelegenheid voor software- en leverancierscontacten.' },
   { title: 'SNOMED CT Expo', date: '2027-10-20', endDate: '2027-10-22', location: 'St Julian’s, Malta', channel: 'Congres', audiences: DATAPARTNERS, relevance: 'Middel, technisch', description: 'Trekt experts in terminologie, interoperabiliteit en gezondheids-IT. Relevant voor datamapping en semantische koppelingen; technisch van aard.' },
   { title: 'Mediterranean Cannabis Summit', date: '2027-10-22', endDate: '2027-10-23', location: 'Ta’ Qali, Malta', channel: 'Conferentie', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Aanvullend', description: 'Brede cannabisbijeenkomst met medische en wetenschappelijke onderdelen, naast industrie, beleid en investeringen.' },
-  { title: 'GS1 Global Healthcare Conference', date: '2027-10-25', endDate: '2027-10-27', location: 'Sydney, Australië', channel: 'Conferentie', audiences: DATAPARTNERS, relevance: 'Hoog voor data- en standaardisatiepartners', description: 'Internationale bijeenkomst over interoperabiliteit, GS1-standaarden, traceerbaarheid en datadeling. Geen groothandelsbeurs, maar inhoudelijk relevant voor het datamodel van Medipim en partnerschappen rond productdata.' },
 
   // November 2027
   { title: 'HDA Research Foundation CEO Roundtable', date: '2027-11-04', location: 'Washington, Verenigde Staten', channel: 'Netwerkevent', audiences: GROOTHANDELS, relevance: 'Aanvullend, vooral voor senior netwerkcontacten', description: 'Jaarlijkse bijeenkomst ten bate van de HDA Research Foundation, met senior contacten uit de Amerikaanse distributiesector.' },
@@ -327,7 +326,18 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-23', apply: (data) => distributorPays(data, newId) },
   { key: 'mc-seed-updates-24', apply: (data) => ({ items: reestimateVisits(data.items) }) },
   { key: 'mc-seed-updates-25', apply: (data) => distributorPays(data, newId) },
+  { key: 'mc-seed-updates-26', apply: (data) => ({ deleteItems: droppedEvents(data.items) }) },
 ];
+
+/** Events taken off the calendar, too expensive for what they bring. */
+const DROPPED_EVENTS = ['GS1 Global Healthcare Conference'];
+
+/** The dropped events with their posts and mails; to-dos go along with each item. */
+export function droppedEvents(items: Item[]): string[] {
+  return items
+    .filter((i) => (i.type === 'event' && DROPPED_EVENTS.includes(i.title)) || (i.type !== 'event' && DROPPED_EVENTS.includes(i.campaign)))
+    .map((i) => i.id);
+}
 
 /** The visitor estimate before Belgium counted as home and before published ticket prices. */
 const previousVisitEstimate = (i: Item) => eventEstimate({ ...i, title: '', countries: i.countries.map((c) => (c === 'BE' ? 'NL' : c)) });
