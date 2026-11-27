@@ -188,7 +188,7 @@ Het team: Nele, Maarten, Ioana en Kjell (`OWNERS` in `src/data/meta.ts`).
 ```
 server/
   index.mjs          serveert dist/ achter basic auth en /api/impact/*
-  google.mjs         Search Console en GA4 via een serviceaccount
+  google.mjs         Search Console en GA4 (nog niet gekoppeld)
   teamleader.mjs     deals uit Teamleader, met het roterende refresh token
 tools/
   teamleader-auth.mjs  Teamleader eenmalig autoriseren, token rechtstreeks naar Railway
@@ -243,15 +243,11 @@ De impactpagina gebruikt deze Railway-variabelen:
 |---|---|
 | `TEAMLEADER_CLIENT_ID`, `TEAMLEADER_CLIENT_SECRET` | De Teamleader-integratie van de website |
 | `TEAMLEADER_REFRESH_TOKEN` | Een eigen autorisatie, gezet door `node tools/teamleader-auth.mjs` |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Sleutel (base64) van `medipim-impact@becom-cursor.iam.gserviceaccount.com` |
-| `GA4_PROPERTY_ID` | Optioneel: anders de eerste GA4-property waar het serviceaccount bij kan |
-| `GSC_SITE` | Optioneel: standaard `https://www.medipim.com/` |
 
 Een Teamleader-refresh token werkt één keer; de server bewaart het volgende op het volume
 `/data` (`TOKEN_DIR`). Gebruik daarom nooit het token van de website of van een andere
-omgeving: na `teamleader-auth.mjs` hoort het alleen op Railway. Het serviceaccount heeft
-alleen leesrechten en moet als gebruiker toegevoegd zijn in Search Console (beperkt) en in
-Google Analytics (kijker).
+omgeving: na `teamleader-auth.mjs` hoort het alleen op Railway. Search Console en Google
+Analytics zijn nog niet gekoppeld: daarvoor is nog geen Google-login voor de server gekozen.
 
 Lokaal: `npm run server` start de server op poort 8787 met de waarden uit `.env.local`
 (niet in git), en `npm run dev` stuurt `/api` daarheen. Voor Teamleader lokaal zet

@@ -526,7 +526,7 @@ export const en: Dict = {
     notConfigured: (name: string) => `${name} is not connected yet`,
     noAccess: (name: string) => `No access to ${name}`,
     failed: (name: string) => `${name} did not answer`,
-    grantAccess: 'Give medipim-impact@becom-cursor.iam.gserviceaccount.com read access: in Search Console as a restricted user, in Google Analytics as a viewer.',
+    grantAccess: 'The server’s Google login has no read access to this property.',
     noDeals: 'No deals created in this period',
     perPhase: 'Per phase',
     perSource: 'Per source',

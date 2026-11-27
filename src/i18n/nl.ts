@@ -475,7 +475,7 @@ export const nl = {
     notConfigured: (name: string) => `${name} is nog niet gekoppeld`,
     noAccess: (name: string) => `Geen toegang tot ${name}`,
     failed: (name: string) => `${name} gaf geen antwoord`,
-    grantAccess: 'Geef medipim-impact@becom-cursor.iam.gserviceaccount.com leesrechten: in Search Console als gebruiker met beperkte rechten, in Google Analytics als kijker.',
+    grantAccess: 'De Google-login van de server heeft geen leesrechten op deze property.',
     noDeals: 'Geen deals aangemaakt in deze periode',
     perPhase: 'Per fase',
     perSource: 'Per bron',
