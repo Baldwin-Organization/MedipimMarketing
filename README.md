@@ -91,7 +91,7 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   `src/data/budget.ts`): als exposant € 20.000 in Europa en € 30.000 daarbuiten; als bezoeker
   ticket, reis, hotel en dagvergoeding voor twee personen, volgens regio, soort event en duur
   (in België alleen ticket en € 50 trein of parking per persoon; bekende ticketprijzen per event,
-  zoals Cann-Reg 2027 aan € 1.100, gaan voor);
+  zoals Cann-Reg 2027 aan € 1.100 en Vital Annual Conference aan € 3.600, gaan voor);
   "campagne" € 2.500 LinkedIn-advertenties. Wie de beslissing wijzigt, krijgt het nieuwe bedrag,
   tenzij iemand het bedrag zelf aanpaste. Op World Health Expo Dubai gaat
   iemand van Medipim mee met Meditech: bezoeker, budgetneutraal (€ 0), met de posts en
@@ -130,10 +130,11 @@ npm run dev        # http://localhost:5173
 
 Bij de eerste start vult de app zichzelf met de eventkalender 2027: 56 internationale
 beurzen en congressen (november 2026 tot november 2027, plus CPHI Frankfurt), als idee,
-zonder eigenaar en zonder to do's. Bij PharmagoraPlus, APP (Gold Coast), GIRP PharmaConnect
-(Sofia), Expopharm en The Pharmacy Show (Birmingham) staat Medipim als exposant (status
-gepland); de andere events zijn nog te beslissen. Een browser met oudere startinhoud krijgt die
-vijf markeringen en de Engelse vertalingen eenmalig bij het opstarten (`SEED_UPDATES` in
+zonder eigenaar en zonder to do's. Bij PharmagoraPlus, Expopharm en The Pharmacy Show
+(Birmingham) staat Medipim als exposant, bij GIRP PharmaConnect (Sofia) en Vital Annual
+Conference (Québec City) als bezoeker, en bij World Health Expo Dubai, APP (Gold Coast) en
+Pharmacy Connect budgetneutraal als bezoeker (status gepland); de andere events zijn nog te
+beslissen. Een browser met oudere startinhoud krijgt die markeringen en de Engelse vertalingen eenmalig bij het opstarten (`SEED_UPDATES` in
 `src/data/seed.ts`; de Engelse teksten staan in `src/data/seed-en.ts`). Elk event is verrijkt met doelgroep, type product en
 het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Events met een onbevestigde datum staan op een voorlopige dag en dragen
 "(datum te bevestigen)" in de titel.
