@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, productionWeeks, removeMedimapper, startMidDecember, visitVital } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, productionWeeks, removeMedimapper, teamChanges, startMidDecember, visitVital } from './seed';
 import { beforeWeekend, daysBetween, shiftIso } from './dates';
 import { PREVIOUS_OFFSETS } from './templates';
 import { moveItem } from './schedule';
@@ -581,5 +581,41 @@ describe('production weeks', () => {
 
     const again = productionWeeks({ items: items.map((i) => changes.items!.find((c) => c.id === i.id) ?? i), todos: result, content: content.map((p) => changes.content!.find((c) => c.id === p.id) ?? p) }, () => 'x');
     expect(again).toEqual({ items: [], todos: [], content: [] });
+  });
+});
+
+describe('team roles', () => {
+  const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
+
+  it('gives every content and distribution step an owner, with four eyes on approval', () => {
+    const data = build();
+    const byId = new Map(data.items.map((i) => [i.id, i]));
+    expect(data.todos.filter((t) => t.phase && !t.owner)).toEqual([]);
+    const owners = (channel: string, title: string) => [...new Set(data.todos.filter((t) => t.title === title && byId.get(t.itemId)!.channel === channel).map((t) => t.owner))];
+    expect(owners('LinkedIn · Medipim', 'Copy schrijven')).toEqual(['Nele']);
+    expect(owners('LinkedIn · Medipim', 'Visual maken')).toEqual(['Kjell']);
+    expect(owners('LinkedIn · Medipim', 'Goedkeuring vragen')).toEqual(['Maarten']);
+    expect(owners('LinkedIn · Medipim', 'Inplannen in tool')).toEqual(['Ioana']);
+    expect(owners('LinkedIn · Maarten (CEO)', 'Copy schrijven')).toEqual(['Maarten']);
+    expect(owners('LinkedIn · Maarten (CEO)', 'Goedkeuring vragen')).toEqual(['Nele']);
+    expect(owners('Outbound-sequentie', 'Contacten verrijken in Bizzy: masterdata, e-commerce en marketing')).toEqual(['Maarten']);
+    expect(owners('Outbound-sequentie', 'Mail schrijven en vertalen')).toEqual(['Nele']);
+    expect(owners('LinkedIn Ads', 'Matched audience uploaden en advertenties starten')).toEqual(['Ioana']);
+    expect(data.items.filter((i) => i.type === 'campaign').every((i) => i.owner === 'Ioana')).toBe(true);
+    expect(data.todos.filter((t) => t.title === 'Registreren en ticket kopen').every((t) => !t.owner)).toBe(true);
+    expect(teamChanges(data)).toEqual({ items: [], todos: [] });
+  });
+
+  it('assigns older data once and keeps owners someone chose', () => {
+    const data = build();
+    const items = data.items.map((i) => (i.type === 'social' && i.title.startsWith('Medipim Academy') ? { ...i, owner: 'Kjell' } : { ...i, owner: '' }));
+    const chosen = data.todos.find((t) => t.title === 'Copy schrijven')!;
+    const todos = data.todos.map(({ owner: _, ...t }) => (t.id === chosen.id ? { ...t, owner: 'Ioana' } : t));
+    const changes = teamChanges({ items, todos });
+    expect(changes.items!.some((i) => i.title.startsWith('Medipim Academy'))).toBe(false);
+    expect(changes.todos!.some((t) => t.id === chosen.id)).toBe(false);
+    expect(changes.todos!.find((t) => t.title === 'Visual maken')?.owner).toBe('Kjell');
+    const after = { items: items.map((i) => changes.items!.find((c) => c.id === i.id) ?? i), todos: todos.map((t) => changes.todos!.find((c) => c.id === t.id) ?? t) };
+    expect(teamChanges(after)).toEqual({ items: [], todos: [] });
   });
 });

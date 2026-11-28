@@ -285,6 +285,10 @@ export function ItemDrawer() {
                     <input type="date" className="mc-input mc-input-date" aria-label={t.drawer.dueDate} value={todo.dueDate} onChange={(e) => updateTodo(todo.id, { dueDate: e.target.value })} />
                     <Button variant="text" intent="secondary" size="small" icon="delete" label={t.drawer.removeTodo} onClick={() => setTodos((list) => list.filter((x) => x.id !== todo.id))} />
                     <div className="mc-todo-meta">
+                      <select className="mc-input mc-input-owner" aria-label={t.drawer.todoOwner} value={todo.owner ?? ''} onChange={(e) => updateTodo(todo.id, { owner: e.target.value || undefined })}>
+                        <option value="">{t.common.nobody}</option>
+                        {OWNERS.map((o) => <option key={o}>{o}</option>)}
+                      </select>
                       {options.length > 0 && (
                         <select className="mc-input mc-input-scope" aria-label={t.drawer.todoScope} value={scopeValue(todo)} onChange={(e) => setScope(todo, e.target.value)}>
                           <option value="">{t.drawer.wholeItem}</option>

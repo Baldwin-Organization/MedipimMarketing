@@ -77,7 +77,7 @@ export function ItemChip({ item, day, compact }: { item: Item; day?: IsoDate; co
   );
 }
 
-export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledTodo; showItem?: boolean; compact?: boolean }) {
+export function TodoEntry({ todo, showItem = true, showOwner = true, compact }: { todo: ScheduledTodo; showItem?: boolean; showOwner?: boolean; compact?: boolean }) {
   const store = useStore();
   const { openItem } = useUi();
   const item = store.itemsById.get(todo.itemId);
@@ -94,7 +94,7 @@ export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledT
       <Checkbox checked={todo.done} onChange={() => store.toggleTodo(todo.id)} label={t.common.check(todoLabel(todo))} />
       <button type="button" className="mc-todo-body" onClick={() => item && openItem(item.id)}>
         <span className="mc-entry-title">{todoLabel(todo)}</span>
-        {showItem && item && <span className="mc-todo-item">{itemTitle(item)}</span>}
+        {showItem && item && <span className="mc-todo-item">{[itemTitle(item), showOwner && todo.owner].filter(Boolean).join(' · ')}</span>}
       </button>
       {!compact && <PhaseBadge phase={todo.phase} />}
       {!compact && <JiraBadge jira={todo.jira} />}

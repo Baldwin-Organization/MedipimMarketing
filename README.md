@@ -34,8 +34,14 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   inplannen, versturen en advertenties starten in de dagen ervoor. Elke standaardstap heeft
   zo'n fase (`phase` in `src/data/templates.ts`, met `PRODUCTION_LEAD` = 14 dagen) en toont
   die als label "Maken" of "Verdelen". Een stap die op een zaterdag of zondag zou vallen,
-  schuift naar de vrijdag ervoor. Het dashboard toont wat er deze week gemaakt moet worden
-  (in het weekend: volgende week).
+  schuift naar de vrijdag ervoor. Het dashboard toont per persoon wat er deze week gemaakt
+  moet worden (in het weekend: volgende week).
+- **Wie doet wat**: elke to-do krijgt een eigenaar volgens de rollen in `src/data/team.ts`:
+  Nele schrijft teksten en mailings, Kjell maakt visuals en video, Ioana plant in en doet de
+  advertenties, Maarten doet de outbound-data en zijn eigen LinkedIn-profiel. Goedkeuring
+  volgt het vier-ogenprincipe: Maarten keurt goed wat Nele schrijft, Nele keurt Maartens eigen
+  posts goed. Een eigenaar die iemand koos, blijft staan; per to-do pas je die aan in het
+  itemformulier. De logistiek van beurzen heeft nog geen vaste eigenaar.
 - **Klaar voor Jira**: elke to do kan een Jira-ticket hebben (`jira` op `Todo`: sleutel, link,
   status en statuscategorie). Het ticketnummer vul je nu zelf in bij de to do. De brug naar
   Jira komt later: die maakt per to do een ticket aan en koppelt de status terug via

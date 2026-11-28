@@ -87,7 +87,12 @@ export function Dashboard() {
           <Card title={t.dashboard.production} icon="edit" className="mc-dash-production">
             <p className="mc-muted">{t.dashboard.productionHint}</p>
             {production.length ? (
-              <div className="mc-stack">{production.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
+              [...new Set(production.map((p) => p.owner ?? ''))].sort((a, b) => (!a ? 1 : !b ? -1 : a.localeCompare(b))).map((owner) => (
+                <section key={owner}>
+                  <h3 className="mc-subhead">{owner || t.dashboard.unassigned}</h3>
+                  <div className="mc-stack">{production.filter((p) => (p.owner ?? '') === owner).map((p) => <TodoEntry key={p.id} todo={p} showOwner={false} />)}</div>
+                </section>
+              ))
             ) : (
               <EmptyState icon="check_circle" title={t.dashboard.noProduction} />
             )}
