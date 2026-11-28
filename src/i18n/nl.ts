@@ -181,6 +181,7 @@ export const nl = {
     production: 'Deze week maken',
     productionHint: 'Content voor over twee weken: schrijven, ontwerpen en laten goedkeuren. Inplannen en versturen gebeurt vlak voor de publicatie.',
     noProduction: 'Niets te maken deze week',
+    unassigned: 'Nog niemand',
     mix: {
       title: 'Kanalen per doelgroep',
       hint: (year: number) => `Op welke kanalen we inzetten om elke doelgroep te bereiken, met het budget voor ${year}. Wijs een kanaal of doelgroep aan om de verbindingen te zien.`,
@@ -273,6 +274,7 @@ export const nl = {
     perLanguageHint: 'Stappen zoals copy of visuals komen één keer per taal, targeting en verzendlijsten één keer per land.',
     scopeTodos: (n: number) => `${n === 1 ? '1 to do' : `${n} to do's`} per taal of land aanvullen`,
     todoScope: 'Voor taal of land',
+    todoOwner: 'Wie doet het',
     wholeItem: 'Hele item',
     jiraKey: 'Jira-ticket',
     jiraKeyPlaceholder: 'Jira',

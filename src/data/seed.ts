@@ -9,6 +9,7 @@ import { AGENCY_SHARE, BUDGET_2027_AGENCY_ON_TOP, SEED_BUDGETS, SEED_PILLARS, UX
 import { moveItem } from './schedule';
 import { WEEKLY_CHANNEL, WEEKLY_FROM, scheduleWeekly } from './seed-weekly';
 import { PREP_FROM, PREVIOUS_OFFSETS, TODO_TEMPLATES } from './templates';
+import { itemOwnerFor, withOwner } from './team';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_DISTRIBUTOR_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
 import type { Audience, Budget, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo, TodoPhase } from './types';
 
@@ -334,6 +335,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-29', apply: (data) => ({ budgets: agencyWithinBudget(data.budgets) }) },
   { key: 'mc-seed-updates-30', apply: (data) => visitVital(data, newId) },
   { key: 'mc-seed-updates-31', apply: (data) => productionWeeks(data, newId) },
+  { key: 'mc-seed-updates-32', apply: (data) => teamChanges(data) },
 ];
 
 /** The agency's service fee for every year with a budget and no agency line yet, at its share of the other lines. */
@@ -361,6 +363,24 @@ export function agencyWithinBudget(budgets: Budget[]): Budget[] {
 
 /** Events taken off the calendar, too expensive for what they bring. */
 const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
+/** Every item and open to-do without an owner gets the one its role gives; owners someone chose stay. */
+function assignTeam(data: Pick<Contents, 'items' | 'todos'>): Pick<Contents, 'items' | 'todos'> {
+  const items = data.items.map((i) => (i.owner ? i : { ...i, owner: itemOwnerFor(i) ?? '' }));
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const todos = data.todos.map((t) => (t.done || !byId.has(t.itemId) ? t : withOwner(t, byId.get(t.itemId)!)));
+  return { items, todos };
+}
+
+/** The team roles for data seeded before them: only the items and to-dos that get an owner. */
+export function teamChanges(data: Pick<Contents, 'items' | 'todos'>): SeedChanges {
+  const now = new Date().toISOString();
+  const team = assignTeam(data);
+  return {
+    items: team.items.filter((i, k) => i.owner !== data.items[k].owner).map((i) => ({ ...i, updatedAt: now })),
+    todos: team.todos.filter((t, k) => t.owner !== data.todos[k].owner),
+  };
+}
+
 const UX_ANNOUNCEMENT = 'Aankondiging nieuwe UX Belgisch platform';
 const UX_ANNOUNCED: IsoDate = '2026-11-23';
 /** Due dates of the seeded launch and retargeting to-dos before the production weeks, by item title and to-do title. */
@@ -652,9 +672,10 @@ export function buildSeed(makeId: () => string): Contents {
   const planned = [...items, retargeting.item, ...events.items, ...outbound.items];
   const content = buildSeedContent(now);
   const weekly = scheduleWeekly({ items: planned, content, pillars: SEED_PILLARS }, makeId);
+  const team = assignTeam({ items: mergeById(planned, weekly.items), todos: [...todos, ...retargeting.todos, ...events.todos, ...outbound.todos, ...weekly.todos] });
   return {
-    items: mergeById(planned, weekly.items),
-    todos: [...todos, ...retargeting.todos, ...events.todos, ...outbound.todos, ...weekly.todos],
+    items: team.items,
+    todos: team.todos,
     budgets: SEED_BUDGETS,
     pillars: SEED_PILLARS,
     content: mergeById(content, weekly.content),

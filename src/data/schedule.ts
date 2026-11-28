@@ -1,4 +1,5 @@
 import { beforeWeekend, daysBetween, shiftIso } from './dates';
+import { ownerFor } from './team';
 import { TODO_TEMPLATES, type TodoTemplate } from './templates';
 import type { IsoDate, Item, JiraLink, Todo } from './types';
 
@@ -74,7 +75,7 @@ function fromTemplate(item: Item, template: TodoTemplate, scope: Scope, makeId: 
     offsetDays: daysBetween(item.date, dueDate),
     ...(template.phase && { phase: template.phase }),
     done: false,
-    owner: item.owner,
+    owner: ownerFor(template.title, item) ?? item.owner,
     ...scope,
   };
 }

@@ -488,6 +488,7 @@ a.mc-chan-node:hover, .mc-chan-node:focus-visible { border-color: var(--mp-conte
 .mc-todo-edit li { flex-wrap: wrap; }
 .mc-todo-meta { flex-basis: 100%; display: flex; align-items: center; gap: var(--mp-space-2); padding-left: calc(var(--mp-height-sm) + var(--mp-space-2)); }
 .mc-input-scope { width: 160px; min-height: var(--mp-height-sm); flex: none; }
+.mc-input-owner { width: 120px; min-height: var(--mp-height-sm); flex: none; }
 .mc-input-jira { width: 120px; min-height: var(--mp-height-sm); flex: none; text-transform: uppercase; }
 .mc-input-jira::placeholder { text-transform: none; }
 .mc-jira { text-decoration: none; flex: none; }
