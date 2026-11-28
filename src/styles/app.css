@@ -491,6 +491,7 @@ a.mc-chan-node:hover, .mc-chan-node:focus-visible { border-color: var(--mp-conte
 .mc-input-jira { width: 120px; min-height: var(--mp-height-sm); flex: none; text-transform: uppercase; }
 .mc-input-jira::placeholder { text-transform: none; }
 .mc-jira { text-decoration: none; flex: none; }
+.mc-phase { flex: none; }
 .mc-add-todo { display: flex; gap: var(--mp-compact-gap); }
 .mc-error { display: flex; align-items: center; gap: var(--mp-space-2); padding: var(--mp-space-2) var(--mp-space-3); border-radius: var(--mp-shape-surface); background: var(--mp-error-bg); color: var(--mp-error-content); }
 

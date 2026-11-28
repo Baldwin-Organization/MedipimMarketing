@@ -1,5 +1,5 @@
 import { addWeeks, startOfISOWeek } from 'date-fns';
-import { daysBetween, fromIso, shiftIso, toIso } from './dates';
+import { fromIso, shiftIso, toIso } from './dates';
 import type { Contents } from './repository';
 import { todosFromTemplate } from './schedule';
 import { ACADEMY_CONTENT, ACADEMY_COUNTRIES, ACADEMY_LANGUAGES, ACADEMY_THEME, MONTH_END_PIECES } from './seed-content';
@@ -15,9 +15,6 @@ const EVENT_POST_CONTENT: Record<string, string> = {
   'Kom ons bezoeken op PharmagoraPlus': 'content-pharmagora',
   'Terugblik op Expopharm': 'content-expopharm-recap',
 };
-
-/** Saturday and Sunday move to the Friday before, so preparation is done before the weekend. */
-const beforeWeekend = (iso: IsoDate) => ({ 6: shiftIso(iso, -1), 0: shiftIso(iso, -2) } as Record<number, IsoDate>)[fromIso(iso).getDay()] ?? iso;
 
 /** The Tuesday of every week in the rhythm that has no post on the Medipim page yet. */
 function freeTuesdays(items: Item[]): IsoDate[] {
@@ -86,10 +83,7 @@ export function scheduleWeekly(data: Pick<Contents, 'items' | 'content' | 'pilla
       updatedAt: now,
     };
   });
-  const todos: Todo[] = items.flatMap((item) => todosFromTemplate(item, makeId).map((t) => {
-    const dueDate = beforeWeekend(t.dueDate);
-    return { ...t, dueDate, offsetDays: daysBetween(item.date, dueDate) };
-  }));
+  const todos: Todo[] = items.flatMap((item) => todosFromTemplate(item, makeId));
   const content = pairs
     .filter(({ piece, date }) => piece.month !== date.slice(0, 7))
     .map(({ piece, date }) => ({ ...piece, month: date.slice(0, 7), updatedAt: now }));

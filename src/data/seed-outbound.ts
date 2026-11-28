@@ -1,6 +1,7 @@
 import { daysBetween, shiftIso } from './dates';
 import { todosFromTemplate } from './schedule';
-import type { Audience, IsoDate, Item, ItemType, Todo } from './types';
+import { PRODUCTION_LEAD } from './templates';
+import type { Audience, IsoDate, Item, ItemType, Todo, TodoPhase } from './types';
 
 /**
  * Outbound to wholesalers and labs in Europe from the CRM database (CRM-business-medimapper): per wave a first mail,
@@ -75,8 +76,10 @@ interface Step {
   title: (w: Wave) => { nl: string; en: string };
   description: (w: Wave) => { nl: string; en: string };
   budget?: (w: Wave) => number;
-  todos: { offset: number; nl: string; en: string }[];
+  todos: StepTodo[];
 }
+
+interface StepTodo { offset: number; nl: string; en: string; phase?: TodoPhase }
 
 const STEPS: Step[] = [
   {
@@ -88,8 +91,9 @@ const STEPS: Step[] = [
     }),
     budget: () => WAVE_ADS_BUDGET,
     todos: [
-      { offset: -4, nl: 'Bedrijvenlijst exporteren uit het CRM', en: 'Export the company list from the CRM' },
-      { offset: -1, nl: 'Matched audience uploaden en advertenties starten', en: 'Upload the matched audience and start the ads' },
+      { offset: -PRODUCTION_LEAD, nl: 'Advertentieteksten en visuals maken', en: 'Create the ad copy and visuals', phase: 'maken' },
+      { offset: -4, nl: 'Bedrijvenlijst exporteren uit het CRM', en: 'Export the company list from the CRM', phase: 'verdelen' },
+      { offset: -1, nl: 'Matched audience uploaden en advertenties starten', en: 'Upload the matched audience and start the ads', phase: 'verdelen' },
     ],
   },
   {
@@ -102,8 +106,8 @@ const STEPS: Step[] = [
     budget: (w) => w.enrichment,
     todos: [
       { offset: -14, nl: 'Contacten verrijken in Bizzy: masterdata, e-commerce en marketing', en: 'Enrich contacts in Bizzy: master data, e-commerce and marketing' },
-      { offset: -6, nl: 'Mail schrijven en vertalen', en: 'Write and translate the mail' },
-      { offset: -1, nl: 'Testmail versturen en lijst controleren', en: 'Send a test mail and check the list' },
+      { offset: -PRODUCTION_LEAD, nl: 'Mail schrijven en vertalen', en: 'Write and translate the mail', phase: 'maken' },
+      { offset: -1, nl: 'Testmail versturen en lijst controleren', en: 'Send a test mail and check the list', phase: 'verdelen' },
       { offset: 2, nl: 'LinkedIn-profiel bekijken en connectieverzoek sturen', en: 'View the LinkedIn profile and send a connection request' },
     ],
   },
@@ -115,8 +119,8 @@ const STEPS: Step[] = [
       en: `Second mail to whoever did not reply, with a concrete example from their country or range and the same demo request. ${CONSENT.en}`,
     }),
     todos: [
-      { offset: -5, nl: 'Voorbeeld per land of segment kiezen', en: 'Choose an example per country or segment' },
-      { offset: -1, nl: 'Lijst bijwerken: wie reageerde gaat eruit', en: 'Update the list: whoever replied comes off' },
+      { offset: -PRODUCTION_LEAD, nl: 'Voorbeeld per land of segment kiezen en mail schrijven', en: 'Choose an example per country or segment and write the mail', phase: 'maken' },
+      { offset: -1, nl: 'Lijst bijwerken: wie reageerde gaat eruit', en: 'Update the list: whoever replied comes off', phase: 'verdelen' },
     ],
   },
   {
@@ -142,6 +146,11 @@ const NEWSLETTERS: { date: IsoDate; nl: string; en: string }[] = [
 ];
 
 const ALL_WAVE_COUNTRIES = [...new Set(WAVES.flatMap((w) => w.countries))];
+
+const stepTodo = (item: Item, t: StepTodo, dueDate: IsoDate, makeId: () => string): Todo => ({
+  id: makeId(), itemId: item.id, title: t.nl, dueDate, done: false, offsetDays: daysBetween(item.date, dueDate),
+  ...(t.phase && { phase: t.phase }), translations: { en: { title: t.en } },
+});
 
 /** The outbound campaign as items with their to-dos. */
 export function buildOutbound(makeId: () => string, now: string): { items: Item[]; todos: Todo[] } {
@@ -179,7 +188,7 @@ export function buildOutbound(makeId: () => string, now: string): { items: Item[
       items.push(item);
       for (const t of s.todos) {
         const dueDate = shiftIso(w.start, s.offset + t.offset);
-        todos.push({ id: makeId(), itemId: item.id, title: t.nl, dueDate, done: false, offsetDays: daysBetween(date, dueDate), translations: { en: { title: t.en } } });
+        todos.push(stepTodo(item, t, dueDate, makeId));
       }
     }
   }
@@ -208,4 +217,39 @@ export function buildOutbound(makeId: () => string, now: string): { items: Item[
 export function addOutbound(data: { items: Item[] }, makeId: () => string): { items: Item[]; todos: Todo[] } {
   if (data.items.some((i) => i.campaign === OUTBOUND)) return { items: [], todos: [] };
   return buildOutbound(makeId, new Date().toISOString());
+}
+
+/** Outbound to-dos before the production weeks, by title: the offset they had and the title they had. */
+const PREVIOUS_STEP_TODOS: Record<string, { offset: number; title?: string }> = {
+  'Mail schrijven en vertalen': { offset: -6 },
+  'Voorbeeld per land of segment kiezen en mail schrijven': { offset: -5, title: 'Voorbeeld per land of segment kiezen' },
+};
+
+/**
+ * The outbound to-dos in production weeks, for data seeded before: writing two weeks ahead, a to-do to make the ads,
+ * and the phase of every seeded step. To-dos someone moved, renamed or finished keep their date.
+ */
+export function outboundProduction(data: { items: Item[]; todos: Todo[] }, makeId: () => string): Todo[] {
+  const changed: Todo[] = [];
+  for (const item of data.items.filter((i) => i.campaign === OUTBOUND)) {
+    const step = STEPS.find((st) => WAVES.some((w) => st.title(w).nl === item.title));
+    if (!step) continue;
+    const todos = data.todos.filter((t) => t.itemId === item.id);
+    for (const t of step.todos) {
+      const before = PREVIOUS_STEP_TODOS[t.nl];
+      const existing = todos.find((x) => x.title === t.nl || (before?.title && x.title === before.title));
+      if (!existing) {
+        if (t.phase === 'maken' && !before) changed.push(stepTodo(item, t, shiftIso(item.date, t.offset), makeId));
+        continue;
+      }
+      const moves = before && !existing.done && !existing.jira && existing.offsetDays === before.offset;
+      if (!moves && existing.phase === t.phase) continue;
+      changed.push({
+        ...existing,
+        ...(t.phase && { phase: t.phase }),
+        ...(moves && { title: t.nl, dueDate: shiftIso(item.date, t.offset), offsetDays: t.offset, translations: { ...existing.translations, en: { ...existing.translations?.en, title: t.en } } }),
+      });
+    }
+  }
+  return changed;
 }

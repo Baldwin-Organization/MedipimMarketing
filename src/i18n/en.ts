@@ -158,6 +158,11 @@ export const en: Dict = {
     dayShort: 'd',
   },
 
+  phase: {
+    maken: 'Create',
+    verdelen: 'Distribute',
+    title: { maken: 'Write, design or get approval for content, two weeks before it goes out', verdelen: 'Schedule, send or start, just before it goes out' },
+  },
   late: {
     full: (n) => `${plural(n, 'day', 'days')} late`,
     title: (n) => `${plural(n, 'day', 'days')} late: originally planned ${plural(n, 'day', 'days')} ago`,
@@ -224,6 +229,9 @@ export const en: Dict = {
     timeline: 'Timeline',
     prepDone: (done, total) => `${done} of ${total} preparations done`,
     thisWeek: 'This week in the calendar',
+    production: 'To create this week',
+    productionHint: 'Content for two weeks from now: writing, design and approval. Scheduling and sending happen just before it goes out.',
+    noProduction: 'Nothing to create this week',
     mix: {
       title: 'Channels by audience',
       hint: (year) => `The channels we use to reach each audience, with the ${year} budget. Point at a channel or audience to see its connections.`,

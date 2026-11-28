@@ -60,6 +60,9 @@ export interface Item {
   updatedAt: string;
 }
 
+/** Making content (writing, design, approval) versus distributing it (scheduling, sending, starting ads). */
+export type TodoPhase = 'maken' | 'verdelen';
+
 export interface Todo {
   id: string;
   itemId: string;
@@ -70,6 +73,7 @@ export interface Todo {
   doneAt?: string;
   /** Days relative to the item date; kept so a moved item can carry its to-dos along. */
   offsetDays: number;
+  phase?: TodoPhase;
   owner?: string;
   /** `title` is Dutch; this holds the English version. */
   translations?: { en?: { title?: string } };
