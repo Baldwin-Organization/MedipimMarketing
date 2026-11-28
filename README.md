@@ -34,8 +34,15 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   inplannen, versturen en advertenties starten in de dagen ervoor. Elke standaardstap heeft
   zo'n fase (`phase` in `src/data/templates.ts`, met `PRODUCTION_LEAD` = 14 dagen) en toont
   die als label "Maken" of "Verdelen". Een stap die op een zaterdag of zondag zou vallen,
-  schuift naar de vrijdag ervoor. Het dashboard toont wat er deze week gemaakt moet worden
-  (in het weekend: volgende week).
+  schuift naar de vrijdag ervoor, een stap op een Belgische feestdag naar de werkdag ervoor
+  (`HOLIDAYS` in `src/data/dates.ts`). Het dashboard toont per persoon wat er deze week gemaakt
+  moet worden (in het weekend: volgende week).
+- **Wie doet wat**: elke to-do krijgt een eigenaar volgens de rollen in `src/data/team.ts`:
+  Nele schrijft teksten en mailings, Kjell maakt visuals en video, Ioana plant in en doet de
+  advertenties, Maarten doet de outbound-data en zijn eigen LinkedIn-profiel. Goedkeuring
+  volgt het vier-ogenprincipe: Maarten keurt goed wat Nele schrijft, Nele keurt Maartens eigen
+  posts goed. Een eigenaar die iemand koos, blijft staan; per to-do pas je die aan in het
+  itemformulier. De logistiek van beurzen heeft nog geen vaste eigenaar.
 - **Klaar voor Jira**: elke to do kan een Jira-ticket hebben (`jira` op `Todo`: sleutel, link,
   status en statuscategorie). Het ticketnummer vul je nu zelf in bij de to do. De brug naar
   Jira komt later: die maakt per to do een ticket aan en koppelt de status terug via
@@ -153,8 +160,9 @@ Belgische apothekers op vrijdag 18 december om 9:00, met to do's. Die drie items
 contentstuk "Lancering nieuwe UX Belgisch platform".
 
 De publicaties starten in de week van 14 december 2026, de voorbereiding een productieweek
-eerder, vanaf maandag 30 november: geen to do valt vroeger. De Google-retargeting wordt begin
-december opgezet en gaat live op 17 december; de wekelijkse posts op de
+eerder, vanaf maandag 30 november: geen to do valt vroeger. De Google-retargeting (alle negen
+markten, het volledige Google-budget van € 16.470) wordt begin december opgezet en gaat live
+op 17 december; de wekelijkse posts op de
 Medipim-pagina beginnen op 15 december. De drie vervolgposts over de nieuwe UX (rondleiding, drie
 dingen die je misschien nog niet zag, vraag van sales) staan als idee zonder datum. Een browser
 met oudere startinhoud verschuift eenmalig mee, behalve items die iemand al verplaatste.
@@ -175,7 +183,8 @@ tekst hebben.
 De outbound naar groothandels en labo's in Europa (thema "Outbound Europa: groothandels en
 labo's", `src/data/seed-outbound.ts`) volgt de CRM-databank in CRM-business-medimapper en heeft
 als doel demo's van Medipim. Er zijn vier golven: nationale groothandels (GIRP) in januari,
-ketens in maart, landen zonder vereniging in mei en labo's in september. Elke golf heeft een eerste
+ketens in maart, landen zonder vereniging eind mei (na GIRP) en labo's in oktober (na de
+najaarsbeurzen). Elke golf heeft een eerste
 mail met een LinkedIn-connectie, een tweede mail twee weken later, een belronde en LinkedIn Ads op
 de bedrijvenlijst (€2.000 per golf, een inschatting). De eerste mail draagt de Bizzy-credits om
 masterdata-, e-commerce- en marketingcontacten te verrijken (€500 per golf, €1.500 voor de labo's).

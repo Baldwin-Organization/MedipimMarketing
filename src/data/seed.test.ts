@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, productionWeeks, removeMedimapper, startMidDecember, visitVital } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, mailLanguages, offHolidays, productionWeeks, removeMedimapper, retargetingInAllMarkets, teamChanges, startMidDecember, visitVital } from './seed';
 import { beforeWeekend, daysBetween, shiftIso } from './dates';
 import { PREVIOUS_OFFSETS } from './templates';
+import { HOLIDAYS } from './dates';
+import { visitorPostTexts } from './seed-events';
+import { outboundWaveDates } from './seed-outbound';
 import { moveItem } from './schedule';
 import type { Budget, Item, Todo } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
@@ -222,14 +225,26 @@ describe('weekly rhythm 2027', () => {
 describe('Google retargeting campaign', () => {
   const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
 
-  it('runs on Google Ads in the four markets, with its set-up to-dos', () => {
+  it('runs on Google Ads in the nine markets with the whole Google budget, with its set-up to-dos', () => {
     const data = build();
     const campaign = data.items.find((i) => i.type === 'campaign' && i.channel === 'Google Ads')!;
-    expect(campaign).toMatchObject({ countries: ['BE', 'FR', 'AU', 'DE'], date: '2026-12-17', endDate: '2027-12-31', status: 'gepland' });
+    expect(campaign).toMatchObject({ countries: ['BE', 'FR', 'DE', 'GB', 'LU', 'AT', 'ES', 'US', 'AU'], languages: ['nl', 'fr', 'de', 'en', 'es'], date: '2026-12-17', endDate: '2027-12-31', status: 'gepland', budgetPlanned: 16470, owner: 'Ioana' });
     expect(campaign.translations?.en?.title).toBeTruthy();
     const todos = data.todos.filter((t) => t.itemId === campaign.id);
     expect(todos).toHaveLength(4);
     expect(todos.every((t) => t.translations?.en?.title && t.dueDate <= campaign.date)).toBe(true);
+  });
+
+  it('moves older data from four markets to nine, once, keeping an amount someone entered', () => {
+    const data = build();
+    expect(retargetingInAllMarkets(data)).toEqual({ items: [], todos: [] });
+    const campaign = data.items.find((i) => i.type === 'campaign' && i.channel === 'Google Ads')!;
+    const older = { ...campaign, title: 'Google retargeting websitebezoekers (BE, FR, AU, DE)', countries: ['BE', 'FR', 'AU', 'DE'], budgetPlanned: 9000 };
+    const todos = data.todos.map((t) => (t.itemId === campaign.id && t.title === 'Remarketingdoelgroep per markt aanmaken' ? { ...t, title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)' } : t));
+    const changes = retargetingInAllMarkets({ items: data.items.map((i) => (i.id === campaign.id ? older : i)), todos });
+    expect(changes.items.map((i) => [i.title, i.countries.length, i.budgetPlanned])).toEqual([[campaign.title, 9, 9000]]);
+    expect(changes.todos.map((t) => t.title)).toEqual(['Remarketingdoelgroep per markt aanmaken']);
+    expect(addRetargeting({ ...data, items: data.items.map((i) => (i.id === campaign.id ? older : i)) })).toEqual({});
   });
 
   it('is added once to data that predates it', () => {
@@ -298,7 +313,7 @@ describe('start in the week of 14 December 2026', () => {
     const changes = startMidDecember({ items: [...items.map((i) => (i.id === moved.id ? moved : i)), followUp], todos, content });
     expect(changes.items!.map((i) => [i.title, i.date])).toEqual(Object.keys(old).slice(1).map((t) => [t, fresh.items.find((i) => i.title === t)!.date]));
     for (const t of changes.todos!) expect(t.dueDate).toBe(fresh.todos.find((f) => f.id === t.id)!.dueDate);
-    expect(changes.todos).toHaveLength(6);
+    expect(changes.todos).toHaveLength(8);
     expect(changes.deleteItems).toEqual(['follow-up']);
     expect(changes.content!.map((p) => [p.id, p.month, p.status])).toEqual([['content-ux-launch', '2026-12', 'klaar'], ['content-ux-tour', undefined, 'idee']]);
   });
@@ -581,5 +596,96 @@ describe('production weeks', () => {
 
     const again = productionWeeks({ items: items.map((i) => changes.items!.find((c) => c.id === i.id) ?? i), todos: result, content: content.map((p) => changes.content!.find((c) => c.id === p.id) ?? p) }, () => 'x');
     expect(again).toEqual({ items: [], todos: [], content: [] });
+  });
+});
+
+describe('team roles', () => {
+  const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
+
+  it('gives every content and distribution step an owner, with four eyes on approval', () => {
+    const data = build();
+    const byId = new Map(data.items.map((i) => [i.id, i]));
+    expect(data.todos.filter((t) => t.phase && !t.owner)).toEqual([]);
+    const owners = (channel: string, title: string) => [...new Set(data.todos.filter((t) => t.title === title && byId.get(t.itemId)!.channel === channel).map((t) => t.owner))];
+    expect(owners('LinkedIn · Medipim', 'Copy schrijven')).toEqual(['Nele']);
+    expect(owners('LinkedIn · Medipim', 'Visual maken')).toEqual(['Kjell']);
+    expect(owners('LinkedIn · Medipim', 'Goedkeuring vragen')).toEqual(['Maarten']);
+    expect(owners('LinkedIn · Medipim', 'Inplannen in tool')).toEqual(['Ioana']);
+    expect(owners('LinkedIn · Maarten (CEO)', 'Copy schrijven')).toEqual(['Maarten']);
+    expect(owners('LinkedIn · Maarten (CEO)', 'Goedkeuring vragen')).toEqual(['Nele']);
+    expect(owners('Outbound-sequentie', 'Contacten verrijken in Bizzy: masterdata, e-commerce en marketing')).toEqual(['Maarten']);
+    expect(owners('Outbound-sequentie', 'Mail schrijven en vertalen')).toEqual(['Nele']);
+    expect(owners('LinkedIn Ads', 'Matched audience uploaden en advertenties starten')).toEqual(['Ioana']);
+    expect(data.items.filter((i) => i.type === 'campaign').every((i) => i.owner === 'Ioana')).toBe(true);
+    expect(data.todos.filter((t) => t.title === 'Registreren en ticket kopen').every((t) => !t.owner)).toBe(true);
+    expect(teamChanges(data)).toEqual({ items: [], todos: [] });
+  });
+
+  it('assigns older data once and keeps owners someone chose', () => {
+    const data = build();
+    const items = data.items.map((i) => (i.type === 'social' && i.title.startsWith('Medipim Academy') ? { ...i, owner: 'Kjell' } : { ...i, owner: '' }));
+    const chosen = data.todos.find((t) => t.title === 'Copy schrijven')!;
+    const todos = data.todos.map(({ owner: _, ...t }) => (t.id === chosen.id ? { ...t, owner: 'Ioana' } : t));
+    const changes = teamChanges({ items, todos });
+    expect(changes.items!.some((i) => i.title.startsWith('Medipim Academy'))).toBe(false);
+    expect(changes.todos!.some((t) => t.id === chosen.id)).toBe(false);
+    expect(changes.todos!.find((t) => t.title === 'Visual maken')?.owner).toBe('Kjell');
+    const after = { items: items.map((i) => changes.items!.find((c) => c.id === i.id) ?? i), todos: todos.map((t) => changes.todos!.find((c) => c.id === t.id) ?? t) };
+    expect(teamChanges(after)).toEqual({ items: [], todos: [] });
+  });
+});
+
+describe('consistency', () => {
+  const build = () => { let n = 0; return buildSeed(() => `id${n++}`); };
+
+  it('addresses the audiences of each visited event, and rewrites only untouched older texts', () => {
+    const data = build();
+    const posts = data.items.filter((i) => i.channel === 'LinkedIn · Maarten (CEO)' && i.campaign && i.campaign !== 'Nieuwe UX Belgisch platform');
+    expect(posts.some((p) => p.description.includes('Europese groothandels'))).toBe(false);
+    expect(posts.find((p) => p.title === 'Medipim op Pharmacy Connect')!.description).toContain('uitnodiging aan apothekers en fabrikanten');
+    expect(visitorPostTexts(data.items)).toEqual([]);
+    const post = posts.find((p) => p.title === 'Terugblik op Vital Annual Conference')!;
+    const older = { ...post, description: "Wat Maarten meeneemt van Vital Annual Conference: de belangrijkste thema's voor Europese groothandels en wat dat betekent voor productdata." };
+    const edited = { ...posts.find((p) => p.title === 'Medipim op Vital Annual Conference')!, description: 'Eigen tekst.' };
+    const changes = visitorPostTexts(data.items.map((i) => (i.id === older.id ? older : i.id === edited.id ? edited : i)));
+    expect(changes.map((i) => [i.id, i.description])).toEqual([[post.id, post.description]]);
+  });
+
+  it('writes mails in the language of their readers, also in older data', () => {
+    const data = build();
+    const mails = data.items.filter((i) => i.type === 'email' && i.channel === 'Uitnodiging');
+    expect(mails.map((i) => [i.campaign, i.languages])).toEqual([['PharmagoraPlus', ['fr']], ['Expopharm', ['de']], ['The Pharmacy Show', ['en']]]);
+    const newsletter = data.items.find((i) => i.title === 'Nieuwsbrief: nieuwe UX van het platform')!;
+    expect(newsletter.languages).toEqual(['nl', 'fr']);
+    expect(mailLanguages(data, () => 'x')).toEqual({ items: [], todos: [] });
+
+    const strip = (i: Item) => (i.type === 'email' && (i.channel === 'Uitnodiging' || i.id === newsletter.id) ? { ...i, languages: [] } : i);
+    const fr = new Set(data.todos.filter((t) => t.itemId === newsletter.id && t.language === 'fr').map((t) => t.id));
+    const todos = data.todos.filter((t) => !fr.has(t.id)).map(({ language: _, ...t }) => t);
+    let m = 0;
+    const changes = mailLanguages({ items: data.items.map(strip), todos }, () => `m${m++}`);
+    expect(changes.items.map((i) => i.languages.join()).sort()).toEqual(['de', 'en', 'fr', 'nl,fr']);
+    expect(changes.todos.filter((t) => t.itemId === newsletter.id).map((t) => [t.title, t.language])).toEqual([
+      ['Tekst en visuals maken', 'nl'], ['Tekst en visuals maken', 'fr'], ['Testmail versturen en goedkeuring vragen', 'nl'], ['Testmail versturen en goedkeuring vragen', 'fr'],
+    ]);
+  });
+
+  it('puts no to-do on a public holiday, and moves older ones off', () => {
+    const data = build();
+    expect(data.todos.filter((t) => HOLIDAYS.includes(t.dueDate))).toEqual([]);
+    expect(offHolidays(data)).toEqual([]);
+    const todo = data.todos.find((t) => t.offsetDays < 0 && t.dueDate === '2026-12-24')!;
+    const changed = offHolidays({ items: data.items, todos: [{ ...todo, dueDate: '2026-12-25', offsetDays: todo.offsetDays + 1 }] });
+    expect(changed.map((t) => t.dueDate)).toEqual(['2026-12-24']);
+  });
+
+  it('moves waves 3 and 4 away from the fairs in older data, with their open to-dos', () => {
+    const data = build();
+    expect(outboundWaveDates(data)).toEqual({ items: [], todos: [] });
+    const wave4 = data.items.filter((i) => i.title.startsWith('Golf 4 ·'));
+    const back = (date: string) => shiftIso(date, daysBetween('2027-10-19', '2027-09-07'));
+    const older = data.items.map((i) => (wave4.includes(i) ? { ...i, date: back(i.date), endDate: i.endDate && back(i.endDate) } : i));
+    const changes = outboundWaveDates({ items: older, todos: data.todos });
+    expect(changes.items.map((i) => [i.id, i.date])).toEqual(wave4.map((i) => [i.id, i.date]));
   });
 });

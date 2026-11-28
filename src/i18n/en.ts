@@ -232,6 +232,7 @@ export const en: Dict = {
     production: 'To create this week',
     productionHint: 'Content for two weeks from now: writing, design and approval. Scheduling and sending happen just before it goes out.',
     noProduction: 'Nothing to create this week',
+    unassigned: 'Nobody yet',
     mix: {
       title: 'Channels by audience',
       hint: (year) => `The channels we use to reach each audience, with the ${year} budget. Point at a channel or audience to see its connections.`,
@@ -324,6 +325,7 @@ export const en: Dict = {
     perLanguageHint: 'Steps such as copy or visuals come once per language, targeting and mailing lists once per country.',
     scopeTodos: (n) => `Add ${n === 1 ? '1 to-do' : `${n} to-dos`} per language or country`,
     todoScope: 'For language or country',
+    todoOwner: 'Who does it',
     wholeItem: 'Whole item',
     jiraKey: 'Jira issue',
     jiraKeyPlaceholder: 'Jira',
