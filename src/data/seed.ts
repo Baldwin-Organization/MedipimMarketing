@@ -1,15 +1,16 @@
 import { eventEstimate } from './budget';
-import { daysBetween } from './dates';
+import { beforeWeekend, daysBetween, shiftIso } from './dates';
 import { countryCode } from './dimensions';
 import { newId, type Contents } from './repository';
 import { seedRevenues } from './potential';
-import { planEvents } from './seed-events';
-import { addOutbound, buildOutbound } from './seed-outbound';
+import { eventTodoDay, planEvents } from './seed-events';
+import { addOutbound, buildOutbound, outboundProduction } from './seed-outbound';
 import { AGENCY_SHARE, BUDGET_2027_AGENCY_ON_TOP, SEED_BUDGETS, SEED_PILLARS, UX_LAUNCH_CONTENT_ID, academyLanguages, academyUpdate, buildSeedContent, contentIdeasUpdate, decemberFillUpdate, weeklyFillUpdate } from './seed-content';
 import { moveItem } from './schedule';
-import { WEEKLY_CHANNEL, scheduleWeekly } from './seed-weekly';
+import { WEEKLY_CHANNEL, WEEKLY_FROM, scheduleWeekly } from './seed-weekly';
+import { PREP_FROM, PREVIOUS_OFFSETS, TODO_TEMPLATES } from './templates';
 import { ACTIONS_EN, EVENTS_EN, RELEVANCE_EN, TENTATIVE_EN, UX_LAUNCH_EN, VIA_DISTRIBUTOR_EN, VIA_MEDITECH_EN, VIA_MEDITECH_EN_BEFORE } from './seed-en';
-import type { Audience, Budget, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo } from './types';
+import type { Audience, Budget, ContentPiece, IsoDate, Item, ItemStatus, ItemType, ProductType, Todo, TodoPhase } from './types';
 
 interface SeedEvent {
   title: string;
@@ -332,6 +333,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-28', apply: (data) => addOutbound(data, newId) },
   { key: 'mc-seed-updates-29', apply: (data) => ({ budgets: agencyWithinBudget(data.budgets) }) },
   { key: 'mc-seed-updates-30', apply: (data) => visitVital(data, newId) },
+  { key: 'mc-seed-updates-31', apply: (data) => productionWeeks(data, newId) },
 ];
 
 /** The agency's service fee for every year with a budget and no agency line yet, at its share of the other lines. */
@@ -358,6 +360,63 @@ export function agencyWithinBudget(budgets: Budget[]): Budget[] {
 }
 
 /** Events taken off the calendar, too expensive for what they bring. */
+const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
+const UX_ANNOUNCEMENT = 'Aankondiging nieuwe UX Belgisch platform';
+const UX_ANNOUNCED: IsoDate = '2026-11-23';
+/** Due dates of the seeded launch and retargeting to-dos before the production weeks, by item title and to-do title. */
+const PREVIOUS_DUE: Record<string, Record<string, IsoDate>> = {
+  'Nieuwe UX Belgisch platform – post Medipim-pagina': { 'Tekst schrijven': '2026-12-14', 'Visual kiezen': '2026-12-14', 'Inplannen op de Medipim-pagina': '2026-12-15' },
+  'Nieuwsbrief: nieuwe UX van het platform': { 'Tekst en visuals maken': '2026-12-16', 'Testmail versturen en goedkeuring vragen': '2026-12-17', 'Verzending inplannen op vrijdag 9:00': '2026-12-17' },
+  [RETARGETING_TITLE]: { 'Google-tag en Consent Mode v2 nakijken op medipim.com': '2026-12-14', 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)': '2026-12-15', 'Advertenties maken per taal (NL, FR, DE, EN)': '2026-12-16' },
+};
+
+/** The new date and phase of a to-do in production weeks, or undefined when it stays as it is. */
+function inProductionWeeks(t: Todo, item: Item): Pick<Todo, 'dueDate' | 'phase'> | undefined {
+  const open = !t.done && !t.jira;
+  const seeded = [...ACTIONS, { title: RETARGETING_TITLE, todos: RETARGETING_TODOS }].find((a) => a.title === item.title)?.todos?.find((s) => s.title === t.title);
+  if (seeded) {
+    const dueDate = open && PREVIOUS_DUE[item.title]?.[t.title] === t.dueDate ? seeded.dueDate : t.dueDate;
+    return dueDate !== t.dueDate || seeded.phase !== t.phase ? { dueDate, phase: seeded.phase } : undefined;
+  }
+  if (item.type === 'event') {
+    const day = open && t.dueDate === WEEKLY_FROM ? eventTodoDay(item, t.title) : undefined;
+    return day && day !== t.dueDate ? { dueDate: day, phase: t.phase } : undefined;
+  }
+  const template = TODO_TEMPLATES[item.type].find((s) => s.title === t.title);
+  if (!template) return undefined;
+  const previous = PREVIOUS_OFFSETS[`${item.type}:${t.title}`];
+  const untouched = previous != null && open && item.date >= PREP_FROM
+    && ([previous, previous - 1, previous - 2].includes(t.offsetDays) || (t.dueDate === WEEKLY_FROM && shiftIso(item.date, previous) <= WEEKLY_FROM));
+  const day = beforeWeekend(shiftIso(item.date, template.offsetDays));
+  const dueDate = untouched ? (day < PREP_FROM ? PREP_FROM : day) : t.dueDate;
+  return dueDate !== t.dueDate || template.phase !== t.phase ? { dueDate, phase: template.phase } : undefined;
+}
+
+/**
+ * Production weeks for data seeded before: content is made two weeks before it goes out and preparation starts on
+ * 30 November 2026. Moves the open to-dos that are still on their planned day, gives every known step its phase, and
+ * puts the UX announcement back on 23 November, when it went out. To-dos someone moved, finished or linked to Jira keep their date.
+ */
+export function productionWeeks(data: Pick<Contents, 'items' | 'todos' | 'content'>, makeId: () => string): SeedChanges {
+  const now = new Date().toISOString();
+  const byId = new Map(data.items.map((i) => [i.id, i]));
+  const outbound = outboundProduction(data, makeId);
+  const todos = data.todos.flatMap((t): Todo[] => {
+    const item = byId.get(t.itemId);
+    const change = item && !outbound.some((o) => o.id === t.id) && inProductionWeeks(t, item);
+    if (!change) return [];
+    const { phase: _, ...rest } = t;
+    return [{ ...rest, dueDate: change.dueDate, offsetDays: daysBetween(item.date, change.dueDate), ...(change.phase && { phase: change.phase }) }];
+  });
+  const announced = data.items
+    .filter((i) => i.title === UX_ANNOUNCEMENT && i.date === WEEKLY_FROM)
+    .map((i) => ({ ...i, date: UX_ANNOUNCED, status: 'klaar' as const, updatedAt: now }));
+  const content = data.content
+    .filter((p) => p.id === UX_LAUNCH_CONTENT_ID && p.month === '2026-12' && p.status === 'klaar' && announced.length)
+    .map((p) => ({ ...p, month: '2026-11', status: 'gedeeld' as const, updatedAt: now }));
+  return { items: announced, todos: [...outbound, ...todos], content };
+}
+
 const VITAL = 'Vital Annual Conference';
 /** The Vital texts before the conference dates were known, Dutch and English. */
 const VITAL_BEFORE = [
@@ -465,7 +524,7 @@ export function startMidDecember(data: Pick<Contents, 'items' | 'todos' | 'conte
   const todos: Todo[] = [];
   for (const item of data.items) {
     const seed = seeded.find((s) => s.title === item.title);
-    if (!seed || earlyDates[item.title] !== item.date) continue;
+    if (!seed || earlyDates[item.title] !== item.date || seed.date === item.date) continue;
     const moved = moveItem(item, data.todos, seed.date);
     items.push({ ...moved.item, endDate: item.type === 'campaign' ? item.endDate : moved.item.endDate, updatedAt: now });
     for (const t of data.todos.filter((t) => t.itemId === item.id)) {
@@ -584,7 +643,7 @@ export function buildSeed(makeId: () => string): Contents {
       updatedAt: now,
     });
     for (const t of a.todos ?? []) {
-      todos.push({ id: makeId(), itemId: id, title: t.title, dueDate: t.dueDate, done: false, offsetDays: daysBetween(a.date, t.dueDate) });
+      todos.push({ id: makeId(), itemId: id, title: t.title, dueDate: t.dueDate, done: false, offsetDays: daysBetween(a.date, t.dueDate), ...(t.phase && { phase: t.phase }) });
     }
   }
   const retargeting = buildRetargeting(makeId, now);
@@ -603,13 +662,12 @@ export function buildSeed(makeId: () => string): Contents {
   };
 }
 
-const RETARGETING_TITLE = 'Google retargeting websitebezoekers (BE, FR, AU, DE)';
 const RETARGETING_START = '2026-12-17';
-const RETARGETING_TODOS: { title: string; en: string; dueDate: IsoDate }[] = [
-  { title: 'Google-tag en Consent Mode v2 nakijken op medipim.com', en: 'Check the Google tag and Consent Mode v2 on medipim.com', dueDate: '2026-12-14' },
-  { title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)', en: 'Create a remarketing audience per country (BE, FR, AU, DE)', dueDate: '2026-12-15' },
-  { title: 'Advertenties maken per taal (NL, FR, DE, EN)', en: 'Create ads per language (NL, FR, DE, EN)', dueDate: '2026-12-16' },
-  { title: 'Frequentielimiet instellen en campagne starten', en: 'Set a frequency cap and start the campaign', dueDate: RETARGETING_START },
+const RETARGETING_TODOS: { title: string; en: string; dueDate: IsoDate; phase?: TodoPhase }[] = [
+  { title: 'Google-tag en Consent Mode v2 nakijken op medipim.com', en: 'Check the Google tag and Consent Mode v2 on medipim.com', dueDate: '2026-12-01' },
+  { title: 'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)', en: 'Create a remarketing audience per country (BE, FR, AU, DE)', dueDate: '2026-12-02' },
+  { title: 'Advertenties maken per taal (NL, FR, DE, EN)', en: 'Create ads per language (NL, FR, DE, EN)', dueDate: '2026-12-03', phase: 'maken' },
+  { title: 'Frequentielimiet instellen en campagne starten', en: 'Set a frequency cap and start the campaign', dueDate: RETARGETING_START, phase: 'verdelen' },
 ];
 
 /** The always-on Google retargeting campaign; the end date is the last budget year and moves along each year. */
@@ -647,6 +705,7 @@ function buildRetargeting(makeId: () => string, now: string): { item: Item; todo
       dueDate: t.dueDate,
       done: false,
       offsetDays: daysBetween(RETARGETING_START, t.dueDate),
+      ...(t.phase && { phase: t.phase }),
       translations: { en: { title: t.en } },
     })),
   };
@@ -663,7 +722,7 @@ const UX_LAUNCH = 'Nieuwe UX Belgisch platform';
 const ALL_AUDIENCES: Audience[] = ['groothandels', 'producenten', 'apothekers', 'ziekenhuizen'];
 const ALL_PRODUCTS: ProductType[] = ['geneesmiddelen', 'cannabis', 'cosmetica', 'voeding', 'baby'];
 
-/** Communication around the launch of the new UX of the Belgian platform (week of 14 December 2026). */
+/** Communication around the launch of the new UX of the Belgian platform: announced on 23 November 2026, the follow-ups in the week of 14 December. */
 const ACTIONS: {
   type: ItemType;
   title: string;
@@ -676,14 +735,14 @@ const ACTIONS: {
   audiences: Audience[];
   countries: string[];
   languages?: string[];
-  todos?: { title: string; dueDate: IsoDate }[];
+  todos?: { title: string; dueDate: IsoDate; phase?: TodoPhase }[];
 }[] = [
   {
     type: 'social',
     title: 'Aankondiging nieuwe UX Belgisch platform',
     description: 'LinkedIn-post in het Engels vanuit het profiel van Maarten (CEO), voor een internationaal publiek.',
     channel: 'LinkedIn · Maarten (CEO)',
-    date: '2026-12-14',
+    date: '2026-11-23',
     status: 'klaar',
     owner: 'Maarten',
     audiences: ALL_AUDIENCES,
@@ -701,9 +760,9 @@ const ACTIONS: {
     audiences: ALL_AUDIENCES,
     countries: [],
     todos: [
-      { title: 'Tekst schrijven', dueDate: '2026-12-14' },
-      { title: 'Visual kiezen', dueDate: '2026-12-14' },
-      { title: 'Inplannen op de Medipim-pagina', dueDate: '2026-12-15' },
+      { title: 'Tekst schrijven', dueDate: '2026-12-01', phase: 'maken' },
+      { title: 'Visual kiezen', dueDate: '2026-12-02', phase: 'maken' },
+      { title: 'Inplannen op de Medipim-pagina', dueDate: '2026-12-14', phase: 'verdelen' },
     ],
   },
   {
@@ -718,9 +777,9 @@ const ACTIONS: {
     audiences: ['apothekers'],
     countries: ['BE'],
     todos: [
-      { title: 'Tekst en visuals maken', dueDate: '2026-12-16' },
-      { title: 'Testmail versturen en goedkeuring vragen', dueDate: '2026-12-17' },
-      { title: 'Verzending inplannen op vrijdag 9:00', dueDate: '2026-12-17' },
+      { title: 'Tekst en visuals maken', dueDate: '2026-12-04', phase: 'maken' },
+      { title: 'Testmail versturen en goedkeuring vragen', dueDate: '2026-12-16', phase: 'verdelen' },
+      { title: 'Verzending inplannen op vrijdag 9:00', dueDate: '2026-12-17', phase: 'verdelen' },
     ],
   },
 ];

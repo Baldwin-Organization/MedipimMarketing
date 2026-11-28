@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } f
 import { ICON_PATHS, type IconName } from '../icons.generated';
 import { STATUS_META, TYPE_META } from '../data/meta';
 import { statusLabel, t, typeLabel } from '../i18n';
-import type { ItemStatus, ItemType, JiraLink } from '../data/types';
+import type { ItemStatus, ItemType, JiraLink, TodoPhase } from '../data/types';
 
 export function Icon({ name, size = 20, className }: { name: IconName; size?: number; className?: string }) {
   return (
@@ -73,6 +73,12 @@ export function LateBadge({ days, compact }: { days: number; compact?: boolean }
       {compact ? `${days} ${t.dates.dayShort}` : full}
     </span>
   );
+}
+
+/** Whether a to-do makes content or distributes it. */
+export function PhaseBadge({ phase }: { phase?: TodoPhase }) {
+  if (!phase) return null;
+  return <span className="mc-phase" title={t.phase.title[phase]}><Pill tone={phase === 'maken' ? 'brand' : 'info'}>{t.phase[phase]}</Pill></span>;
 }
 
 const JIRA_TONE = { new: 'neutral', indeterminate: 'info', done: 'success' } as const;

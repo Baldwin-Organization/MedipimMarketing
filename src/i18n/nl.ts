@@ -107,6 +107,11 @@ export const nl = {
     dayShort: 'd',
   },
 
+  phase: {
+    maken: 'Maken',
+    verdelen: 'Verdelen',
+    title: { maken: 'Content schrijven, ontwerpen of laten goedkeuren, twee weken voor de publicatie', verdelen: 'Inplannen, versturen of starten, vlak voor de publicatie' },
+  },
   late: {
     full: (n: number) => `${plural(n, 'dag', 'dagen')} te laat`,
     title: (n: number) => `${plural(n, 'dag', 'dagen')} te laat: oorspronkelijk ${plural(n, 'dag', 'dagen')} geleden gepland`,
@@ -173,6 +178,9 @@ export const nl = {
     timeline: 'Tijdlijn',
     prepDone: (done: number, total: number) => `${done} van ${total} voorbereidingen klaar`,
     thisWeek: 'Deze week in de kalender',
+    production: 'Deze week maken',
+    productionHint: 'Content voor over twee weken: schrijven, ontwerpen en laten goedkeuren. Inplannen en versturen gebeurt vlak voor de publicatie.',
+    noProduction: 'Niets te maken deze week',
     mix: {
       title: 'Kanalen per doelgroep',
       hint: (year: number) => `Op welke kanalen we inzetten om elke doelgroep te bereiken, met het budget voor ${year}. Wijs een kanaal of doelgroep aan om de verbindingen te zien.`,

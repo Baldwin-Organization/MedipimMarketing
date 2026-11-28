@@ -29,6 +29,13 @@ De interface is tweetalig (Nederlands en Engels, te wisselen onderaan de zijbalk
   ("Copy schrijven · Frans"). Voeg je later een taal of land toe, dan vult een knop in het
   itemformulier de ontbrekende to do's aan (`per` in `src/data/templates.ts`, `scopeTodos` in
   `src/data/schedule.ts`).
+- **Maken en verdelen**: het maken van content staat los van het verdelen ervan. Schrijven,
+  ontwerpen en laten goedkeuren gebeurt in de productieweek, twee weken voor de publicatie;
+  inplannen, versturen en advertenties starten in de dagen ervoor. Elke standaardstap heeft
+  zo'n fase (`phase` in `src/data/templates.ts`, met `PRODUCTION_LEAD` = 14 dagen) en toont
+  die als label "Maken" of "Verdelen". Een stap die op een zaterdag of zondag zou vallen,
+  schuift naar de vrijdag ervoor. Het dashboard toont wat er deze week gemaakt moet worden
+  (in het weekend: volgende week).
 - **Klaar voor Jira**: elke to do kan een Jira-ticket hebben (`jira` op `Todo`: sleutel, link,
   status en statuscategorie). Het ticketnummer vul je nu zelf in bij de to do. De brug naar
   Jira komt later: die maakt per to do een ticket aan en koppelt de status terug via
@@ -140,13 +147,14 @@ het land uit de locatie; de relevantie voor Medipim staat in de beschrijving. Ev
 "(datum te bevestigen)" in de titel.
 
 Daarnaast bevat de startinhoud de communicatie rond de nieuwe UX van het Belgische platform
-(thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten op maandag 14 december 2026,
+(thema "Nieuwe UX Belgisch platform"): de LinkedIn-post van Maarten, die op 23 november 2026 uitging,
 een LinkedIn-post vanuit de Medipim-pagina op 15 december en een nieuwsbrief aan de
 Belgische apothekers op vrijdag 18 december om 9:00, met to do's. Die drie items verwijzen naar het
 contentstuk "Lancering nieuwe UX Belgisch platform".
 
-De planning start in de week van 14 december 2026: geen item en geen to do valt eerder. De
-Google-retargeting wordt die week opgezet en gaat live op 17 december; de wekelijkse posts op de
+De publicaties starten in de week van 14 december 2026, de voorbereiding een productieweek
+eerder, vanaf maandag 30 november: geen to do valt vroeger. De Google-retargeting wordt begin
+december opgezet en gaat live op 17 december; de wekelijkse posts op de
 Medipim-pagina beginnen op 15 december. De drie vervolgposts over de nieuwe UX (rondleiding, drie
 dingen die je misschien nog niet zag, vraag van sales) staan als idee zonder datum. Een browser
 met oudere startinhoud verschuift eenmalig mee, behalve items die iemand al verplaatste.

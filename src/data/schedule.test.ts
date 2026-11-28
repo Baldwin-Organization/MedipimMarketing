@@ -74,13 +74,13 @@ describe('templates and seed', () => {
     const { items, todos } = buildSeed(() => `id${n++}`);
     const launch = items.filter((i) => i.campaign === 'Nieuwe UX Belgisch platform');
     expect(launch.map((i) => [i.date, i.channel, i.status])).toEqual([
-      ['2026-12-14', 'LinkedIn · Maarten (CEO)', 'klaar'],
+      ['2026-11-23', 'LinkedIn · Maarten (CEO)', 'klaar'],
       ['2026-12-15', 'LinkedIn · Medipim', 'gepland'],
       ['2026-12-18', 'Nieuwsbrief apothekers', 'gepland'],
     ]);
     const mail = launch[2];
     expect(mail).toMatchObject({ time: '09:00', audiences: ['apothekers'], countries: ['BE'] });
-    expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-2, -1, -1]);
+    expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-14, -2, -1]);
   });
 });
 

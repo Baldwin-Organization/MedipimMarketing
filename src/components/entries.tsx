@@ -7,7 +7,7 @@ import { useStore } from '../data/store';
 import type { IsoDate, Item } from '../data/types';
 import { useUi } from '../ui-context';
 import { ParticipationDot } from './participation';
-import { Checkbox, Icon, JiraBadge, LateBadge } from './ui';
+import { Checkbox, Icon, JiraBadge, LateBadge, PhaseBadge } from './ui';
 
 const MIME = 'application/x-mc-entry';
 
@@ -96,6 +96,7 @@ export function TodoEntry({ todo, showItem = true, compact }: { todo: ScheduledT
         <span className="mc-entry-title">{todoLabel(todo)}</span>
         {showItem && item && <span className="mc-todo-item">{itemTitle(item)}</span>}
       </button>
+      {!compact && <PhaseBadge phase={todo.phase} />}
       {!compact && <JiraBadge jira={todo.jira} />}
       <LateBadge days={todo.lateDays} compact={compact} />
     </div>

@@ -6,6 +6,8 @@ export const toIso = (d: Date): IsoDate => format(d, 'yyyy-MM-dd');
 export const fromIso = (iso: IsoDate): Date => parseISO(iso);
 export const todayIso = (): IsoDate => toIso(new Date());
 export const shiftIso = (iso: IsoDate, days: number): IsoDate => toIso(addDays(fromIso(iso), days));
+/** Saturday and Sunday move to the Friday before, so the work is done before the weekend. */
+export const beforeWeekend = (iso: IsoDate): IsoDate => ({ 6: shiftIso(iso, -1), 0: shiftIso(iso, -2) } as Record<number, IsoDate>)[fromIso(iso).getDay()] ?? iso;
 export const daysBetween = (from: IsoDate, to: IsoDate): number =>
   differenceInCalendarDays(fromIso(to), fromIso(from));
 

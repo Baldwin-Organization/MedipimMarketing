@@ -1,7 +1,7 @@
 import { daysBetween, fromIso, shiftIso } from './dates';
 import type { Contents } from './repository';
 import { todosFromTemplate } from './schedule';
-import { WEEKLY_FROM } from './seed-weekly';
+import { PREP_FROM } from './templates';
 import type { Item, ItemType, Todo } from './types';
 
 interface Text { nl: string; en: string }
@@ -100,6 +100,7 @@ const dayOf = (event: Item, offset: number, from?: 'end') => {
   const day = shiftIso(from === 'end' ? event.endDate ?? event.date : event.date, offset);
   return offset === 0 && !from ? day : workday(day);
 };
+const notBeforePrep = (iso: string) => (iso < PREP_FROM ? PREP_FROM : iso);
 const place = (event: Item): Text => ({ nl: event.location ?? '', en: event.translations?.en?.location || event.location || '' });
 
 /** Posts and preparation for one event Medipim attends: posts and mails as their own items, the preparation as to-dos on the event. */
@@ -130,11 +131,13 @@ function planEvent(event: Item, makeId: () => string, now: string): { items: Ite
   });
   const todos: Todo[] = [
     ...(exhibiting ? EXHIBITOR_TODOS : VISITOR_TODOS).map((t) => {
-      const day = dayOf(event, t.offset, t.from);
-      const dueDate = day < WEEKLY_FROM ? WEEKLY_FROM : day;
+      const dueDate = notBeforePrep(dayOf(event, t.offset, t.from));
       return { id: makeId(), itemId: event.id, title: t.nl, dueDate, done: false, offsetDays: daysBetween(event.date, dueDate), translations: { en: { title: t.en } } };
     }),
-    ...items.flatMap((i) => todosFromTemplate(i, makeId)),
+    ...items.flatMap((i) => todosFromTemplate(i, makeId).map((t) => {
+      const dueDate = notBeforePrep(t.dueDate);
+      return { ...t, dueDate, offsetDays: daysBetween(i.date, dueDate) };
+    })),
   ];
   return { items, todos };
 }
@@ -152,4 +155,10 @@ export function planEvents(data: Pick<Contents, 'items' | 'todos'>, makeId: () =
     && !data.items.some((i) => i.type !== 'event' && i.campaign === e.title));
   const plans = planned.map((e) => planEvent(e, makeId, now));
   return { items: plans.flatMap((p) => p.items), todos: plans.flatMap((p) => p.todos) };
+}
+
+/** The day an event's preparation to-do falls on, by its title; undefined for to-dos the plan does not know. */
+export function eventTodoDay(event: Item, title: string): string | undefined {
+  const t = [...EXHIBITOR_TODOS, ...VISITOR_TODOS].find((p) => p.nl === title);
+  return t && notBeforePrep(dayOf(event, t.offset, t.from));
 }

@@ -1,8 +1,9 @@
+import { startOfISOWeek } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { groupByUrgency } from '../components/TodayPanel';
 import { ItemChip, TodoEntry } from '../components/entries';
 import { Button, Card, EmptyState, Stat, StatusPill, TypeBadge } from '../components/ui';
-import { daysBetween, fmt, relativeDay, shiftIso } from '../data/dates';
+import { daysBetween, fmt, fromIso, relativeDay, shiftIso, toIso } from '../data/dates';
 import { participationKey } from '../data/meta';
 import { useStore } from '../data/store';
 import { channelLabel, itemText, itemTitle, participationLabel, t } from '../i18n';
@@ -16,6 +17,11 @@ export function Dashboard() {
   const { today } = store;
   const horizon = shiftIso(today, 13);
   const groups = groupByUrgency(store.todos, today);
+  /** Sunday of the working week; on Saturday and Sunday that is the coming week. */
+  const weekEnd = shiftIso(toIso(startOfISOWeek(fromIso(shiftIso(today, 2)))), 6);
+  const production = store.todos
+    .filter((t) => t.phase === 'maken' && !t.done && t.displayDate <= weekEnd)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const upcoming = store.items
     .filter((i) => i.date >= today && i.date <= horizon)
     .sort((a, b) => (a.date + (a.time ?? '')).localeCompare(b.date + (b.time ?? '')));
@@ -78,6 +84,15 @@ export function Dashboard() {
         </div>
 
         <div className="mc-dash-col">
+          <Card title={t.dashboard.production} icon="edit" className="mc-dash-production">
+            <p className="mc-muted">{t.dashboard.productionHint}</p>
+            {production.length ? (
+              <div className="mc-stack">{production.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
+            ) : (
+              <EmptyState icon="check_circle" title={t.dashboard.noProduction} />
+            )}
+          </Card>
+
           <Card title={t.dashboard.late} icon="warning" className="mc-dash-late">
             {groups.late.length ? (
               <div className="mc-stack">{groups.late.map((t) => <TodoEntry key={t.id} todo={t} />)}</div>
