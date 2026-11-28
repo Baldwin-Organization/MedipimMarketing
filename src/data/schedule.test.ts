@@ -80,7 +80,7 @@ describe('templates and seed', () => {
     ]);
     const mail = launch[2];
     expect(mail).toMatchObject({ time: '09:00', audiences: ['apothekers'], countries: ['BE'] });
-    expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-14, -2, -1]);
+    expect(todos.filter((t) => t.itemId === mail.id).map((t) => t.offsetDays)).toEqual([-14, -14, -2, -2, -1]);
   });
 });
 

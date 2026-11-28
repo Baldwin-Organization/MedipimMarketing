@@ -17,9 +17,9 @@ describe('CRM outbound', () => {
     expect(items.every((i) => i.translations?.en?.title && i.translations.en.campaign && i.date.startsWith('2027'))).toBe(true);
   });
 
-  it('starts with the national wholesalers in January and reaches the labs after the summer', () => {
+  it('starts with the national wholesalers in January and reaches the labs after the autumn fairs', () => {
     const firsts = build().items.filter((i) => i.campaign === OUTBOUND && i.title.includes('mail 1')).map((i) => [i.date, i.audiences.join()]);
-    expect(firsts).toEqual([['2027-01-12', 'groothandels'], ['2027-03-09', 'groothandels'], ['2027-05-11', 'groothandels'], ['2027-09-07', 'producenten']]);
+    expect(firsts).toEqual([['2027-01-12', 'groothandels'], ['2027-03-09', 'groothandels'], ['2027-05-25', 'groothandels'], ['2027-10-19', 'producenten']]);
   });
 
   it('books Bizzy credits on email and the ads on LinkedIn', () => {

@@ -1,4 +1,4 @@
-import { beforeWeekend, daysBetween, shiftIso } from './dates';
+import { daysBetween, shiftIso, workdayAfter, workdayBefore } from './dates';
 import { ownerFor } from './team';
 import { TODO_TEMPLATES, type TodoTemplate } from './templates';
 import type { IsoDate, Item, JiraLink, Todo } from './types';
@@ -66,7 +66,8 @@ function scopesFor(template: TodoTemplate, item: Item): Scope[] {
 const sameScope = (todo: Todo, scope: Scope) => todo.language === scope.language && todo.country === scope.country;
 
 function fromTemplate(item: Item, template: TodoTemplate, scope: Scope, makeId: () => string): Todo {
-  const dueDate = beforeWeekend(shiftIso(item.date, template.offsetDays));
+  const day = shiftIso(item.date, template.offsetDays);
+  const dueDate = template.offsetDays > 0 ? workdayAfter(day) : workdayBefore(day);
   return {
     id: makeId(),
     itemId: item.id,

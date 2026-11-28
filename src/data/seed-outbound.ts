@@ -1,5 +1,5 @@
-import { daysBetween, shiftIso } from './dates';
-import { todosFromTemplate } from './schedule';
+import { daysBetween, shiftIso, workdayAfter, workdayBefore } from './dates';
+import { moveItem, todosFromTemplate } from './schedule';
 import { PRODUCTION_LEAD } from './templates';
 import type { Audience, IsoDate, Item, ItemType, Todo, TodoPhase } from './types';
 
@@ -44,14 +44,14 @@ const WAVES: Wave[] = [
     enrichment: 500,
   },
   {
-    n: 3, start: '2027-05-11', nl: 'landen zonder vereniging', en: 'countries without an association',
+    n: 3, start: '2027-05-25', nl: 'landen zonder vereniging', en: 'countries without an association',
     who: { nl: '48 groothandels uit de registers van Zwitserland, Denemarken, Cyprus, Malta, Litouwen, Slovenië, Luxemburg en Finland', en: '48 wholesalers from the registers of Switzerland, Denmark, Cyprus, Malta, Lithuania, Slovenia, Luxembourg and Finland' },
     audiences: WHOLESALE,
     countries: ['CH', 'DK', 'CY', 'MT', 'LT', 'SI', 'LU', 'FI'],
     enrichment: 500,
   },
   {
-    n: 4, start: '2027-09-07', nl: 'labo’s', en: 'labs',
+    n: 4, start: '2027-10-19', nl: 'labo’s', en: 'labs',
     who: { nl: 'een selectie uit de 2.715 labo’s en fabrikanten in de bronlijst, eerst de grootste vergunninghouders in onze markten', en: 'a selection from the 2,715 labs and manufacturers in the source list, the largest marketing authorisation holders in our markets first' },
     audiences: LABS,
     countries: ['BE', 'NL', 'DE', 'FR', 'IT', 'ES', 'GB', 'CH', 'AT', 'IE', 'DK'],
@@ -187,7 +187,8 @@ export function buildOutbound(makeId: () => string, now: string): { items: Item[
       };
       items.push(item);
       for (const t of s.todos) {
-        const dueDate = shiftIso(w.start, s.offset + t.offset);
+        const day = shiftIso(w.start, s.offset + t.offset);
+        const dueDate = t.offset > 0 ? workdayAfter(day) : workdayBefore(day);
         todos.push(stepTodo(item, t, dueDate, makeId));
       }
     }
@@ -252,4 +253,27 @@ export function outboundProduction(data: { items: Item[]; todos: Todo[] }, makeI
     }
   }
   return changed;
+}
+
+/** Starts of the waves that moved: wave 3 sat between Vital and GIRP, wave 4 in the week of Pharmacy Connect and before Expopharm. */
+const WAVE_STARTS_BEFORE: Record<number, IsoDate> = { 3: '2027-05-11', 4: '2027-09-07' };
+
+/** The moved waves for data seeded before, with their open to-dos; items someone moved stay where they are. */
+export function outboundWaveDates(data: { items: Item[]; todos: Todo[] }): { items: Item[]; todos: Todo[] } {
+  const now = new Date().toISOString();
+  const items: Item[] = [];
+  const todos: Todo[] = [];
+  for (const w of WAVES.filter((w) => WAVE_STARTS_BEFORE[w.n])) {
+    for (const s of STEPS) {
+      const item = data.items.find((i) => i.title === s.title(w).nl && i.date === shiftIso(WAVE_STARTS_BEFORE[w.n], s.offset));
+      if (!item) continue;
+      const moved = moveItem(item, data.todos, shiftIso(w.start, s.offset));
+      items.push({ ...moved.item, updatedAt: now });
+      todos.push(...moved.todos.map((t) => {
+        const dueDate = t.offsetDays > 0 ? workdayAfter(t.dueDate) : workdayBefore(t.dueDate);
+        return { ...t, dueDate, offsetDays: daysBetween(moved.item.date, dueDate) };
+      }));
+    }
+  }
+  return { items, todos };
 }

@@ -49,6 +49,8 @@ const ROLES: Record<string, Role | 'goedkeuring'> = {
   'Google-tag en Consent Mode v2 nakijken op medipim.com': 'advertenties',
   'Remarketingdoelgroep per land aanmaken (BE, FR, AU, DE)': 'advertenties',
   'Advertenties maken per taal (NL, FR, DE, EN)': 'advertenties',
+  'Remarketingdoelgroep per markt aanmaken': 'advertenties',
+  'Advertenties maken per taal (NL, FR, DE, EN, ES)': 'advertenties',
   'Frequentielimiet instellen en campagne starten': 'advertenties',
   'Contacten verrijken in Bizzy: masterdata, e-commerce en marketing': 'outbound',
   'Bedrijvenlijst exporteren uit het CRM': 'outbound',

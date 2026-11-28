@@ -1,8 +1,9 @@
-import { daysBetween, fromIso, shiftIso } from './dates';
+import { daysBetween, fromIso, shiftIso, workdayAfter, workdayBefore } from './dates';
 import type { Contents } from './repository';
+import { COUNTRY_LANGUAGES } from './dimensions';
 import { todosFromTemplate } from './schedule';
 import { PREP_FROM } from './templates';
-import type { Item, ItemType, Todo } from './types';
+import type { Audience, Item, ItemType, Todo } from './types';
 
 interface Text { nl: string; en: string }
 
@@ -14,7 +15,7 @@ interface PlannedPost {
   from?: 'end';
   time?: string;
   title: (event: string) => Text;
-  description: (event: string, place: Text) => Text;
+  description: (event: string, place: Text, who: Text) => Text;
 }
 
 interface PlannedTodo extends Text {
@@ -71,17 +72,17 @@ const VISITOR_POSTS: PlannedPost[] = [
   {
     type: 'social', channel: 'LinkedIn · Maarten (CEO)', offset: -7,
     title: (e) => ({ nl: `Medipim op ${e}`, en: `Medipim at ${e}` }),
-    description: (e, p) => ({
-      nl: `Aankondiging dat Maarten naar ${e} in ${p.nl} gaat, met een uitnodiging aan groothandels om af te spreken over Medipim en grensoverschrijdende productdata.`,
-      en: `Announcement that Maarten is attending ${e} in ${p.en}, inviting wholesalers to meet about Medipim and cross-border product data.`,
+    description: (e, p, w) => ({
+      nl: `Aankondiging dat Maarten naar ${e} in ${p.nl} gaat, met een uitnodiging aan ${w.nl} om af te spreken over Medipim en hun productdata.`,
+      en: `Announcement that Maarten is attending ${e} in ${p.en}, inviting ${w.en} to meet about Medipim and their product data.`,
     }),
   },
   {
     type: 'social', channel: 'LinkedIn · Maarten (CEO)', offset: 2, from: 'end',
     title: (e) => ({ nl: `Terugblik op ${e}`, en: `Looking back on ${e}` }),
-    description: (e) => ({
-      nl: `Wat Maarten meeneemt van ${e}: de belangrijkste thema's voor Europese groothandels en wat dat betekent voor productdata.`,
-      en: `What Maarten takes away from ${e}: the main themes for European wholesalers and what they mean for product data.`,
+    description: (e, _p, w) => ({
+      nl: `Wat Maarten meeneemt van ${e}: de belangrijkste thema's voor ${w.nl} en wat dat betekent voor productdata.`,
+      en: `What Maarten takes away from ${e}: the main themes for ${w.en} and what they mean for product data.`,
     }),
   },
 ];
@@ -100,20 +101,46 @@ const dayOf = (event: Item, offset: number, from?: 'end') => {
   const day = shiftIso(from === 'end' ? event.endDate ?? event.date : event.date, offset);
   return offset === 0 && !from ? day : workday(day);
 };
+const AUDIENCE_TEXT: Record<Audience, Text> = {
+  groothandels: { nl: 'groothandels', en: 'wholesalers' },
+  producenten: { nl: 'fabrikanten', en: 'manufacturers' },
+  apothekers: { nl: 'apothekers', en: 'pharmacists' },
+  ziekenhuizen: { nl: 'ziekenhuisapothekers', en: 'hospital pharmacists' },
+};
+const and = { nl: 'en', en: 'and' };
+/** The audiences of an event in a sentence, "groothandels en apothekers". */
+const audienceText = (event: Item): Text => {
+  const words = (event.audiences.length ? event.audiences : ['groothandels' as const]).map((a) => AUDIENCE_TEXT[a]);
+  const join = (lang: keyof Text) => {
+    const list = words.map((w) => w[lang]);
+    return list.length > 1 ? `${list.slice(0, -1).join(', ')} ${and[lang]} ${list.at(-1)}` : list[0];
+  };
+  return { nl: join('nl'), en: join('en') };
+};
+
+/** The languages of the countries an event takes place in, for mails to its visitors. */
+export const eventLanguages = (event: Item) => [...new Set(event.countries.flatMap((c) => COUNTRY_LANGUAGES[c] ?? []))];
+
 const notBeforePrep = (iso: string) => (iso < PREP_FROM ? PREP_FROM : iso);
+/** The day of an event's preparation or follow-up to-do: a working day, not before the first production week. */
+const todoDay = (event: Item, t: PlannedTodo) => {
+  const day = dayOf(event, t.offset, t.from);
+  return notBeforePrep(t.offset > 0 ? workdayAfter(day) : workdayBefore(day));
+};
 const place = (event: Item): Text => ({ nl: event.location ?? '', en: event.translations?.en?.location || event.location || '' });
 
 /** Posts and preparation for one event Medipim attends: posts and mails as their own items, the preparation as to-dos on the event. */
 function planEvent(event: Item, makeId: () => string, now: string): { items: Item[]; todos: Todo[] } {
   const exhibiting = event.participation === 'exposant';
   const name = event.translations?.en?.title || event.title;
+  const who = audienceText(event);
   const items = (exhibiting ? EXHIBITOR_POSTS : VISITOR_POSTS).map((p): Item => {
     const where = place(event);
     return {
       id: makeId(),
       type: p.type,
       title: p.title(event.title).nl,
-      description: p.description(event.title, where).nl,
+      description: p.description(event.title, where, who).nl,
       channel: p.channel,
       date: dayOf(event, p.offset, p.from),
       ...(p.time && { time: p.time }),
@@ -123,15 +150,15 @@ function planEvent(event: Item, makeId: () => string, now: string): { items: Ite
       audiences: event.audiences,
       productTypes: event.productTypes,
       countries: event.countries,
-      languages: [],
-      translations: { en: { title: p.title(name).en, description: p.description(name, where).en, campaign: name } },
+      languages: p.type === 'email' ? eventLanguages(event) : [],
+      translations: { en: { title: p.title(name).en, description: p.description(name, where, who).en, campaign: name } },
       createdAt: now,
       updatedAt: now,
     };
   });
   const todos: Todo[] = [
     ...(exhibiting ? EXHIBITOR_TODOS : VISITOR_TODOS).map((t) => {
-      const dueDate = notBeforePrep(dayOf(event, t.offset, t.from));
+      const dueDate = todoDay(event, t);
       return { id: makeId(), itemId: event.id, title: t.nl, dueDate, done: false, offsetDays: daysBetween(event.date, dueDate), translations: { en: { title: t.en } } };
     }),
     ...items.flatMap((i) => todosFromTemplate(i, makeId).map((t) => {
@@ -160,5 +187,36 @@ export function planEvents(data: Pick<Contents, 'items' | 'todos'>, makeId: () =
 /** The day an event's preparation to-do falls on, by its title; undefined for to-dos the plan does not know. */
 export function eventTodoDay(event: Item, title: string): string | undefined {
   const t = [...EXHIBITOR_TODOS, ...VISITOR_TODOS].find((p) => p.nl === title);
-  return t && notBeforePrep(dayOf(event, t.offset, t.from));
+  return t && todoDay(event, t);
+}
+
+/** The visitor post texts before they followed the audiences of the event, Dutch and English. */
+const VISITOR_TEXT_BEFORE: ((e: string, p: Text) => Text)[] = [
+  (e, p) => ({
+    nl: `Aankondiging dat Maarten naar ${e} in ${p.nl} gaat, met een uitnodiging aan groothandels om af te spreken over Medipim en grensoverschrijdende productdata.`,
+    en: `Announcement that Maarten is attending ${e} in ${p.en}, inviting wholesalers to meet about Medipim and cross-border product data.`,
+  }),
+  (e) => ({
+    nl: `Wat Maarten meeneemt van ${e}: de belangrijkste thema's voor Europese groothandels en wat dat betekent voor productdata.`,
+    en: `What Maarten takes away from ${e}: the main themes for European wholesalers and what they mean for product data.`,
+  }),
+];
+
+/** The visitor posts with texts for the audiences of their event, for data seeded before; texts someone edited stay. */
+export function visitorPostTexts(items: Item[]): Item[] {
+  const now = new Date().toISOString();
+  return items.flatMap((post): Item[] => {
+    const event = items.find((e) => e.type === 'event' && e.participation === 'bezoeker' && e.title === post.campaign);
+    const k = VISITOR_POSTS.findIndex((p) => p.title(event?.title ?? '').nl === post.title);
+    if (!event || k < 0 || post.type !== 'social') return [];
+    const name = event.translations?.en?.title || event.title;
+    const where = place(event);
+    const before = VISITOR_TEXT_BEFORE[k];
+    const after = VISITOR_POSTS[k].description;
+    const nl = post.description === before(event.title, where).nl ? after(event.title, where, audienceText(event)).nl : post.description;
+    const enBefore = post.translations?.en?.description;
+    const en = enBefore === before(name, where).en ? after(name, where, audienceText(event)).en : enBefore;
+    if (nl === post.description && en === enBefore) return [];
+    return [{ ...post, description: nl, translations: { ...post.translations, en: { ...post.translations?.en, description: en } }, updatedAt: now }];
+  });
 }
