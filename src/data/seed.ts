@@ -78,7 +78,7 @@ const EVENTS: SeedEvent[] = [
   { title: 'CPHI Middle East', date: '2027-04-26', endDate: '2027-04-28', location: 'Riyad, Saoedi-Arabië', channel: 'Beurs', audiences: PRODUCENTEN, relevance: 'Middel; vooral fabrikanten in de Golfregio', description: 'Grote farmabeurs voor de hele productieketen, met steun van het Saoedische ministerie van Volksgezondheid. Verplaatst van december 2026 naar april 2027.' },
 
   // Mei 2027
-  { title: 'Vital Annual Conference', date: '2027-05-02', location: 'Québec City, Canada', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Hoog voor Canadese distributiecontacten', description: 'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.' },
+  { title: 'Vital Annual Conference', date: '2027-05-02', endDate: '2027-05-05', location: 'Québec City, Canada', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Hoog voor Canadese distributiecontacten', description: 'Vierdaags congres in het Fairmont Le Château Frontenac dat distributeurs, fabrikanten en dienstverleners uit de Canadese farmaceutische keten samenbrengt rond strategische inzichten, trends en nieuwe samenwerkingen. Ticket voor niet-leden: CAD 5.250 plus 5% GST bij vroege inschrijving, daarna CAD 5.750.' },
   { title: 'CSHP Professional Practice Conference', date: '2027-05-07', endDate: '2027-05-09', location: 'Toronto, Canada', channel: 'Congres', audiences: ZIEKENHUIZEN, relevance: 'Middel', description: 'Canadees congres voor ziekenhuisapothekers. Relevant als Medipim ziekenhuisfarmacie of institutionele medicatiegegevens wil verkennen.' },
   { title: 'GIRP PharmaConnect 2027', date: '2027-05-19', endDate: '2027-05-20', location: 'Sofia, Bulgarije', channel: 'Conferentie', audiences: GROOTHANDELS, relevance: 'Zeer hoog voor Europese groothandels', description: 'GIRP brengt groothandels, fabrikanten en andere Europese supplychainpartijen samen. Inhoudelijk een bijzonder sterke gelegenheid om Medipim te positioneren rond grensoverschrijdende productdata en marktvergelijking.' },
   { title: 'Congresso Brasileiro da Cannabis Medicinal en Cannabis Fair', date: '2027-05-20', endDate: '2027-05-22', location: 'São Paulo, Brazilië', channel: 'Congres', audiences: PRODUCENTEN, products: CANNABIS, relevance: 'Hoog voor cannabisdata', description: 'Combineert medische onderwerpen met een beurs voor de cannabiswaardeketen, waaronder farmaceutische industrie, technologie en distributie.' },
@@ -125,7 +125,7 @@ export const EXHIBITOR_BUDGET = 20000;
 /** Marked as exhibitor before the stands were narrowed down to `EXHIBITING`. */
 const NO_LONGER_EXHIBITING = ['APP Conference and Trade Exhibition', 'GIRP PharmaConnect 2027'];
 /** Conferences Medipim attends without a stand; they fall under the visitor budget line. */
-const VISITING = ['GIRP PharmaConnect 2027'];
+const VISITING = ['GIRP PharmaConnect 2027', 'Vital Annual Conference'];
 /** Someone from Medipim attends together with partner Meditech, at no cost to Medipim. */
 const VIA_MEDITECH = ['World Health Expo Dubai'];
 /** Events the earlier Meditech updates handled; Pharmacy Connect went to the distributor afterwards. */
@@ -331,6 +331,7 @@ export const SEED_UPDATES: { key: string; apply: (data: Contents) => SeedChanges
   { key: 'mc-seed-updates-27', apply: (data) => ({ budgets: agencyBudgets(data.budgets) }) },
   { key: 'mc-seed-updates-28', apply: (data) => addOutbound(data, newId) },
   { key: 'mc-seed-updates-29', apply: (data) => ({ budgets: agencyWithinBudget(data.budgets) }) },
+  { key: 'mc-seed-updates-30', apply: (data) => visitVital(data, newId) },
 ];
 
 /** The agency's service fee for every year with a budget and no agency line yet, at its share of the other lines. */
@@ -357,6 +358,39 @@ export function agencyWithinBudget(budgets: Budget[]): Budget[] {
 }
 
 /** Events taken off the calendar, too expensive for what they bring. */
+const VITAL = 'Vital Annual Conference';
+/** The Vital texts before the conference dates were known, Dutch and English. */
+const VITAL_BEFORE = [
+  'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.',
+  'Multi-day event that brings the Canadian pharmaceutical supply chain together for industry discussions and collaboration. 2 May is the start date according to the organiser; check the full conference dates with Vital.',
+];
+
+/**
+ * Vital Annual Conference as a visit, with its full dates, the visitor estimate and the visitor posts and preparation,
+ * for data seeded before. Dates, texts, a participation and amounts someone changed stay.
+ */
+export function visitVital(data: Pick<Contents, 'items' | 'todos'>, makeId: () => string): Pick<Contents, 'items' | 'todos'> {
+  const now = new Date().toISOString();
+  const seeded = EVENTS.find((e) => e.title === VITAL)!;
+  const en = EVENTS_EN[VITAL];
+  const events = data.items
+    .filter((i) => i.type === 'event' && i.title === VITAL && (!i.participation || (i.date === seeded.date && i.endDate === seeded.date)))
+    .map((i): Item => {
+      const endDate = i.date === seeded.date && i.endDate === seeded.date ? seeded.endDate : i.endDate;
+      const participation = i.participation ?? 'bezoeker';
+      const visit = { ...i, endDate, participation, status: i.status === 'idee' ? 'gepland' as const : i.status };
+      return {
+        ...visit,
+        budgetPlanned: i.budgetPlanned == null && i.budgetActual == null ? eventEstimate(visit) : i.budgetPlanned,
+        description: i.description.replace(VITAL_BEFORE[0], seeded.description),
+        translations: { ...i.translations, en: { ...i.translations?.en, description: i.translations?.en?.description?.replace(VITAL_BEFORE[1], en.description) } },
+        updatedAt: now,
+      };
+    });
+  const plan = planEvents({ items: [...events, ...data.items.filter((i) => i.type !== 'event')], todos: data.todos }, makeId);
+  return { items: [...events, ...plan.items], todos: plan.todos };
+}
+
 const DROPPED_EVENTS = ['GS1 Global Healthcare Conference'];
 
 /** The dropped events with their posts and mails; to-dos go along with each item. */

@@ -70,7 +70,7 @@ export const ESTIMATE = {
   visitors: 2,
   ticket: { Beurs: 150, Conferentie: 900, Congres: 900, Netwerkevent: 600 } as Record<string, number>,
   /** Published ticket prices per event title, overriding the price per kind of event. */
-  ticketFor: { 'Cann-Reg 2027': 1100 } as Record<string, number>,
+  ticketFor: { 'Cann-Reg 2027': 1100, 'Vital Annual Conference': 3600 } as Record<string, number>,
   /** Per person, there and back; at home a train ticket or parking. */
   travel: { home: 50, nearby: 250, europe: 450, far: 1500 },
   hotelPerNight: 220,

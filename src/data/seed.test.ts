@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember } from './seed';
+import { EXHIBITOR_BUDGET, addBudgetAndContent, agencyBudgets, agencyWithinBudget, addEvents, addSeedTranslations, buildSeed, distributorPays, droppedEvents, duplicateEvents, exhibitorBudgets, markExhibitors, markVisitors, addRetargeting, estimateEventBudgets, markViaMeditech, meditechAttends, reestimateVisits, removeMedimapper, startMidDecember, visitVital } from './seed';
 import { moveItem } from './schedule';
 import type { Budget, Item } from './types';
 import { contentIdeasUpdate, weeklyFillUpdate } from './seed-content';
@@ -10,14 +10,14 @@ const seed = () => {
 };
 
 describe('event participation', () => {
-  it('marks the three exhibitor events with their budget, GIRP as visited and leaves the rest undecided', () => {
+  it('marks the three exhibitor events with their budget, GIRP and Vital as visited and leaves the rest undecided', () => {
     const events = seed();
     const exhibiting = events.filter((e) => e.participation === 'exposant');
     expect(exhibiting.map((e) => e.title).sort()).toEqual(['Expopharm', 'PharmagoraPlus', 'The Pharmacy Show']);
     expect(exhibiting.every((e) => e.status === 'gepland' && e.budgetPlanned === EXHIBITOR_BUDGET)).toBe(true);
-    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['World Health Expo Dubai', 'gepland'], ['APP Conference and Trade Exhibition', 'gepland'], ['GIRP PharmaConnect 2027', 'gepland'], ['Pharmacy Connect', 'gepland']]);
-    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 7);
-    expect(events.filter((e) => e.budgetPlanned)).toHaveLength(4);
+    expect(events.filter((e) => e.participation === 'bezoeker').map((e) => [e.title, e.status])).toEqual([['World Health Expo Dubai', 'gepland'], ['APP Conference and Trade Exhibition', 'gepland'], ['Vital Annual Conference', 'gepland'], ['GIRP PharmaConnect 2027', 'gepland'], ['Pharmacy Connect', 'gepland']]);
+    expect(events.filter((e) => !e.participation)).toHaveLength(events.length - 8);
+    expect(events.filter((e) => e.budgetPlanned)).toHaveLength(5);
   });
 
   it('updates existing data that predates the decision, once', () => {
@@ -311,6 +311,7 @@ describe('event budgets from the decisions', () => {
       ['World Health Expo Dubai', 0],
       ['PharmagoraPlus', 20000],
       ['APP Conference and Trade Exhibition', 0],
+      ['Vital Annual Conference', 13000],
       ['GIRP PharmaConnect 2027', 4000],
       ['Pharmacy Connect', 0],
       ['Expopharm', 20000],
@@ -481,5 +482,39 @@ describe('APP Conference, paid by the distributor', () => {
     expect(changes.items[0].description).toBe(pc.description);
     expect(changes.items[0].translations?.en?.description).toBe(pc.translations?.en?.description);
     expect(changes.todos).toEqual([]);
+  });
+});
+
+describe('Vital Annual Conference', () => {
+  const VITAL = 'Vital Annual Conference';
+
+  it('is a four-day visit with its estimate, posts and preparation in the seed', () => {
+    let n = 0;
+    const { items, todos } = buildSeed(() => `id${n++}`);
+    const vital = items.find((i) => i.title === VITAL)!;
+    expect(vital).toMatchObject({ date: '2027-05-02', endDate: '2027-05-05', participation: 'bezoeker', status: 'gepland', budgetPlanned: 13000 });
+    expect(todos.some((t) => t.itemId === vital.id)).toBe(true);
+    expect(items.some((i) => i.type === 'social' && i.campaign === VITAL)).toBe(true);
+  });
+
+  it('updates older data once, keeping what someone changed', () => {
+    let n = 0;
+    const data = buildSeed(() => `id${n++}`);
+    const seeded = data.items.find((i) => i.title === VITAL)!;
+    const older: Item = {
+      ...seeded, endDate: '2027-05-02', participation: undefined, status: 'idee', budgetPlanned: undefined,
+      description: seeded.description.replace(/^.*?(?=\n\n)/, 'Meerdaagse bijeenkomst die de Canadese farmaceutische keten samenbrengt voor sectorbesprekingen en samenwerking. 2 mei is de startdatum volgens de organisator; controleer de volledige congresdata bij Vital.'),
+    };
+    const others = data.items.filter((i) => i.id !== seeded.id && i.campaign !== VITAL);
+    const todos = data.todos.filter((t) => t.itemId !== seeded.id && !data.items.some((i) => i.id === t.itemId && i.campaign === VITAL));
+
+    let m = 0;
+    const changes = visitVital({ items: [...others, older], todos }, () => `m${m++}`);
+    expect(changes.items.find((i) => i.id === seeded.id)).toMatchObject({ endDate: '2027-05-05', participation: 'bezoeker', status: 'gepland', budgetPlanned: 13000, description: seeded.description });
+    expect(changes.todos.length).toBeGreaterThan(0);
+    expect(visitVital({ items: [...others, ...changes.items], todos: [...todos, ...changes.todos] }, () => 'x')).toEqual({ items: [], todos: [] });
+
+    const skipped = { ...older, participation: 'geen' as const, endDate: '2027-05-03' };
+    expect(visitVital({ items: [...others, skipped], todos }, () => 'x')).toEqual({ items: [], todos: [] });
   });
 });
